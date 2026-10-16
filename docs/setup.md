@@ -9,7 +9,7 @@ computer over ADB. ADB also unlocks the few permissions an app can't request fro
 2. Open it, allow it to install apps when the TV asks, and enter:
 
    ```
-   samlo.cloud/couch.apk
+   samlo.cloud/couch/couch-latest.apk
    ```
 
    It always points to the [latest release](https://github.com/samuelloranger/couch/releases/latest).

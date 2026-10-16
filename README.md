@@ -49,8 +49,8 @@ The interface is in English, or French on a TV set to French.
 
 ## Install
 
-On the TV: install **Downloader** from the Play Store, open it and enter `samlo.cloud/couch.apk`.
-It always fetches the [latest release](https://github.com/samuelloranger/couch/releases/latest).
+On the TV: install **Downloader** from the Play Store, open it and enter
+`samlo.cloud/couch/couch-latest.apk`. It always fetches the [latest release](https://github.com/samuelloranger/couch/releases/latest).
 
 Then turn on **Couch: Home button** in the TV's accessibility settings so HOME opens Couch.
 The [setup guide](https://samlo.cloud/couch/setup) covers installing from a computer and the
