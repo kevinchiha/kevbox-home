@@ -44,6 +44,7 @@ launcher. Plain Android Views, no AndroidX, no Compose, no tracking: the APK is 
   visibility, app channels, inputs, clock format, weather, ambient delay.
 - HOME button takeover on TVs that hardwire HOME to the stock launcher, repairing itself if
   Android drops it.
+- Updates itself: an Update button appears when a new release is out, one confirmation installs it.
 
 The interface is in English, or French on a TV set to French.
 

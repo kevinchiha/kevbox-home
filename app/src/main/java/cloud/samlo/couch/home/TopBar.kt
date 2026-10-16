@@ -17,16 +17,20 @@ import cloud.samlo.couch.data.Config
 import cloud.samlo.couch.data.WeatherNow
 import cloud.samlo.couch.ui.NowPlaying
 import cloud.samlo.couch.ui.Tokens
+import cloud.samlo.couch.ui.UpdateChip
 import cloud.samlo.couch.ui.dp
 import cloud.samlo.couch.ui.showLongDate
 
 /**
- * The strip in the top right corner: what's playing, the weather, the settings gear and the
- * clock. Reading order is right to left, so the gear sits between the weather and the clock.
+ * The strip in the top right corner: what's playing, an update when there is one, the weather,
+ * the settings gear and the clock. Reading order is right to left, so the gear sits between the
+ * weather and the clock. The strip is anchored right, so the update chip appears without moving
+ * the weather, gear or clock.
  */
 @SuppressLint("ViewConstructor")
-class TopBar(context: Context, onSettings: () -> Unit) : LinearLayout(context) {
+class TopBar(context: Context, onSettings: () -> Unit, onUpdate: () -> Unit) : LinearLayout(context) {
     val nowPlaying = NowPlaying(context)
+    val update = UpdateChip(context).apply { setOnClickListener { onUpdate() } }
     private val weatherBox = LinearLayout(context)
     private val weatherIcon = ImageView(context).apply { setColorFilter(Tokens.textPrimary) }
     private val weatherTemp = text(30f, Tokens.textPrimary, "sans-serif-light")
@@ -49,6 +53,7 @@ class TopBar(context: Context, onSettings: () -> Unit) : LinearLayout(context) {
         orientation = HORIZONTAL
         gravity = Gravity.CENTER_VERTICAL
         addView(nowPlaying, LayoutParams(WRAP_CONTENT, WRAP_CONTENT).apply { marginEnd = context.dp(24) })
+        addView(update, LayoutParams(WRAP_CONTENT, context.dp(40)).apply { marginEnd = context.dp(24) })
         addView(buildWeather(), LayoutParams(WRAP_CONTENT, WRAP_CONTENT).apply { marginEnd = context.dp(28) })
         addView(buildGear(onSettings), LayoutParams(context.dp(40), context.dp(40)).apply { marginEnd = context.dp(20) })
         addView(LinearLayout(context).apply {

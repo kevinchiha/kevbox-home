@@ -80,7 +80,12 @@ needed.
 
 ## Updating
 
-Install the new APK over the old one: enter the same link in Downloader, or run
-`adb install -r couch.apk`. Settings are kept: they live in the app's
+Couch looks for a new release once a day. When there is one, an **Update** button appears in the top
+bar, left of the weather: press it, and confirm in the dialog Android shows. The first time, Android also asks you
+to allow Couch to install apps. When the HOME button service is on, Couch reopens on its own once
+the update is installed. Turn the check off in Customize → System.
+
+You can also install the new APK over the old one yourself: enter the same link in Downloader, or
+run `adb install -r couch.apk`. Either way, settings are kept: they live in the app's
 storage and survive updates, not uninstalls. To keep them across an uninstall, copy
 `/sdcard/Android/data/cloud.samlo.couch/files/` off the TV first.

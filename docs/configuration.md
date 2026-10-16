@@ -22,6 +22,8 @@ Everything can be changed from the TV: press UP from the top row to reach ⚙ an
 | | Rearrange apps | OK picks an app up, left/right moves it, OK puts it down |
 | Clock and weather | 24-hour clock, Date, Weather, City, Units | |
 | Standby | Ambient mode | Never, 2, 5, 10 or 20 minutes |
+| System | Check for updates | On / Off |
+| | About | the installed version; OK installs a newer one when there is one |
 
 Couch follows the TV's language: English, or French on a TV set to French.
 
@@ -81,6 +83,7 @@ setting changes, so edit it while the home screen is in the background.
 | `weatherCity` | string | `""` | City for the weather; empty locates by IP address. |
 | `fahrenheit` | boolean | `false` | °F instead of °C. |
 | `ambientMinutes` | number | `5` | Idle minutes before ambient mode; `0` turns it off. |
+| `checkUpdates` | boolean | `true` | Look for a newer release once a day. |
 
 Back up or restore the whole setup by copying the directory:
 

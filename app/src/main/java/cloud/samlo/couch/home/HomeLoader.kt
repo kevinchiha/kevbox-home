@@ -8,6 +8,8 @@ import cloud.samlo.couch.data.UserFiles
 import cloud.samlo.couch.data.Wallpapers
 import cloud.samlo.couch.data.Weather
 import cloud.samlo.couch.data.WeatherNow
+import cloud.samlo.couch.update.Release
+import cloud.samlo.couch.update.UpdateCheck
 import java.util.concurrent.Executors
 
 /** Everything one reload produced, ready to apply on the main thread. */
@@ -17,6 +19,8 @@ class HomeData(
     val pictures: List<String>,
     val weather: WeatherNow?,
     val sections: List<SectionData>,
+    /** A newer release, when the daily check found one. */
+    val update: Release?,
 )
 
 /**
@@ -28,9 +32,12 @@ class HomeLoader(
     private val files: UserFiles,
     private val wallpapers: Wallpapers,
     private val weather: Weather,
+    private val updates: UpdateCheck,
     private val onLoaded: (HomeData) -> Unit,
 ) {
     private val executor = Executors.newSingleThreadExecutor()
+    /** The daily update check, apart so a slow GitHub never delays the rows. */
+    private val checker = Executors.newSingleThreadExecutor()
     private val main = Handler(Looper.getMainLooper())
     private var loading = false
     private var reloadQueued = false
@@ -41,6 +48,7 @@ class HomeLoader(
             return
         }
         loading = true
+        checker.execute { if (updates.refresh(Config.load(files.dir))) main.post { load() } }
         executor.execute {
             val data = build()
             main.post {
@@ -54,13 +62,16 @@ class HomeLoader(
         }
     }
 
-    fun shutdown() = executor.shutdown()
+    fun shutdown() {
+        executor.shutdown()
+        checker.shutdown()
+    }
 
     private fun build(): HomeData {
         val config = Config.load(files.dir)
         val sections = SectionBuilder.build(context, config, files.icons)
         val wallpaper = wallpapers.current(config, files.dir)
         val pictures = if (config.ambientMinutes > 0) wallpapers.all(config, files.dir) else emptyList()
-        return HomeData(config, wallpaper, pictures, weather.now(config), sections)
+        return HomeData(config, wallpaper, pictures, weather.now(config), sections, updates.pending(config))
     }
 }

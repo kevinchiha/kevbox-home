@@ -1,6 +1,6 @@
 # Architecture
 
-Couch is one Gradle module of plain Kotlin on framework Views. Five packages, each with one job;
+Couch is one Gradle module of plain Kotlin on framework Views. Six packages, each with one job;
 no file is longer than about 160 lines.
 
 ```
@@ -9,6 +9,7 @@ cloud.samlo.couch
 ├── home/      the home screen: wiring, loading, binding, top bar, menus, reorder, ambient
 ├── ui/        reusable views: Card, FocusRow, Rows, Hero, Ambient, NowPlaying, tokens
 ├── data/      config, apps, inputs, channels, weather, wallpapers, image pipeline
+├── update/    daily release check, download, checksum, Android's package installer
 └── settings/  Customize: activity shell, option rows, one file per page, icon picker
 ```
 

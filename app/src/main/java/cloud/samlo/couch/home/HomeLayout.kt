@@ -13,10 +13,10 @@ import cloud.samlo.couch.ui.Tokens
 import cloud.samlo.couch.ui.dp
 
 /** The home screen's view tree, bottom to top: hero, rows, top bar, ambient overlay. */
-class HomeViews(context: Context, images: Images, onSettings: () -> Unit) {
+class HomeViews(context: Context, images: Images, onSettings: () -> Unit, onUpdate: () -> Unit) {
     val hero = Hero(context, images)
     val rows = Rows(context)
-    val topBar = TopBar(context, onSettings)
+    val topBar = TopBar(context, onSettings, onUpdate)
     val ambient = Ambient(context, images)
 
     val root = FrameLayout(context).apply {

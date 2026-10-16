@@ -47,6 +47,9 @@ class Config {
     /** Minutes idle on the home screen before ambient mode; 0 turns it off. */
     var ambientMinutes = 5
 
+    /** Once a day, look for a newer release on GitHub. */
+    var checkUpdates = true
+
     val cardScale: Float
         get() = when (cardSize) {
             "small" -> 0.85f

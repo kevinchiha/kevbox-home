@@ -28,6 +28,7 @@ internal object ConfigJson {
         .put("weatherCity", c.weatherCity)
         .put("fahrenheit", c.fahrenheit)
         .put("ambientMinutes", c.ambientMinutes)
+        .put("checkUpdates", c.checkUpdates)
 
     /** Every field is optional; a missing one keeps what [into] already holds. */
     fun decode(json: JSONObject, into: Config) = with(into) {
@@ -54,6 +55,7 @@ internal object ConfigJson {
         weatherCity = json.optString("weatherCity", weatherCity)
         fahrenheit = json.optBoolean("fahrenheit", fahrenheit)
         ambientMinutes = json.optInt("ambientMinutes", ambientMinutes)
+        checkUpdates = json.optBoolean("checkUpdates", checkUpdates)
     }
 
     private fun JSONObject.strings(name: String): List<String>? {

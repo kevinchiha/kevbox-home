@@ -59,6 +59,7 @@ features:
 - Weather (Open-Meteo, located automatically or by city), clock, now playing.
 - Ambient mode after a few idle minutes: full-screen wallpaper, large clock, weather.
 - Long-press any card to move, rename, hide or change its icon.
+- Updates itself: an Update button appears when a new release is out.
 
 The interface is in English, or French on a TV set to French. Start with [Setup](./setup).
 

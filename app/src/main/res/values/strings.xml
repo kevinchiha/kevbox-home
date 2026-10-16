@@ -172,5 +172,14 @@
     <string name="inputs_hint">"OK: choose the icon  ·  Long press: rename"</string>
     <string name="inputs_empty">This TV has no inputs.</string>
     <string name="input_row_help">Pick the icon from cards, or long-press to rename the input.</string>
+    <!-- Updates -->
+    <string name="check_updates">Check for updates</string>
+    <string name="check_updates_help">Once a day, Couch asks GitHub for its latest release and shows an Update button left of the weather when there is one.</string>
+    <string name="about_update">Version %1$s is available. Press OK to install it.</string>
+    <string name="update_chip">Update %1$s</string>
+    <string name="update_downloading">Downloading the update…</string>
+    <string name="update_failed">Couldn’t install the update. Try again later.</string>
+    <string name="update_corrupt">The download didn’t match its checksum, so it wasn’t installed.</string>
+    <string name="update_signature">This version is signed with a different key. Uninstall Couch, then install it.</string>
     <string name="icon_auto_guess">Automatic · %1$s</string>
 </resources>

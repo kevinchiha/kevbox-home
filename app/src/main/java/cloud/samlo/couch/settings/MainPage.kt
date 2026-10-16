@@ -2,10 +2,15 @@ package cloud.samlo.couch.settings
 
 import android.content.Intent
 import android.provider.Settings
+import android.widget.Toast
 import cloud.samlo.couch.R
 import cloud.samlo.couch.data.Accents
 import cloud.samlo.couch.data.Config
+import cloud.samlo.couch.data.Fetcher
 import cloud.samlo.couch.ui.Tokens
+import cloud.samlo.couch.update.Installer
+import cloud.samlo.couch.update.UpdateCheck
+import cloud.samlo.couch.update.Versions
 
 /**
  * "Customize": every option on one TV-friendly list. Left/right changes a value in place,
@@ -132,8 +137,23 @@ class MainPage(private val ctx: SettingsContext) : SettingsPage {
         o.link(ctx.str(R.string.android_settings), ctx.str(R.string.android_settings_help)) {
             ctx.activity.startActivity(Intent(Settings.ACTION_SETTINGS).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
         }
-        val pm = ctx.activity.packageManager
-        o.link(ctx.str(R.string.about), ctx.str(R.string.about_help), { pm.getPackageInfo(ctx.activity.packageName, 0).versionName.orEmpty() }) {}
+        o.toggle(ctx.str(R.string.check_updates), ctx.str(R.string.check_updates_help), { config.checkUpdates }, { config.checkUpdates = it })
+        about()
+    }
+
+    /** The installed version; OK installs a newer one when the last daily check found it. */
+    private fun about() {
+        val fetcher = Fetcher(ctx.activity)
+        val update = UpdateCheck(ctx.activity, fetcher).pending(config)
+        val help = update?.let { ctx.activity.getString(R.string.about_update, it.version) } ?: ctx.str(R.string.about_help)
+        o.link(ctx.str(R.string.about), help, { Versions.installed(ctx.activity) }) {
+            if (update != null && !Installer.running) {
+                Toast.makeText(ctx.activity, R.string.update_downloading, Toast.LENGTH_SHORT).show()
+                Installer(ctx.activity, fetcher).install(update) { message ->
+                    message?.let { Toast.makeText(ctx.activity, it, Toast.LENGTH_LONG).show() }
+                }
+            }
+        }
     }
 
     private fun open(page: String) = ctx.activity.startActivity(SettingsActivity.intent(ctx.activity, page))

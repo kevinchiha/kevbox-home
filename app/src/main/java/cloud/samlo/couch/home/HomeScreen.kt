@@ -5,6 +5,7 @@ import android.content.Intent
 import android.os.Handler
 import android.os.Looper
 import android.view.KeyEvent
+import android.widget.Toast
 import cloud.samlo.couch.HomeAccessibilityService
 import cloud.samlo.couch.R
 import cloud.samlo.couch.data.Config
@@ -18,6 +19,9 @@ import cloud.samlo.couch.data.Weather
 import cloud.samlo.couch.data.WeatherNow
 import cloud.samlo.couch.settings.SettingsActivity
 import cloud.samlo.couch.ui.Tokens
+import cloud.samlo.couch.update.Installer
+import cloud.samlo.couch.update.Release
+import cloud.samlo.couch.update.UpdateCheck
 
 /**
  * The home screen's wiring and lifecycle: it owns the pieces (loader, binder, organizer, menus,
@@ -28,7 +32,9 @@ class HomeScreen(private val activity: Activity) {
     private val prefs = Prefs.of(activity)
     private val fetcher = Fetcher(activity)
     private val images = Images(activity, fetcher)
-    private val views = HomeViews(activity, images) { openSettings() }
+    private val views = HomeViews(activity, images, { openSettings() }, { installUpdate() })
+    private val installer = Installer(activity, fetcher)
+    private var update: Release? = null
     private val main = Handler(Looper.getMainLooper())
 
     private var config = Config.load(null)
@@ -44,7 +50,9 @@ class HomeScreen(private val activity: Activity) {
         onFocused = { card -> if (organizer.active) organizer.hint() else views.hero.show(card.tile) },
         onLongPress = { menus.show(it) },
     )
-    private val loader = HomeLoader(activity, files, Wallpapers(fetcher, prefs), Weather(fetcher, prefs), ::onLoaded)
+    private val loader = HomeLoader(
+        activity, files, Wallpapers(fetcher, prefs), Weather(fetcher, prefs), UpdateCheck(activity, fetcher), ::onLoaded,
+    )
     private val watchers = SystemWatchers(activity, views.rows) { load() }
 
     fun onCreate() {
@@ -99,6 +107,9 @@ class HomeScreen(private val activity: Activity) {
         ambientMode.minutes = config.ambientMinutes
         ambientMode.pictures = data.pictures
         showWeather(data.weather)
+        update = data.update
+        // A reload mid-download keeps the "Downloading" label.
+        if (!Installer.running) views.topBar.update.show(update?.version)
         binder.bind(data.sections, config)
         ambientMode.schedule()
     }
@@ -117,6 +128,16 @@ class HomeScreen(private val activity: Activity) {
         ambientMode.weatherLine = now?.let {
             val label = if (it.condition.label != 0) activity.getString(it.condition.label) else ""
             activity.getString(R.string.weather_line, it.temperature, label, it.place)
+        }
+    }
+
+    private fun installUpdate() {
+        val release = update ?: return
+        if (Installer.running) return
+        views.topBar.update.downloading()
+        installer.install(release) { message ->
+            if (message != null) Toast.makeText(activity, message, Toast.LENGTH_LONG).show()
+            views.topBar.update.show(release.version)
         }
     }
 

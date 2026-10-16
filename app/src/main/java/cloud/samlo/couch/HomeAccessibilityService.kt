@@ -16,12 +16,7 @@ import cloud.samlo.couch.data.Prefs
  */
 class HomeAccessibilityService : AccessibilityService() {
     override fun onAccessibilityEvent(event: AccessibilityEvent) {
-        if (event.eventType != AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED) return
-        startActivity(
-            Intent(this, MainActivity::class.java).addFlags(
-                Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_NO_ANIMATION,
-            ),
-        )
+        if (event.eventType == AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED) openCouch()
     }
 
     override fun onInterrupt() = Unit
@@ -30,14 +25,33 @@ class HomeAccessibilityService : AccessibilityService() {
         super.onServiceConnected()
         // Remember that HOME capture is wanted, so it can be restored after Android drops it.
         wanted(this, true)
+        // A self-update restarts the app and leaves the stock launcher showing; come back to Couch.
+        val prefs = Prefs.of(this)
+        val since = System.currentTimeMillis() - prefs.getLong(REOPEN, 0L)
+        prefs.edit().remove(REOPEN).apply()
+        if (since in 0..REOPEN_WINDOW_MS) openCouch()
     }
+
+    private fun openCouch() = startActivity(
+        Intent(this, MainActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_NO_ANIMATION),
+    )
 
     companion object {
         private const val WANTED = "homeCaptureWanted"
+        private const val REOPEN = "update:reopenAt"
+        /** An update that hasn't landed by then was cancelled or failed: never reopen on a later connect. */
+        private const val REOPEN_WINDOW_MS = 10 * 60_000L
         private const val WRITE_SECURE_SETTINGS = "android.permission.WRITE_SECURE_SETTINGS"
 
         fun wanted(context: Context, value: Boolean) =
             Prefs.of(context).edit().putBoolean(WANTED, value).apply()
+
+        /** Set just before an update is committed and cleared if it fails; the reconnecting service then reopens Couch. */
+        fun reopenAfterUpdate(context: Context, pending: Boolean) {
+            val edit = Prefs.of(context).edit()
+            if (pending) edit.putLong(REOPEN, System.currentTimeMillis()) else edit.remove(REOPEN)
+            edit.commit()
+        }
 
         /**
          * Android removes an app's accessibility service from the enabled list whenever the app is

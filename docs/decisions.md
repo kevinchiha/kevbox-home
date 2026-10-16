@@ -40,8 +40,19 @@ Settings live in `config.json` in the app's external files directory rather than
 preferences, so they can be read, backed up and edited over ADB without root, and custom icons and
 wallpaper sit next to them.
 
+## Updates through Android's installer
+
+Couch is sideloaded, so nothing else tells people a new version exists. It downloads the release
+APK, checks it against the SHA-256 the release publishes, and hands it to Android's package
+installer. Android can't install silently without root or device-owner rights, so the user
+confirms each update once; on Android 12 and later, updates after the first one Couch installed
+itself can skip that prompt. The checksum catches a broken download; Android's rule that an update
+must be signed with the same key is what keeps a foreign APK out, so debug builds and forks get a
+message to reinstall instead.
+
 ## Network use
 
 Each network feature is opt-in or replaceable: the wallpaper can be a local image or a gradient,
 weather can be turned off or given a city instead of IP location. Reddit's own API refuses
-anonymous clients, so subreddit wallpapers go through the public Arctic Shift archive.
+anonymous clients, so subreddit wallpapers go through the public Arctic Shift archive. The update
+check asks GitHub for the latest release once a day and can be turned off.
