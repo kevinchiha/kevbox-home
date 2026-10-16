@@ -35,9 +35,8 @@ adb connect <tv-address>:5555   # accept the prompt on the TV the first time
 
 ### 2. Install
 
-Download `couch.apk` from the [latest release](https://github.com/samuelloranger/couch/releases/latest), then:
-
 ```sh
+curl -L -o couch.apk https://samlo.cloud/couch/couch-latest.apk   # the latest release
 adb install couch.apk
 adb shell cmd package compile -m speed -f cloud.samlo.couch   # optional: full ahead-of-time compile
 ```

@@ -49,12 +49,26 @@ The interface is in English, or French on a TV set to French.
 
 ## Install
 
-On the TV: install **Downloader** from the Play Store, open it and enter
-`samlo.cloud/couch/couch-latest.apk`. It always fetches the [latest release](https://github.com/samuelloranger/couch/releases/latest).
+**On the TV:** install **Downloader** from the Play Store, open it and enter
+`samlo.cloud/couch/couch-latest.apk`. Then turn on **Couch: Home button** in the TV's
+accessibility settings so HOME opens Couch.
 
-Then turn on **Couch: Home button** in the TV's accessibility settings so HOME opens Couch.
-The [setup guide](https://samlo.cloud/couch/setup) covers installing from a computer and the
-optional ADB permissions.
+**From a computer**, with ADB enabled on the TV:
+
+```sh
+adb connect <tv-address>:5555
+curl -L -o couch.apk https://samlo.cloud/couch/couch-latest.apk   # the latest release
+adb install couch.apk
+adb shell pm grant cloud.samlo.couch android.permission.READ_TV_LISTINGS
+adb shell cmd notification allow_listener cloud.samlo.couch/cloud.samlo.couch.MediaListener
+adb shell pm grant cloud.samlo.couch android.permission.WRITE_SECURE_SETTINGS
+adb shell settings put secure enabled_accessibility_services \
+  cloud.samlo.couch/cloud.samlo.couch.HomeAccessibilityService
+adb shell settings put secure accessibility_enabled 1
+```
+
+The ADB permissions add the now-playing pill and let the HOME button repair itself. The
+[setup guide](https://samlo.cloud/couch/setup) explains each step.
 
 ## Documentation
 
