@@ -33,19 +33,19 @@ features:
 
 <div class="shots">
   <figure>
-    <img src="/screenshots/home.jpg" alt="Home screen with the apps row and the hero area" loading="lazy">
+    <img src="./screenshots/home.jpg" alt="Home screen with the apps row and the hero area" loading="lazy">
     <figcaption>Home: the focused show fills the hero area.</figcaption>
   </figure>
   <figure>
-    <img src="/screenshots/channel.jpg" alt="An app channel row with its backdrop" loading="lazy">
+    <img src="./screenshots/channel.jpg" alt="An app channel row with its backdrop" loading="lazy">
     <figcaption>Preview channels from the apps you use.</figcaption>
   </figure>
   <figure>
-    <img src="/screenshots/settings.jpg" alt="The Customize settings screen" loading="lazy">
+    <img src="./screenshots/settings.jpg" alt="The Customize settings screen" loading="lazy">
     <figcaption>Customize: every option, from the remote.</figcaption>
   </figure>
   <figure>
-    <img src="/screenshots/menu.jpg" alt="The long-press menu on an app card" loading="lazy">
+    <img src="./screenshots/menu.jpg" alt="The long-press menu on an app card" loading="lazy">
     <figcaption>Long-press any card to move, rename or hide it.</figcaption>
   </figure>
 </div>

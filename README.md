@@ -16,9 +16,9 @@ A light, fast home screen for Android TV, built for TVs whose chips struggle wit
 launcher. Plain Android Views, no AndroidX, no Compose, no tracking, and an APK under 200 KB.
 
 <p align="center">
-  <img src="docs/public/screenshots/home.jpg" alt="Home screen" width="32%">
-  <img src="docs/public/screenshots/channel.jpg" alt="An app channel row with its backdrop" width="32%">
-  <img src="docs/public/screenshots/settings.jpg" alt="Customize" width="32%">
+  <img src="docs/screenshots/home.jpg" alt="Home screen" width="32%">
+  <img src="docs/screenshots/channel.jpg" alt="An app channel row with its backdrop" width="32%">
+  <img src="docs/screenshots/settings.jpg" alt="Customize" width="32%">
 </p>
 
 ## Why
