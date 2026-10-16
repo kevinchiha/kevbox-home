@@ -1,9 +1,19 @@
-# Couch
+<p align="center">
+  <img src="docs/logo.svg" width="96" alt="Couch logo" />
+</p>
+
+<h1 align="center">Couch</h1>
+
+<p align="center">
+  <a href="https://github.com/samuelloranger/couch/releases"><img src="https://img.shields.io/github/v/release/samuelloranger/couch" alt="Latest release" /></a>
+  <a href="https://github.com/samuelloranger/couch/actions/workflows/ci.yml"><img src="https://github.com/samuelloranger/couch/actions/workflows/ci.yml/badge.svg" alt="CI" /></a>
+  <img src="https://img.shields.io/badge/Android%20TV-9%2B-FF8A4C?logo=androidtv&logoColor=white" alt="Android TV 9+" />
+  <img src="https://img.shields.io/badge/APK-under%20200%20KB-17130F" alt="APK under 200 KB" />
+  <a href="https://buymeacoffee.com/samlo122"><img src="https://img.shields.io/badge/Buy%20me%20a%20coffee-FFDD00?logo=buymeacoffee&logoColor=black" alt="Buy me a coffee" /></a>
+</p>
 
 A light, fast home screen for Android TV, built for TVs whose chips struggle with the stock
 launcher. Plain Android Views, no AndroidX, no Compose, no tracking, and an APK under 200 KB.
-
-[![CI](https://github.com/samuelloranger/couch/actions/workflows/ci.yml/badge.svg)](https://github.com/samuelloranger/couch/actions/workflows/ci.yml)
 
 <p align="center">
   <img src="docs/screenshots/home.jpg" alt="Home screen" width="32%">
