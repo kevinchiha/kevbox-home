@@ -69,12 +69,26 @@ adb shell dumpsys gfxinfo cloud.samlo.couch | grep -E "Janky|percentile"
 Frame times above 16.7 ms drop a frame at 60 Hz. Check the 90th and 99th percentiles after any UI
 change.
 
+## Documentation site
+
+The pages in `docs/` are a [VitePress](https://vitepress.dev) site:
+
+```sh
+bun install
+bun run docs:dev        # live preview
+bun run docs:build      # docs/.vitepress/dist
+```
+
+The `Docs` workflow builds it on every push to `main` that touches `docs/` and publishes it.
+
 ## CI and releases
 
 - **CI** (`.github/workflows/ci.yml`) runs on every push to `main` and every pull request: build,
   unit tests, lint, and the APK as an artifact.
 - **Release** (`.github/workflows/release.yml`) runs on `v*` tags: it builds and signs the APK and
   publishes a GitHub release with the APK and its SHA-256.
+- **Docs** (`.github/workflows/docs.yml`) builds the documentation site and pushes it to the
+  repository that serves it. Android CI skips pushes that only change documentation.
 
 ```sh
 git tag v0.2.0 && git push origin v0.2.0

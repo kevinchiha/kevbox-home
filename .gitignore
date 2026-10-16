@@ -12,3 +12,8 @@ local.properties
 
 # Local agent worktrees.
 .claude/
+
+# Docs site.
+node_modules/
+docs/.vitepress/dist/
+docs/.vitepress/cache/

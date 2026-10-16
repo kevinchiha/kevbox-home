@@ -18,22 +18,16 @@ and package. `MainActivity` only forwards lifecycle calls and keys to `home.Home
 
 ## Data flow
 
-```mermaid
-flowchart LR
-    subgraph Loader thread
-        HL[HomeLoader] --> AS[AppSource]
-        HL --> IS[InputSource]
-        HL --> P[Programs]
-        HL --> W[Weather / Wallpapers]
-        AS & IS & P --> SB[SectionBuilder]
-    end
-    SB -- SectionData --> BIND[SectionBinder]
-    subgraph Main thread
-        BIND --> ROWS[Rows / FocusRow / Card]
-        ROWS -- focus --> HERO[Hero]
-    end
-    CFG[(config.json)] --> HL
-    SET[settings/*] --> CFG
+```text
+loader thread                                         main thread
+─────────────                                         ───────────
+config.json ─▶ HomeLoader
+                ├─ AppSource ───┐
+                ├─ InputSource ─┼─▶ SectionBuilder ─SectionData─▶ SectionBinder
+                ├─ Programs ────┘                                    │
+                └─ Weather, Wallpapers                               ▼
+                                                     Rows / FocusRow / Card ─focus─▶ Hero
+settings/* ─▶ config.json
 ```
 
 1. `HomeLoader` runs on a single background thread: it reads `config.json`, lists apps and inputs,

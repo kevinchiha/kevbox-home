@@ -1,0 +1,59 @@
+name: Docs
+
+# Builds the VitePress site and pushes it into the repository that publishes it.
+# Configured with repository variables (DOCS_REPO, DOCS_DEST, DOCS_BASE, DOCS_HOSTNAME)
+# and a write deploy key on that repository (secret DOCS_DEPLOY_KEY). Unconfigured forks skip the push.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "docs/**"
+      - "package.json"
+      - "bun.lock"
+      - ".github/workflows/docs.yml"
+  workflow_dispatch:
+
+concurrency:
+  group: docs-publish
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  publish:
+    name: Build and publish docs
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2
+      - run: bun install --frozen-lockfile
+      - name: Build
+        env:
+          DOCS_BASE: ${{ vars.DOCS_BASE }}
+          DOCS_HOSTNAME: ${{ vars.DOCS_HOSTNAME }}
+        run: bun run docs:build
+      - name: Push the built site
+        env:
+          DEPLOY_KEY: ${{ secrets.DOCS_DEPLOY_KEY }}
+          REPO: ${{ vars.DOCS_REPO }}
+          DEST: ${{ vars.DOCS_DEST }}
+        run: |
+          if [ -z "$DEPLOY_KEY" ] || [ -z "$REPO" ] || [ -z "$DEST" ]; then
+            echo "Docs publishing is not configured; skipping."
+            exit 0
+          fi
+          key="$RUNNER_TEMP/docs_key"
+          printf '%s\n' "$DEPLOY_KEY" > "$key" && chmod 600 "$key"
+          export GIT_SSH_COMMAND="ssh -i $key -o IdentitiesOnly=yes -o StrictHostKeyChecking=accept-new"
+          git clone --depth 1 "git@github.com:${REPO}.git" out
+          rm -rf "out/${DEST}" && mkdir -p "out/${DEST}"
+          cp -r docs/.vitepress/dist/. "out/${DEST}/"
+          cd out
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A "${DEST}"
+          git diff --cached --quiet || git commit -m "docs(couch): sync ${GITHUB_SHA::7}"
+          git push

@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="docs/logo.svg" width="96" alt="Couch logo" />
+  <img src="docs/public/logo.svg" width="96" alt="Couch logo" />
 </p>
 
 <h1 align="center">Couch</h1>
@@ -16,9 +16,9 @@ A light, fast home screen for Android TV, built for TVs whose chips struggle wit
 launcher. Plain Android Views, no AndroidX, no Compose, no tracking, and an APK under 200 KB.
 
 <p align="center">
-  <img src="docs/screenshots/home.jpg" alt="Home screen" width="32%">
-  <img src="docs/screenshots/channel.jpg" alt="An app channel row with its backdrop" width="32%">
-  <img src="docs/screenshots/settings.jpg" alt="Personnaliser" width="32%">
+  <img src="docs/public/screenshots/home.jpg" alt="Home screen" width="32%">
+  <img src="docs/public/screenshots/channel.jpg" alt="An app channel row with its backdrop" width="32%">
+  <img src="docs/public/screenshots/settings.jpg" alt="Personnaliser" width="32%">
 </p>
 
 ## Why
@@ -54,6 +54,8 @@ The interface is in French.
 3. Make HOME open Couch: same page.
 
 ## Documentation
+
+The full documentation is at **[samlo.cloud/couch](https://samlo.cloud/couch)**. The same pages live in [`docs/`](docs):
 
 - [Setup](docs/setup.md): install, permissions, HOME button, updating.
 - [Configuration](docs/configuration.md): every option, `config.json`, custom icons and wallpaper.
