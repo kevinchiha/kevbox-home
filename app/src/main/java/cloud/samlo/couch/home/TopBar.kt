@@ -18,6 +18,7 @@ import cloud.samlo.couch.data.WeatherNow
 import cloud.samlo.couch.ui.NowPlaying
 import cloud.samlo.couch.ui.Tokens
 import cloud.samlo.couch.ui.dp
+import cloud.samlo.couch.ui.showLongDate
 
 /**
  * The strip in the top right corner: what's playing, the weather, the settings gear and the
@@ -39,8 +40,7 @@ class TopBar(context: Context, onSettings: () -> Unit) : LinearLayout(context) {
         includeFontPadding = false
     }
     private val clockDate = TextClock(context).apply {
-        format12Hour = "EEEE d MMMM"
-        format24Hour = "EEEE d MMMM"
+        showLongDate()
         textSize = 14f
         setTextColor(Tokens.textMuted)
     }

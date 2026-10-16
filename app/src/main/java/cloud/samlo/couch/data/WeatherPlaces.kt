@@ -3,6 +3,7 @@ package cloud.samlo.couch.data
 import android.content.SharedPreferences
 import org.json.JSONObject
 import java.net.URLEncoder
+import java.util.Locale
 
 class Place(val name: String, val latitude: Double, val longitude: Double)
 
@@ -35,7 +36,7 @@ class WeatherPlaces(private val fetcher: Fetcher, private val prefs: SharedPrefe
 
     private fun byName(city: String): Place? {
         val q = URLEncoder.encode(city.trim(), "UTF-8")
-        val o = JSONObject(fetcher.text("https://geocoding-api.open-meteo.com/v1/search?name=$q&count=1&language=fr") ?: return null)
+        val o = JSONObject(fetcher.text("https://geocoding-api.open-meteo.com/v1/search?name=$q&count=1&language=${Locale.getDefault().language}") ?: return null)
         val r = o.optJSONArray("results")?.optJSONObject(0) ?: return null
         return Place(r.getString("name"), r.getDouble("latitude"), r.getDouble("longitude"))
     }

@@ -23,7 +23,7 @@ import cloud.samlo.couch.ui.dp
 
 /**
  * Pick an input's icon from real cards, each drawn exactly as it will look on the home screen.
- * "Automatique" shows what the name would guess.
+ * "Automatic" shows what the name would guess.
  */
 class IconPickerActivity : Activity() {
     private val files by lazy { UserFiles(this) }

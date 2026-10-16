@@ -8,7 +8,7 @@ import cloud.samlo.couch.data.Config
 import cloud.samlo.couch.ui.Tokens
 
 /**
- * "Personnaliser": every option on one TV-friendly list. Left/right changes a value in place,
+ * "Customize": every option on one TV-friendly list. Left/right changes a value in place,
  * OK cycles or opens it, and the panel on the right explains the focused option.
  */
 class MainPage(private val ctx: SettingsContext) : SettingsPage {

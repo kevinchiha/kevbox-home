@@ -89,6 +89,13 @@ android {
     buildFeatures {
         buildConfig = false
     }
+
+    // Kotlin's builtins metadata only serves kotlin-reflect, which Couch doesn't use.
+    packaging {
+        resources {
+            excludes += "kotlin/**"
+        }
+    }
 }
 
 dependencies {

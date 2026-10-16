@@ -42,8 +42,7 @@ class Ambient(context: Context, private val images: Images) : FrameLayout(contex
     private val date = TextClock(context).apply {
         textSize = 22f
         setTextColor(0xE6FFFFFF.toInt())
-        format12Hour = "EEEE d MMMM"
-        format24Hour = "EEEE d MMMM"
+        showLongDate()
         setShadowLayer(12f, 0f, 2f, 0x99000000.toInt())
     }
 
