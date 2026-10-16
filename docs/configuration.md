@@ -1,33 +1,35 @@
 # Configuration
 
 Everything can be changed from the TV: press UP from the top row to reach ⚙ and open
-**Personnaliser**, or long-press any card. Changes apply the next time the home screen shows.
+**Customize**, or long-press any card. Changes apply the next time the home screen shows.
 
-## Personnaliser
+## Customize
 
 | Section | Option | Values |
 |---|---|---|
-| Apparence | Taille des cartes | Petite, Moyenne, Grande |
-| | Couleur d'accent | Braise, Ambre, Menthe, Ciel, Corail, Blanc |
-| | Noms sous les cartes | Oui / Non |
-| | Descriptions | Oui / Non |
-| Fond d'écran | Source | Photo du jour (Bing), Reddit, Dégradé, Mon image |
+| Appearance | Card size | Small, Medium, Large |
+| | Accent colour | Ember, Amber, Mint, Sky, Coral, White |
+| | Names under cards | On / Off |
+| | Descriptions | On / Off |
+| Wallpaper | Source | Photo of the day (Bing), Reddit, Gradient, My image |
 | | Subreddit | any subreddit; only TV-shaped images (16:9 to 21:9) are kept |
-| | Changer d'image | every 1, 3, 6 or 24 hours |
-| | Assombrir | Léger, Moyen, Fort |
-| Accueil | Rangées | show, hide and reorder rows |
-| | Entrées | rename inputs, pick their icon |
-| | Chaînes des applis | show any preview channel an app publishes |
-| | Afficher ou masquer des applis | one checklist for apps and inputs |
-| | Réorganiser les applis | OK picks an app up, left/right moves it, OK puts it down |
-| Horloge et météo | Horloge 24 h, Date, Météo, Ville, Unités | |
-| Veille | Mode ambiant | Jamais, 2, 5, 10 or 20 minutes |
+| | Change image | every 1, 3, 6 or 24 hours |
+| | Dim | Light, Medium, Strong |
+| Home | Rows | show, hide and reorder rows |
+| | Inputs | rename inputs, pick their icon |
+| | App channels | show any preview channel an app publishes |
+| | Show or hide apps | one checklist for apps and inputs |
+| | Rearrange apps | OK picks an app up, left/right moves it, OK puts it down |
+| Clock and weather | 24-hour clock, Date, Weather, City, Units | |
+| Standby | Ambient mode | Never, 2, 5, 10 or 20 minutes |
+
+Couch follows the TV's language: English, or French on a TV set to French.
 
 ## Long-press menus
 
-- **App**: Déplacer, Renommer, Masquer, Infos sur l'appli.
-- **Input**: Renommer, Changer l'icône, Masquer.
-- **Show or video**: Ouvrir l'appli, Infos sur l'appli.
+- **App**: Move, Rename, Hide, App info.
+- **Input**: Rename, Change icon, Hide.
+- **Show or video**: Open the app, App info.
 
 ## Input icons
 

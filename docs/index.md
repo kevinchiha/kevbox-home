@@ -41,8 +41,12 @@ features:
     <figcaption>Preview channels from the apps you use.</figcaption>
   </figure>
   <figure>
-    <img src="/screenshots/settings.jpg" alt="The Personnaliser settings screen" loading="lazy">
-    <figcaption>Personnaliser: every option, from the remote.</figcaption>
+    <img src="/screenshots/settings.jpg" alt="The Customize settings screen" loading="lazy">
+    <figcaption>Customize: every option, from the remote.</figcaption>
+  </figure>
+  <figure>
+    <img src="/screenshots/menu.jpg" alt="The long-press menu on an app card" loading="lazy">
+    <figcaption>Long-press any card to move, rename or hide it.</figcaption>
   </figure>
 </div>
 
@@ -56,6 +60,6 @@ features:
 - Ambient mode after a few idle minutes: full-screen wallpaper, large clock, weather.
 - Long-press any card to move, rename, hide or change its icon.
 
-The interface is in French. Start with [Setup](./setup).
+The interface is in English, or French on a TV set to French. Start with [Setup](./setup).
 
 </div>

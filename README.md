@@ -18,7 +18,7 @@ launcher. Plain Android Views, no AndroidX, no Compose, no tracking, and an APK 
 <p align="center">
   <img src="docs/public/screenshots/home.jpg" alt="Home screen" width="32%">
   <img src="docs/public/screenshots/channel.jpg" alt="An app channel row with its backdrop" width="32%">
-  <img src="docs/public/screenshots/settings.jpg" alt="Personnaliser" width="32%">
+  <img src="docs/public/screenshots/settings.jpg" alt="Customize" width="32%">
 </p>
 
 ## Why
@@ -40,18 +40,21 @@ launcher. Plain Android Views, no AndroidX, no Compose, no tracking, and an APK 
 - Weather (Open-Meteo, located automatically or by city), clock, now playing.
 - Ambient mode after a few idle minutes: full-screen wallpaper, large clock, weather.
 - Long-press any card to move, rename, hide or change its icon.
-- **Personnaliser**: card size, accent colour, dimming, names under cards, row order and
+- **Customize**: card size, accent colour, dimming, names under cards, row order and
   visibility, app channels, inputs, clock format, weather, ambient delay.
 - HOME button takeover on TVs that hardwire HOME to the stock launcher, repairing itself if
   Android drops it.
 
-The interface is in French.
+The interface is in English, or French on a TV set to French.
 
 ## Install
 
-1. Download `couch-vX.Y.Z.apk` from the [latest release](https://github.com/samuelloranger/couch/releases/latest).
-2. Install it and grant the permissions it can't ask for itself: see [docs/setup.md](docs/setup.md).
-3. Make HOME open Couch: same page.
+On the TV: install **Downloader** from the Play Store, open it and enter `samlo.cloud/couch.apk`.
+It always fetches the [latest release](https://github.com/samuelloranger/couch/releases/latest).
+
+Then turn on **Couch: Home button** in the TV's accessibility settings so HOME opens Couch.
+The [setup guide](https://samlo.cloud/couch/setup) covers installing from a computer and the
+optional ADB permissions.
 
 ## Documentation
 

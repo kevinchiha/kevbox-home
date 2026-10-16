@@ -38,7 +38,9 @@ jobs:
           apk="couch-${TAG}.apk"
           cp app/build/outputs/apk/release/app-release.apk "$apk"
           sha256sum "$apk" > "$apk.sha256"
-          gh release create "$TAG" "$apk" "$apk.sha256" --title "Couch ${TAG#v}" --generate-notes --verify-tag
+          # couch.apk keeps one name across releases, so releases/latest/download/couch.apk always works.
+          cp "$apk" couch.apk
+          gh release create "$TAG" "$apk" "$apk.sha256" couch.apk --title "Couch ${TAG#v}" --generate-notes --verify-tag
       - name: Remove signing key
         if: always()
         run: rm -f "$RUNNER_TEMP/couch.jks"

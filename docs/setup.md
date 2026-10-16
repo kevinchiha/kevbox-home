@@ -1,9 +1,28 @@
 # Setup
 
-Couch is sideloaded: it is not on the Play Store. You need ADB access to the TV once, for the
-install and the permissions an app can't request from the remote.
+Couch is not on the Play Store. Install it from the TV itself with a downloader app, or from a
+computer over ADB. ADB also unlocks the few permissions an app can't request from the remote.
 
-## 1. Enable ADB on the TV
+## On the TV, no computer
+
+1. Install **Downloader** (by AFTVnews) from the Play Store.
+2. Open it, allow it to install apps when the TV asks, and enter:
+
+   ```
+   samlo.cloud/couch.apk
+   ```
+
+   It always points to the [latest release](https://github.com/samuelloranger/couch/releases/latest).
+3. Install, open Couch, and allow access to TV listings when it asks.
+4. Make HOME open Couch: in the TV's accessibility settings, turn on **Couch: Home button**
+   (see [step 4](#_4-make-home-open-couch) for what it does).
+
+That covers everything except the now-playing pill and the HOME button repairing itself, which
+need the ADB permissions below.
+
+## With a computer (ADB)
+
+### 1. Enable ADB on the TV
 
 Settings → System → About → press OK on *Build* seven times to unlock developer options, then
 Settings → System → Developer options → **Network debugging** (or USB debugging).
@@ -14,16 +33,18 @@ From a computer on the same network:
 adb connect <tv-address>:5555   # accept the prompt on the TV the first time
 ```
 
-## 2. Install
+### 2. Install
+
+Download `couch.apk` from the [latest release](https://github.com/samuelloranger/couch/releases/latest), then:
 
 ```sh
-adb install couch-vX.Y.Z.apk
+adb install couch.apk
 adb shell cmd package compile -m speed -f cloud.samlo.couch   # optional: full ahead-of-time compile
 ```
 
 The compile step makes the very first launch as smooth as later ones.
 
-## 3. Permissions
+### 3. Permissions
 
 | Permission | What it unlocks | Command |
 |---|---|---|
@@ -34,7 +55,7 @@ The compile step makes the very first launch as smooth as later ones.
 Couch asks for TV listings itself on first launch; the other two are only possible over ADB.
 Everything works without them, minus the feature in that row.
 
-## 4. Make HOME open Couch
+### 4. Make HOME open Couch
 
 Most Android TV devices let you pick a default home app. Many TVs (Sony Bravia among them) don't:
 HOME always opens the stock launcher. For those, Couch includes an accessibility service that
@@ -60,6 +81,7 @@ needed.
 
 ## Updating
 
-Install the new APK over the old one (`adb install -r`). Settings are kept: they live in the app's
+Install the new APK over the old one: enter the same link in Downloader, or run
+`adb install -r couch.apk`. Settings are kept: they live in the app's
 storage and survive updates, not uninstalls. To keep them across an uninstall, copy
 `/sdcard/Android/data/cloud.samlo.couch/files/` off the TV first.

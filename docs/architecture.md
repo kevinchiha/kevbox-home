@@ -9,7 +9,7 @@ cloud.samlo.couch
 ├── home/      the home screen: wiring, loading, binding, top bar, menus, reorder, ambient
 ├── ui/        reusable views: Card, FocusRow, Rows, Hero, Ambient, NowPlaying, tokens
 ├── data/      config, apps, inputs, channels, weather, wallpapers, image pipeline
-└── settings/  Personnaliser: activity shell, option rows, one file per page, icon picker
+└── settings/  Customize: activity shell, option rows, one file per page, icon picker
 ```
 
 The four classes at the root are referenced by name from the TV's settings (the launcher entry,
