@@ -6,8 +6,9 @@ The less obvious choices, and what they cost.
 
 The target is TVs with weak GPUs and little memory. Framework Views are precompiled into the
 system image, so Couch has nothing to warm up: no JIT-compiled UI toolkit, no first-scroll stutter.
-The APK stays under 200 KB. The cost is more hand-written view code, kept manageable by small
-classes (see [architecture](architecture.md)).
+The APK stays at a few hundred KB, and CI fails the build above 500 KB so a dependency can't
+slip in unnoticed. The cost is more hand-written view code, kept manageable by small classes (see
+[architecture](architecture.md)).
 
 ## Only render properties move
 

@@ -4,7 +4,7 @@ layout: home
 hero:
   name: Couch
   text: A light, fast Android TV launcher
-  tagline: Built for TVs whose chips struggle with the stock launcher. Plain Android Views, no ads, no tracking, and an APK under 200 KB.
+  tagline: Built for TVs whose chips struggle with the stock launcher. Plain Android Views, no ads, no tracking, and an APK of a few hundred KB.
   image:
     src: /logo.svg
     alt: Couch logo
