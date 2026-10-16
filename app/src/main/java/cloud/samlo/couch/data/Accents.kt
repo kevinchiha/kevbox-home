@@ -7,9 +7,9 @@ class Accent(val label: Int, val hex: String)
 
 object Accents {
     val all = listOf(
+        Accent(R.string.accent_mint, "#34D399"),
         Accent(R.string.accent_ember, "#FF8A4C"),
         Accent(R.string.accent_amber, "#FBBF24"),
-        Accent(R.string.accent_mint, "#34D399"),
         Accent(R.string.accent_sky, "#5AB0FF"),
         Accent(R.string.accent_coral, "#FF6B81"),
         Accent(R.string.accent_white, "#F5F5F7"),
@@ -19,7 +19,7 @@ object Accents {
 
     /** Choices an earlier palette saved, and the one that replaced each. */
     private val retired = mapOf(
-        "#8B93FF" to "#FF8A4C",
+        "#8B93FF" to "#34D399",
         "#4ADE80" to "#34D399",
         "#F472B6" to "#FF6B81",
     )

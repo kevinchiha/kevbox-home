@@ -69,15 +69,15 @@ class ConfigTest {
     }
 
     @Test
-    fun defaultAccentIsEmber() {
-        assertEquals("#FF8A4C", Config().accent)
-        assertEquals("#FF8A4C", Accents.default)
+    fun defaultAccentIsMint() {
+        assertEquals("#34D399", Config().accent)
+        assertEquals("#34D399", Accents.default)
     }
 
     @Test
-    fun theOldIndigoDefaultMigratesToEmber() {
-        assertEquals("#FF8A4C", Config.fromJson("""{"accent":"#8B93FF"}""").accent)
-        assertEquals("#FF8A4C", Config.fromJson("""{"accent":"#8b93ff"}""").accent)
+    fun theOldIndigoDefaultMigratesToMint() {
+        assertEquals("#34D399", Config.fromJson("""{"accent":"#8B93FF"}""").accent)
+        assertEquals("#34D399", Config.fromJson("""{"accent":"#8b93ff"}""").accent)
     }
 
     @Test

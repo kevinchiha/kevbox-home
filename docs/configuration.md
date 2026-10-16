@@ -8,7 +8,7 @@ Everything can be changed from the TV: press UP from the top row to reach ⚙ an
 | Section | Option | Values |
 |---|---|---|
 | Appearance | Card size | Small, Medium, Large |
-| | Accent colour | Ember, Amber, Mint, Sky, Coral, White |
+| | Accent colour | Mint, Ember, Amber, Sky, Coral, White |
 | | Names under cards | On / Off |
 | | Descriptions | On / Off |
 | Wallpaper | Source | Photo of the day (Bing), Reddit, Gradient, My image |
@@ -68,7 +68,7 @@ setting changes, so edit it while the home screen is in the background.
 | `hiddenSections` | string[] | `[]` | Hidden rows. |
 | `channels` | object | `{}` | Channel id → shown or not, overriding the stock launcher's choice. |
 | `cardSize` | string | `medium` | `small`, `medium`, `large`. |
-| `accent` | string | `#FF8A4C` | Accent colour (hex). |
+| `accent` | string | `#34D399` | Accent colour (hex). |
 | `wallpaper` | string | `daily` | `daily`, `reddit`, `gradient`, `custom`. |
 | `subreddit` | string | `WidescreenWallpaper` | Subreddit for the `reddit` source. |
 | `wallpaperHours` | number | `3` | Hours between Reddit images. |

@@ -7,8 +7,8 @@
 <p align="center">
   <a href="https://github.com/samuelloranger/couch/releases"><img src="https://img.shields.io/github/v/release/samuelloranger/couch" alt="Latest release" /></a>
   <a href="https://github.com/samuelloranger/couch/actions/workflows/ci.yml"><img src="https://github.com/samuelloranger/couch/actions/workflows/ci.yml/badge.svg" alt="CI" /></a>
-  <img src="https://img.shields.io/badge/Android%20TV-9%2B-FF8A4C?logo=androidtv&logoColor=white" alt="Android TV 9+" />
-  <img src="https://img.shields.io/badge/APK-under%20200%20KB-17130F" alt="APK under 200 KB" />
+  <img src="https://img.shields.io/badge/Android%20TV-9%2B-34D399?logo=androidtv&logoColor=white" alt="Android TV 9+" />
+  <img src="https://img.shields.io/badge/APK-under%20200%20KB-111715" alt="APK under 200 KB" />
   <a href="https://buymeacoffee.com/samlo122"><img src="https://img.shields.io/badge/Buy%20me%20a%20coffee-FFDD00?logo=buymeacoffee&logoColor=black" alt="Buy me a coffee" /></a>
 </p>
 

@@ -10,11 +10,11 @@ import cloud.samlo.couch.data.Accents
  */
 object Tokens {
     val textPrimary = Color.parseColor("#EDEDEF")
-    val textMuted = Color.parseColor("#948C85")
-    val surface = Color.parseColor("#1F1B18")
-    val surfaceFocused = Color.parseColor("#2B2521")
+    val textMuted = Color.parseColor("#8A9490")
+    val surface = Color.parseColor("#1A201E")
+    val surfaceFocused = Color.parseColor("#242B28")
     val ring = Color.parseColor("#FFFFFF")
-    val background = Color.parseColor("#0C0A08")
+    val background = Color.parseColor("#0A0D0C")
 
     /** Set from the user's choice before cards are built. */
     var accent = Color.parseColor(Accents.default)

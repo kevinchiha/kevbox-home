@@ -10,7 +10,7 @@ export default defineConfig({
   description: "A light, fast Android TV launcher built on plain Android Views.",
   head: [
     ["link", { rel: "icon", type: "image/svg+xml", href: `${base}logo.svg` }],
-    ["meta", { name: "theme-color", content: "#0c0a08" }],
+    ["meta", { name: "theme-color", content: "#0a0d0c" }],
   ],
   ...(hostname ? { sitemap: { hostname } } : {}),
   cleanUrls: true,
