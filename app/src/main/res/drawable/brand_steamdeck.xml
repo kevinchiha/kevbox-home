@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Steam Deck mark from Simple Icons (CC0). -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M8.999 0V4.309C13.241 4.309 16.693 7.759 16.693 12S13.241 19.691 8.999 19.691V24C15.616 24 20.999 18.617 20.999 12S15.616 0 8.999 0ZM8.999 6.011C5.686 6.011 2.999 8.698 3.001 12.011 3.002 15.324 5.688 18.01 9.001 18.009 12.314 18.008 15 15.322 14.999 12.009 14.998 8.696 12.312 6.01 8.999 6.011Z" />
+</vector>

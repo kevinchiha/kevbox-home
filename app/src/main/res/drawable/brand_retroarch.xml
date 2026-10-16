@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- RetroArch mark from Simple Icons (CC0). -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M6.84 5.76L8.4 7.68H5.28L4.56 10.56H2.64L3.36 7.68H1.44L0 13.44H3.84L3.36 15.36H6.72L4.2 18.24H7.02L9.36 15.36H14.64L16.98 18.24H19.8L17.28 15.36H20.64L20.16 13.44H24L22.56 7.68H20.64L21.36 10.56H19.44L18.72 7.68H15.6L17.16 5.76H15.12L13.44 7.68H10.56L8.88 5.76ZM7.08 9.6H9V11.52H7.08ZM15.005 9.6H16.925V11.52H15.005Z" />
+</vector>

@@ -1,0 +1,118 @@
+package cloud.samlo.couch.home
+
+import android.annotation.SuppressLint
+import android.content.Context
+import android.graphics.Typeface
+import android.graphics.drawable.GradientDrawable
+import android.graphics.drawable.StateListDrawable
+import android.view.Gravity
+import android.view.View
+import android.view.ViewGroup.LayoutParams.WRAP_CONTENT
+import android.widget.ImageView
+import android.widget.LinearLayout
+import android.widget.TextClock
+import android.widget.TextView
+import cloud.samlo.couch.R
+import cloud.samlo.couch.data.Config
+import cloud.samlo.couch.data.WeatherNow
+import cloud.samlo.couch.ui.NowPlaying
+import cloud.samlo.couch.ui.Tokens
+import cloud.samlo.couch.ui.dp
+
+/**
+ * The strip in the top right corner: what's playing, the weather, the settings gear and the
+ * clock. Reading order is right to left, so the gear sits between the weather and the clock.
+ */
+@SuppressLint("ViewConstructor")
+class TopBar(context: Context, onSettings: () -> Unit) : LinearLayout(context) {
+    val nowPlaying = NowPlaying(context)
+    private val weatherBox = LinearLayout(context)
+    private val weatherIcon = ImageView(context).apply { setColorFilter(Tokens.textPrimary) }
+    private val weatherTemp = text(30f, Tokens.textPrimary, "sans-serif-light")
+    private val weatherPlace = text(13f, Tokens.textMuted, null)
+    private val clockTime = TextClock(context).apply {
+        format12Hour = "HH:mm"
+        format24Hour = "HH:mm"
+        textSize = 34f
+        typeface = Typeface.create("sans-serif-light", Typeface.NORMAL)
+        setTextColor(Tokens.textPrimary)
+        includeFontPadding = false
+    }
+    private val clockDate = TextClock(context).apply {
+        format12Hour = "EEEE d MMMM"
+        format24Hour = "EEEE d MMMM"
+        textSize = 14f
+        setTextColor(Tokens.textMuted)
+    }
+
+    init {
+        orientation = HORIZONTAL
+        gravity = Gravity.CENTER_VERTICAL
+        addView(nowPlaying, LayoutParams(WRAP_CONTENT, WRAP_CONTENT).apply { marginEnd = context.dp(24) })
+        addView(buildWeather(), LayoutParams(WRAP_CONTENT, WRAP_CONTENT).apply { marginEnd = context.dp(28) })
+        addView(buildGear(onSettings), LayoutParams(context.dp(40), context.dp(40)).apply { marginEnd = context.dp(20) })
+        addView(LinearLayout(context).apply {
+            orientation = VERTICAL
+            gravity = Gravity.END
+            addView(clockTime)
+            addView(clockDate)
+        })
+    }
+
+    /** The clock's time format ("HH:mm" or "h:mm") and whether the date shows. */
+    fun applyLook(config: Config, timeFormat: String) {
+        clockTime.format12Hour = timeFormat
+        clockTime.format24Hour = timeFormat
+        clockDate.visibility = if (config.showDate) View.VISIBLE else View.GONE
+    }
+
+    fun showWeather(now: WeatherNow?) {
+        if (now == null) {
+            weatherBox.visibility = View.GONE
+            return
+        }
+        weatherIcon.setImageResource(now.icon)
+        weatherTemp.text = context.getString(R.string.weather_temperature, now.temperature)
+        weatherPlace.text = context.getString(R.string.weather_place_range, now.place, now.high, now.low)
+        weatherBox.visibility = View.VISIBLE
+    }
+
+    private fun buildWeather() = weatherBox.apply {
+        orientation = HORIZONTAL
+        gravity = Gravity.CENTER_VERTICAL
+        visibility = View.GONE
+        addView(weatherIcon, LayoutParams(context.dp(30), context.dp(30)).apply { marginEnd = context.dp(10) })
+        addView(LinearLayout(context).apply {
+            orientation = VERTICAL
+            addView(weatherTemp)
+            addView(weatherPlace)
+        })
+    }
+
+    private fun buildGear(onSettings: () -> Unit) = ImageView(context).apply {
+        setImageResource(R.drawable.ic_settings)
+        setColorFilter(Tokens.textPrimary)
+        contentDescription = context.getString(R.string.settings)
+        val pad = context.dp(9)
+        setPadding(pad, pad, pad, pad)
+        isFocusable = true
+        background = StateListDrawable().apply {
+            addState(intArrayOf(android.R.attr.state_focused), GradientDrawable().apply {
+                shape = GradientDrawable.OVAL
+                setColor(0x33FFFFFF)
+                setStroke(context.dp(2), Tokens.ring)
+            })
+            addState(intArrayOf(), GradientDrawable().apply { shape = GradientDrawable.OVAL })
+        }
+        setOnClickListener { onSettings() }
+    }
+
+    private fun text(size: Float, color: Int, family: String?) = TextView(context).apply {
+        textSize = size
+        setTextColor(color)
+        if (family != null) {
+            typeface = Typeface.create(family, Typeface.NORMAL)
+            includeFontPadding = false
+        }
+    }
+}

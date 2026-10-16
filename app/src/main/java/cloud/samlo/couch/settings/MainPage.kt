@@ -1,0 +1,140 @@
+package cloud.samlo.couch.settings
+
+import android.content.Intent
+import android.provider.Settings
+import cloud.samlo.couch.R
+import cloud.samlo.couch.data.Accents
+import cloud.samlo.couch.data.Config
+import cloud.samlo.couch.ui.Tokens
+
+/**
+ * "Personnaliser": every option on one TV-friendly list. Left/right changes a value in place,
+ * OK cycles or opens it, and the panel on the right explains the focused option.
+ */
+class MainPage(private val ctx: SettingsContext) : SettingsPage {
+    private val o = ctx.options
+    private val config get() = ctx.config
+
+    override fun build() {
+        look()
+        wallpaper()
+        home()
+        clock()
+        standby()
+        system()
+    }
+
+    private fun look() {
+        o.header(ctx.str(R.string.group_look))
+        o.choice(
+            ctx.str(R.string.card_size), ctx.str(R.string.card_size_help),
+            listOf(
+                Option(ctx.str(R.string.size_small), "small"),
+                Option(ctx.str(R.string.size_medium), "medium"),
+                Option(ctx.str(R.string.size_large), "large"),
+            ),
+            { config.cardSize }, { config.cardSize = it },
+        )
+        o.choice(
+            ctx.str(R.string.accent), ctx.str(R.string.accent_help),
+            Accents.all.map { Option(ctx.str(it.label), it.hex) },
+            { config.accent },
+            {
+                config.accent = it
+                Tokens.applyAccent(it)
+                // The focus ring here follows the new colour right away.
+                o.restyle()
+            },
+        )
+        o.toggle(ctx.str(R.string.show_labels), ctx.str(R.string.show_labels_help), { config.showLabels }, { config.showLabels = it })
+        o.toggle(ctx.str(R.string.show_descriptions), ctx.str(R.string.show_descriptions_help), { config.showDescriptions }, { config.showDescriptions = it })
+    }
+
+    private fun wallpaper() {
+        o.header(ctx.str(R.string.group_wallpaper))
+        o.choice(
+            ctx.str(R.string.wallpaper_source), ctx.str(R.string.wallpaper_source_help),
+            listOf(
+                Option(ctx.str(R.string.wallpaper_daily), "daily"),
+                Option(ctx.str(R.string.wallpaper_reddit), "reddit"),
+                Option(ctx.str(R.string.wallpaper_gradient), "gradient"),
+                Option(ctx.str(R.string.wallpaper_custom), "custom"),
+            ),
+            { config.wallpaper }, { config.wallpaper = it },
+        )
+        o.text(
+            ctx.str(R.string.subreddit), ctx.str(R.string.subreddit_help), Config.DEFAULT_SUBREDDIT,
+            { "r/" + config.subreddit }, { config.subreddit = it.removePrefix("r/").ifEmpty { Config.DEFAULT_SUBREDDIT } },
+        )
+        o.choice(
+            ctx.str(R.string.wallpaper_hours), ctx.str(R.string.wallpaper_hours_help),
+            listOf(
+                Option(ctx.str(R.string.hours_1), "1"),
+                Option(ctx.str(R.string.hours_3), "3"),
+                Option(ctx.str(R.string.hours_6), "6"),
+                Option(ctx.str(R.string.hours_24), "24"),
+            ),
+            { config.wallpaperHours.toString() }, { config.wallpaperHours = it.toInt() },
+        )
+        o.choice(
+            ctx.str(R.string.dim), ctx.str(R.string.dim_help),
+            listOf(
+                Option(ctx.str(R.string.dim_light), "light"),
+                Option(ctx.str(R.string.dim_medium), "medium"),
+                Option(ctx.str(R.string.dim_strong), "strong"),
+            ),
+            { config.dim }, { config.dim = it },
+        )
+    }
+
+    private fun home() {
+        o.header(ctx.str(R.string.group_home))
+        o.link(ctx.str(R.string.settings_rows), ctx.str(R.string.settings_rows_help)) { open(SettingsActivity.PAGE_ROWS) }
+        o.link(ctx.str(R.string.settings_inputs), ctx.str(R.string.settings_inputs_help)) { open(SettingsActivity.PAGE_INPUTS) }
+        o.link(ctx.str(R.string.settings_channels), ctx.str(R.string.settings_channels_help)) { open(SettingsActivity.PAGE_CHANNELS) }
+        o.link(ctx.str(R.string.settings_visibility), ctx.str(R.string.settings_visibility_help)) {
+            Dialogs.visibility(ctx.activity, config, ctx.files.dir) {}
+        }
+        o.link(ctx.str(R.string.settings_organize), ctx.str(R.string.settings_organize_help)) {
+            ctx.activity.setResult(SettingsActivity.RESULT_ORGANIZE)
+            ctx.activity.finish()
+        }
+    }
+
+    private fun clock() {
+        o.header(ctx.str(R.string.group_clock))
+        o.toggle(ctx.str(R.string.clock24h), ctx.str(R.string.clock24h_help), { config.clock24h }, { config.clock24h = it })
+        o.toggle(ctx.str(R.string.show_date), ctx.str(R.string.show_date_help), { config.showDate }, { config.showDate = it })
+        o.toggle(ctx.str(R.string.weather), ctx.str(R.string.weather_help), { config.weather }, { config.weather = it })
+        val auto = ctx.str(R.string.city_auto)
+        o.text(
+            ctx.str(R.string.city), ctx.str(R.string.city_help), auto,
+            { config.weatherCity.ifEmpty { auto } }, { config.weatherCity = it },
+        )
+        o.choice(
+            ctx.str(R.string.units), "", listOf(Option("°C", "c"), Option("°F", "f")),
+            { if (config.fahrenheit) "f" else "c" }, { config.fahrenheit = it == "f" },
+        )
+    }
+
+    private fun standby() {
+        o.header(ctx.str(R.string.group_standby))
+        val minutes = listOf(2, 5, 10, 20).map { Option(ctx.activity.getString(R.string.minutes_short, it), it.toString()) }
+        o.choice(
+            ctx.str(R.string.ambient), ctx.str(R.string.ambient_help),
+            listOf(Option(ctx.str(R.string.ambient_never), "0")) + minutes,
+            { config.ambientMinutes.toString() }, { config.ambientMinutes = it.toInt() },
+        )
+    }
+
+    private fun system() {
+        o.header(ctx.str(R.string.group_system))
+        o.link(ctx.str(R.string.android_settings), ctx.str(R.string.android_settings_help)) {
+            ctx.activity.startActivity(Intent(Settings.ACTION_SETTINGS).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+        }
+        val pm = ctx.activity.packageManager
+        o.link(ctx.str(R.string.about), ctx.str(R.string.about_help), { pm.getPackageInfo(ctx.activity.packageName, 0).versionName.orEmpty() }) {}
+    }
+
+    private fun open(page: String) = ctx.activity.startActivity(SettingsActivity.intent(ctx.activity, page))
+}

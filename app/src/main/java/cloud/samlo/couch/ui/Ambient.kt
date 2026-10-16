@@ -1,0 +1,147 @@
+package cloud.samlo.couch.ui
+
+import android.annotation.SuppressLint
+import android.content.Context
+import android.graphics.Bitmap
+import android.graphics.Typeface
+import android.graphics.drawable.GradientDrawable
+import android.os.Handler
+import android.os.Looper
+import android.view.Gravity
+import android.view.View
+import android.view.animation.LinearInterpolator
+import android.widget.FrameLayout
+import android.widget.ImageView
+import android.widget.LinearLayout
+import android.widget.TextClock
+import android.widget.TextView
+import cloud.samlo.couch.data.Images
+
+/**
+ * Ambient mode: the wallpaper full screen with a slow drift, a large clock and the weather.
+ * Pictures rotate every few minutes when the source has several. Only render properties move
+ * (scale and alpha), so it stays cheap on a weak GPU.
+ */
+@SuppressLint("ViewConstructor")
+class Ambient(context: Context, private val images: Images) : FrameLayout(context) {
+    private val main = Handler(Looper.getMainLooper())
+    private val below = picture()
+    private val above = picture().apply { alpha = 0f }
+    private val weather = TextView(context).apply {
+        textSize = 20f
+        setTextColor(0xE6FFFFFF.toInt())
+        setShadowLayer(12f, 0f, 2f, 0x99000000.toInt())
+    }
+    private val time = TextClock(context).apply {
+        textSize = 96f
+        typeface = Typeface.create("sans-serif-thin", Typeface.NORMAL)
+        setTextColor(0xFFFFFFFF.toInt())
+        includeFontPadding = false
+        setShadowLayer(18f, 0f, 2f, 0x99000000.toInt())
+    }
+    private val date = TextClock(context).apply {
+        textSize = 22f
+        setTextColor(0xE6FFFFFF.toInt())
+        format12Hour = "EEEE d MMMM"
+        format24Hour = "EEEE d MMMM"
+        setShadowLayer(12f, 0f, 2f, 0x99000000.toInt())
+    }
+
+    private var urls: List<String> = emptyList()
+    private var index = 0
+
+    @Volatile
+    private var wanted: String? = null
+
+    private val rotate = object : Runnable {
+        override fun run() {
+            if (urls.size > 1) {
+                index = (index + 1) % urls.size
+                showPicture(urls[index])
+            }
+            main.postDelayed(this, ROTATE_MS)
+        }
+    }
+
+    val showing: Boolean get() = visibility == View.VISIBLE
+
+    init {
+        setBackgroundColor(0xFF000000.toInt())
+        visibility = View.GONE
+        alpha = 0f
+        addView(below, fill())
+        addView(above, fill())
+        addView(FlatView(context).apply {
+            background = GradientDrawable(
+                GradientDrawable.Orientation.BL_TR,
+                intArrayOf(0xB3000000.toInt(), 0x33000000, 0x00000000),
+            )
+        }, fill())
+        addView(clockColumn(), LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT, Gravity.BOTTOM or Gravity.START).apply {
+            leftMargin = context.dp(Tokens.OVERSCAN_H + 8)
+            bottomMargin = context.dp(Tokens.OVERSCAN_V + 16)
+        })
+    }
+
+    /** Full width: TextClock text changes after the first measure, and a wrap_content width
+     *  measured while hidden cuts the time off. */
+    private fun clockColumn() = LinearLayout(context).apply {
+        orientation = LinearLayout.VERTICAL
+        addView(time, LinearLayout.LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT))
+        addView(date, LinearLayout.LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT))
+        addView(weather, LinearLayout.LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT).apply {
+            topMargin = context.dp(6)
+        })
+    }
+
+    fun setTimeFormat(format: String) {
+        time.format12Hour = format
+        time.format24Hour = format
+    }
+
+    fun show(pictures: List<String>, weatherLine: String?) {
+        urls = pictures
+        weather.text = weatherLine.orEmpty()
+        weather.visibility = if (weatherLine.isNullOrEmpty()) View.GONE else View.VISIBLE
+        visibility = View.VISIBLE
+        animate().alpha(1f).setDuration(800).setInterpolator(Tokens.ease).start()
+        index = if (urls.isEmpty()) 0 else (System.currentTimeMillis() / ROTATE_MS % urls.size).toInt()
+        urls.getOrNull(index)?.let { showPicture(it) }
+        main.removeCallbacks(rotate)
+        main.postDelayed(rotate, ROTATE_MS)
+    }
+
+    fun hide() {
+        main.removeCallbacks(rotate)
+        wanted = null
+        animate().alpha(0f).setDuration(220).setInterpolator(Tokens.ease).withEndAction {
+            visibility = View.GONE
+            below.animate().cancel()
+            above.animate().cancel()
+        }.start()
+    }
+
+    private fun showPicture(url: String) {
+        wanted = url
+        images.load(url, context.dp(640), context.dp(360), 0f, opaque = true, isCurrent = { wanted == url }) { bitmap ->
+            crossfade(bitmap)
+        }
+    }
+
+    private fun crossfade(bitmap: Bitmap) {
+        val incoming = if (above.alpha > 0.5f) below else above
+        incoming.setImageBitmap(bitmap)
+        incoming.scaleX = 1f
+        incoming.scaleY = 1f
+        // A slow drift over the whole interval; linear so it never visibly speeds up or stops.
+        incoming.animate().scaleX(DRIFT).scaleY(DRIFT).setDuration(ROTATE_MS).setInterpolator(LinearInterpolator()).start()
+        above.animate().alpha(if (incoming === above) 1f else 0f).setDuration(1500).setInterpolator(Tokens.ease).start()
+    }
+
+    private fun picture() = ImageView(context).apply { scaleType = ImageView.ScaleType.CENTER_CROP }
+
+    private companion object {
+        const val ROTATE_MS = 120_000L
+        const val DRIFT = 1.08f
+    }
+}
