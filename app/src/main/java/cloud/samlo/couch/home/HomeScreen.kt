@@ -4,6 +4,7 @@ import android.app.Activity
 import android.content.Intent
 import android.os.Handler
 import android.os.Looper
+import android.os.SystemClock
 import android.view.KeyEvent
 import android.widget.Toast
 import cloud.samlo.couch.HomeAccessibilityService
@@ -12,6 +13,7 @@ import cloud.samlo.couch.R
 import cloud.samlo.couch.data.Config
 import cloud.samlo.couch.data.Fetcher
 import cloud.samlo.couch.data.Images
+import cloud.samlo.couch.data.InputSource
 import cloud.samlo.couch.data.Prefs
 import cloud.samlo.couch.data.Programs
 import cloud.samlo.couch.data.UserFiles
@@ -44,6 +46,7 @@ class HomeScreen(private val activity: Activity) {
 
     private var config = Config.load(null)
     private var resumed = false
+    private var resumedAt = 0L
 
     private val ambientMode = AmbientMode(views.ambient, { resumed }, { organizer.active })
         .also { it.minutes = config.ambientMinutes }
@@ -58,7 +61,7 @@ class HomeScreen(private val activity: Activity) {
     private val loader = HomeLoader(
         activity, files, Wallpapers(fetcher, prefs), Weather(fetcher, prefs), UpdateCheck(activity, fetcher), ::onLoaded,
     )
-    private val watchers = SystemWatchers(activity, views.rows) { load() }
+    private val watchers = SystemWatchers(activity, views.rows, { load() }) { offerInput(it) }
     private val reloadForRecommendations = Runnable { if (resumed) load() }
 
     fun onCreate() {
@@ -69,6 +72,7 @@ class HomeScreen(private val activity: Activity) {
 
     fun onResume() {
         resumed = true
+        resumedAt = SystemClock.elapsedRealtime()
         MediaListener.onRecommendationsChanged = {
             // Apps often post a batch at once: one reload for all of them.
             main.removeCallbacks(reloadForRecommendations)
@@ -88,6 +92,8 @@ class HomeScreen(private val activity: Activity) {
         if (organizer.active) organizer.stop()
         stopLive()
         ambientMode.cancel()
+        views.topBar.inputOffer.hide()
+        views.index.topBar.inputOffer.hide()
     }
 
     fun onDestroy() {
@@ -196,6 +202,14 @@ class HomeScreen(private val activity: Activity) {
         }
     }
 
+    /** A device on an input just turned on: while home shows, offer to switch to it (unless hidden). */
+    private fun offerInput(inputId: String) {
+        // A TV waking up reports its inputs changing as it comes back; those are no news.
+        if (!resumed || SystemClock.elapsedRealtime() - resumedAt < WAKE_SETTLE_MS) return
+        val tile = InputSource.tiles(activity, config, null).firstOrNull { it.inputId == inputId } ?: return
+        if (views.indexShown) views.index.topBar.inputOffer.offer(tile) else views.topBar.inputOffer.offer(tile)
+    }
+
     @Suppress("DEPRECATION")
     private fun openSettings() {
         activity.startActivityForResult(Intent(activity, SettingsActivity::class.java), 1)
@@ -203,5 +217,6 @@ class HomeScreen(private val activity: Activity) {
 
     private companion object {
         const val RECOMMENDATIONS_SETTLE_MS = 2_000L
+        const val WAKE_SETTLE_MS = 10_000L
     }
 }
