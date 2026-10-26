@@ -16,8 +16,8 @@ A light, fast home screen for Android TV, built for TVs whose chips struggle wit
 launcher. Plain Android Views, no AndroidX, no Compose, no tracking: the APK is a few hundred KB.
 
 <p align="center">
-  <img src="docs/screenshots/home.jpg" alt="Home screen" width="32%">
-  <img src="docs/screenshots/channel.jpg" alt="An app channel row with its backdrop" width="32%">
+  <img src="docs/screenshots/home.jpg" alt="The Index home screen" width="32%">
+  <img src="docs/screenshots/channel.jpg" alt="Moving along an app's channel" width="32%">
   <img src="docs/screenshots/settings.jpg" alt="Customize" width="32%">
 </p>
 
@@ -33,8 +33,8 @@ launcher. Plain Android Views, no AndroidX, no Compose, no tracking: the APK is 
 
 ## Features
 
-- Two layouts: rows of cards with a hero area for the focused show or film, or **Index**, a list
-  of your apps beside what the selected one offers and your screen time with it.
+- Two layouts: **Index** (the default), a list of your apps beside what the selected one offers
+  and your screen time with it, or rows of cards with a hero area for the focused show or film.
 - Apps row, recently used apps, HDMI inputs row with brand logos (PlayStation, Xbox, Nintendo
   Switch, Apple TV…), and the preview channels apps publish (YouTube, Jellyfin and others).
 - When a console or player on an input turns on, a chip offers to switch to it.
