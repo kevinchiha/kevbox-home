@@ -10,6 +10,7 @@ import cloud.samlo.couch.data.Config
 import cloud.samlo.couch.data.Programs
 import cloud.samlo.couch.data.Tile
 import cloud.samlo.couch.data.Usage
+import cloud.samlo.couch.kevbox.home.AppLists
 import cloud.samlo.couch.ui.dp
 import cloud.samlo.couch.ui.dpf
 import java.io.File
@@ -26,10 +27,14 @@ class IndexEntry(
     val channelTitle: String?,
     val programs: List<Tile>,
     val usage: AppUsage?,
+    /** Customize's 24-hour setting, carried here because the row's "Opened at" line needs it. */
+    val clock24h: Boolean,
 ) {
     val key: String get() = app.key
+    // The build hour turns "today" into "yesterday" by the first reload in a new hour.
     val signature: String = "${app.signature}|${icon?.generationId}|$channelTitle|" +
-        "${usage?.perDayMs?.joinToString(",")}|${usage?.opens}|${usage?.lastUsed}|" + programs.joinToString(";") { it.signature }
+        "${usage?.perDayMs?.joinToString(",")}|${usage?.opens}|${usage?.lastUsed}|$clock24h|" +
+        "${System.currentTimeMillis() / 3_600_000}|" + programs.joinToString(";") { it.signature }
 }
 
 class IndexData(
@@ -47,8 +52,9 @@ object IndexBuilder {
         )
         val usage = Usage.lastWeek(context)
         val channels = Programs.channels(context, config).groupBy { it.packageName }
-        // Apps keep the user's order among equals (pinned first, then by name).
-        val ordered = if (usage == null) apps else apps.sortedByDescending { usage[it.key]?.weekMs ?: 0L }
+        // The column is config.apps in its saved order; usage never reorders it.
+        val byPackage = apps.associateBy { it.key }
+        val ordered = AppLists.column(config.apps, config.hidden, byPackage.keys).map { byPackage.getValue(it) }
         val entries = ordered.map { tile ->
             val channel = channels[tile.key]?.firstOrNull()
             IndexEntry(
@@ -57,6 +63,7 @@ object IndexBuilder {
                 channelTitle = channel?.let { Programs.title(context, it.packageName, it.name, ", ") },
                 programs = channel?.tiles.orEmpty(),
                 usage = usage?.get(tile.key),
+                clock24h = config.clock24h,
             )
         }
         return IndexData(entries, usage != null)

@@ -38,6 +38,8 @@ object Programs {
         recommendations: Map<String, List<Recommendations.Item>> = Recommendations.lastKnown,
     ): List<ChannelInfo> {
         val order = { pkg: String -> config.pinnedApps.indexOf(pkg).let { if (it < 0) Int.MAX_VALUE else it } }
+        // KevBox: the left column's apps first, in its order; nothing here sets pinnedApps.
+        val column = { pkg: String -> config.apps.indexOf(pkg).let { if (it < 0) Int.MAX_VALUE else it } }
         val preview = if (!canRead(context)) emptyList() else query(context, TvContract.Channels.CONTENT_URI) { c ->
             if (c.string("type") != TvContract.Channels.TYPE_PREVIEW) return@query null
             val pkg = c.string("package_name") ?: return@query null
@@ -49,18 +51,20 @@ object Programs {
         val recommended = recommendations.keys
             .filter { it !in withChannels && it !in config.hiddenApps }
             .map { ChannelInfo(Recommendations.channelId(it), it, context.getString(R.string.channel_recommended), true) }
-        return (preview + recommended).sortedWith(compareBy({ order(it.packageName) }, { it.packageName }, { it.name }))
+        return (preview + recommended).sortedWith(compareBy({ column(it.packageName) }, { order(it.packageName) }, { it.packageName }, { it.name }))
     }
 
     /** The channels to show as rows, each with its best programs first. */
     fun channels(context: Context, config: Config): List<Channel> {
         val recommendations = Recommendations.byPackage()
+        // KevBox: the cap applies only to apps outside config.apps, so the column's apps keep their rows.
+        var others = 0
         return allChannels(context, config, recommendations)
             .asSequence()
-            .filter { it.shown(config) }
+            .filter { it.shown(config) && (it.packageName in config.apps || others < MAX_CHANNELS) }
             .map { info -> Channel(info.id, info.packageName, info.name, programs(context, info, recommendations)) }
             .filter { it.tiles.isNotEmpty() }
-            .take(MAX_CHANNELS)
+            .onEach { if (it.packageName !in config.apps) others++ }
             .toList()
     }
 
