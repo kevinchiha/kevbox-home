@@ -10,15 +10,16 @@ import android.os.Looper
 import cloud.samlo.couch.HomeAccessibilityService
 import cloud.samlo.couch.R
 import cloud.samlo.couch.data.Fetcher
+import cloud.samlo.couch.kevbox.update.VersionJson
 import java.io.File
 import java.security.MessageDigest
 import java.util.concurrent.Executors
 import java.util.concurrent.atomic.AtomicBoolean
 
 /**
- * Downloads a release's APK, checks it against the published SHA-256 and hands it to Android's
- * package installer. Android then asks the user to confirm (and, the first time, to let Couch
- * install apps); [InstallResult] receives the outcome. One install runs at a time, app-wide.
+ * Downloads a release's APK, checks it against the SHA-256 in version.json and hands it to
+ * Android's package installer. Android then asks the user to confirm (and, the first time, to let
+ * KevBox Home install apps); [InstallResult] receives the outcome. One install runs at a time, app-wide.
  */
 class Installer(context: Context, private val fetcher: Fetcher) {
     private val context = context.applicationContext
@@ -30,7 +31,7 @@ class Installer(context: Context, private val fetcher: Fetcher) {
     fun install(release: Release, onDone: (Int?) -> Unit) {
         if (!busy.compareAndSet(false, true)) return
         executor.execute {
-            val apk = File(context.cacheDir, Release.APK)
+            val apk = File(context.cacheDir, APK)
             val error = try {
                 download(release, apk)
                 verify(apk, release)
@@ -54,13 +55,11 @@ class Installer(context: Context, private val fetcher: Fetcher) {
     }
 
     /**
-     * The checksum file reads `<sha256>  couch-vX.Y.Z.apk`; only the hash matters. It catches a
-     * broken download; Android's same-signature rule is what keeps a foreign APK out.
+     * Checks the APK against the `sha256` version.json published with it. It catches a broken or
+     * swapped download; Android's same-signature rule is what keeps a foreign APK out.
      */
     private fun verify(apk: File, release: Release) {
-        val expected = fetcher.text(release.checksumUrl)?.trim()?.split(Regex("\\s+"))?.firstOrNull()
-            ?: throw Failure(R.string.update_failed)
-        if (!expected.equals(sha256(apk), ignoreCase = true)) throw Failure(R.string.update_corrupt)
+        if (!VersionJson.matches(sha256(apk), release.sha256)) throw Failure(R.string.update_corrupt)
     }
 
     private fun commit(apk: File) {
@@ -76,7 +75,7 @@ class Installer(context: Context, private val fetcher: Fetcher) {
         installer.openSession(id).use { session ->
             try {
                 apk.inputStream().use { input ->
-                    session.openWrite(Release.APK, 0, apk.length()).use { output ->
+                    session.openWrite(APK, 0, apk.length()).use { output ->
                         input.copyTo(output)
                         session.fsync(output)
                     }
@@ -114,6 +113,8 @@ class Installer(context: Context, private val fetcher: Fetcher) {
     private class Failure(val messageRes: Int) : Exception()
 
     companion object {
+        /** The cache file and installer session name for the download. */
+        private const val APK = "kevbox-home.apk"
         private val executor = Executors.newSingleThreadExecutor()
         private val main = Handler(Looper.getMainLooper())
         private val busy = AtomicBoolean(false)

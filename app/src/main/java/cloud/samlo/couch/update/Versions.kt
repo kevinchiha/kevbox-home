@@ -2,7 +2,7 @@ package cloud.samlo.couch.update
 
 import android.content.Context
 
-/** `X.Y.Z` versions, as the release tags and `versionName` write them. */
+/** `X.Y.Z` versions, as `versionName` writes them, and the installed `versionCode`. */
 object Versions {
     /**
      * `v1.2.3` or `1.2` as numbers; null for anything else. A suffix like `-beta.1` is ignored, the
@@ -29,4 +29,11 @@ object Versions {
 
     fun installed(context: Context): String =
         context.packageManager.getPackageInfo(context.packageName, 0).versionName.orEmpty()
+
+    /**
+     * This build's `versionCode`, the number update checks compare: it always rises, while a
+     * four-part name like `0.8.1.1` fails [parse].
+     */
+    fun installedCode(context: Context): Long =
+        context.packageManager.getPackageInfo(context.packageName, 0).longVersionCode
 }
