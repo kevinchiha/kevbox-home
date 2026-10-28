@@ -3,27 +3,39 @@ package cloud.samlo.couch.index
 import android.annotation.SuppressLint
 import android.content.Context
 import android.graphics.drawable.Animatable
-import android.graphics.drawable.GradientDrawable
-import android.graphics.drawable.StateListDrawable
 import android.view.Gravity
 import android.view.View
 import android.widget.ImageView
 import android.widget.LinearLayout
+import android.widget.TextClock
 import cloud.samlo.couch.R
 import cloud.samlo.couch.data.Config
 import cloud.samlo.couch.data.WeatherNow
+import cloud.samlo.couch.kevbox.buttons.ButtonRow
+import cloud.samlo.couch.kevbox.config.KevBoxConfig
+import cloud.samlo.couch.ui.Fonts
 import cloud.samlo.couch.ui.NowPlaying
 import cloud.samlo.couch.ui.Tokens
 import cloud.samlo.couch.ui.UpdateChip
 import cloud.samlo.couch.ui.dp
-import cloud.samlo.couch.ui.dpf
 
-/** Top right: what's playing, an update when there is one, the weather, then Settings. */
+/** Top right: what's playing, an update when there is one, the KevBox buttons, the clock, then the weather. */
 @SuppressLint("ViewConstructor")
 class IndexTopBar(context: Context, onSettings: () -> Unit, onUpdate: () -> Unit) : LinearLayout(context) {
     val nowPlaying = NowPlaying(context)
     val update = UpdateChip(context).apply { setOnClickListener { onUpdate() } }
-    val settings = pill(R.drawable.ic_pill_settings, R.string.settings, onSettings)
+    private val buttons = ButtonRow(context, onSettings)
+    /** The Settings button, where IndexScreen sent Up before [firstButton] existed. */
+    val settings: View = buttons.settings
+    private val clock = TextClock(context).apply {
+        format12Hour = "HH:mm"
+        format24Hour = "HH:mm"
+        textSize = 20f
+        typeface = Fonts.hanken(context, 600)
+        letterSpacing = -0.02f
+        setTextColor(Tokens.textPrimary)
+        includeFontPadding = false
+    }
     private val weather = LinearLayout(context).apply {
         orientation = HORIZONTAL
         gravity = Gravity.CENTER_VERTICAL
@@ -38,6 +50,8 @@ class IndexTopBar(context: Context, onSettings: () -> Unit, onUpdate: () -> Unit
         gravity = Gravity.CENTER_VERTICAL
         addView(nowPlaying, LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT).apply { marginEnd = context.dp(15) })
         addView(update, LayoutParams(LayoutParams.WRAP_CONTENT, context.dp(26)).apply { marginEnd = context.dp(15) })
+        addView(buttons, LayoutParams(LayoutParams.WRAP_CONTENT, context.dp(26)).apply { marginEnd = context.dp(15) })
+        addView(clock, LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT).apply { marginEnd = context.dp(15) })
         // Meteocons leave a margin around the drawing; 30dp draws the sky at about 20dp.
         // The icon may overhang the pills' height without making the bar taller.
         weather.addView(weatherIcon, LayoutParams(context.dp(30), context.dp(30)).apply {
@@ -47,8 +61,7 @@ class IndexTopBar(context: Context, onSettings: () -> Unit, onUpdate: () -> Unit
         })
         weather.addView(temperature)
         weather.addView(place, LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT).apply { marginStart = context.dp(7) })
-        addView(weather, LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT).apply { marginEnd = context.dp(15) })
-        addView(settings, LayoutParams(LayoutParams.WRAP_CONTENT, context.dp(26)))
+        addView(weather, LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT))
     }
 
     fun showWeather(now: WeatherNow?) {
@@ -63,36 +76,25 @@ class IndexTopBar(context: Context, onSettings: () -> Unit, onUpdate: () -> Unit
         weather.visibility = VISIBLE
     }
 
-    /** Stub: task 7 fills this in. The leftmost button, where Up from the first app lands. */
-    fun firstButton(): View? = settings
+    /** The leftmost button OK can press, where Up from the first app lands; null when none shows. */
+    fun firstButton(): View? = buttons.firstButton()
 
-    /** Stub: task 7 fills this in. Shows the buttons [config] asks for. */
-    @Suppress("UNUSED_PARAMETER")
-    fun applyLook(config: Config) = Unit
-
-    private fun pill(icon: Int, label: Int, onClick: () -> Unit) = LinearLayout(context).apply {
-        orientation = HORIZONTAL
-        gravity = Gravity.CENTER_VERTICAL
-        setPadding(context.dp(11), 0, context.dp(11), 0)
-        isFocusable = true
-        isClickable = true
-        contentDescription = context.getString(label)
-        background = StateListDrawable().apply {
-            addState(intArrayOf(android.R.attr.state_focused), shape(0x33FFFFFF, Tokens.ring))
-            addState(intArrayOf(), shape(IndexTokens.pill, null))
-        }
-        addView(ImageView(context).apply {
-            setImageResource(icon)
-            setColorFilter(IndexTokens.pillText)
-        }, LayoutParams(context.dp(12), context.dp(12)).apply { marginEnd = context.dp(5) })
-        addView(text(11f, 500, IndexTokens.pillText).apply { text = context.getString(label) })
-        setOnClickListener { onClick() }
+    /** Runs on every load: the clock's format, and the buttons [config] asks for. */
+    fun applyLook(config: Config) {
+        val time = if (config.clock24h) "HH:mm" else "h:mm"
+        clock.format12Hour = time
+        clock.format24Hour = time
+        buttons.show(KevBoxConfig.buttonsOf(config), config.speedtestApp)
     }
 
-    private fun shape(color: Int, stroke: Int?) = GradientDrawable().apply {
-        cornerRadius = context.dpf(13f)
-        setColor(color)
-        stroke?.let { setStroke(context.dp(2), it) }
+    override fun onAttachedToWindow() {
+        super.onAttachedToWindow()
+        buttons.startWatching()
+    }
+
+    override fun onDetachedFromWindow() {
+        buttons.stopWatching()
+        super.onDetachedFromWindow()
     }
 
     private fun text(sizeSp: Float, weight: Int, color: Int, lineHeight: Float = 1f) =
