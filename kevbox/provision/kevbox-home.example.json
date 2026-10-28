@@ -1,0 +1,12 @@
+{
+  "apps": ["tv.kevbox.live", "tv.kevbox", "org.smarttube.stable"],
+  "drawer": ["com.surfshark.vpnclient.android", "com.rma.netpulsetv", "com.android.vending",
+             "nextapp.fx", "com.esaba.downloader", "org.videolan.vlc"],
+  "keys": [
+    {"keycode": 193, "scancode": 416, "package": "tv.kevbox"},
+    {"keycode": 194, "scancode": 207, "package": "tv.kevbox.live"},
+    {"keycode": 190, "scancode": 425, "package": "org.smarttube.stable"},
+    {"keycode": 3, "scancode": 172, "action": "home"},
+    {"keycode": 284, "scancode": 216, "action": "drawer"}
+  ]
+}
