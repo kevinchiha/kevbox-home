@@ -3,18 +3,30 @@ package cloud.samlo.couch
 import android.accessibilityservice.AccessibilityService
 import android.content.ComponentName
 import android.content.Context
-import android.content.Intent
 import android.content.pm.PackageManager
 import android.provider.Settings
+import android.view.KeyEvent
 import android.view.accessibility.AccessibilityEvent
 import cloud.samlo.couch.data.Prefs
+import cloud.samlo.couch.kevbox.KevBox
+import cloud.samlo.couch.kevbox.keys.KeyActions
+import cloud.samlo.couch.kevbox.keys.KeyFilter
+import cloud.samlo.couch.kevbox.restart.ForceStop
 
 /**
- * Some TVs hardwire HOME to the stock launcher. This service only receives window changes from
- * that launcher (see `res/xml/home_accessibility.xml`) and replaces it with Couch. It never
- * filters key events, so holding volume keeps ramping.
+ * Three jobs that need an accessibility service. It filters the remote's keys through the
+ * provisioned map, so app buttons open KevBox's apps from anywhere; a key with no mapping passes
+ * through untouched, so holding volume keeps ramping. It presses Force stop for Restart app
+ * ([ForceStop]). And on TVs that hardwire HOME to the stock launcher, it replaces that launcher's
+ * window with KevBox Home when one appears (see `res/xml/home_accessibility.xml`).
  */
 class HomeAccessibilityService : AccessibilityService() {
+    private var filter: KeyFilter? = null
+    private var restartRun: ForceStop? = null
+
+    override fun onKeyEvent(event: KeyEvent): Boolean =
+        filter?.onKey(event.action, event.keyCode, event.scanCode, event.repeatCount) ?: false
+
     override fun onAccessibilityEvent(event: AccessibilityEvent) {
         if (event.eventType != AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED) return
         if (!isStockHome(event.packageName?.toString(), event.className?.toString())) return
@@ -26,6 +38,8 @@ class HomeAccessibilityService : AccessibilityService() {
     override fun onServiceConnected() {
         super.onServiceConnected()
         running = this
+        val actions = KeyActions(this)
+        filter = KeyFilter(actions::entries, actions::installed, actions::act)
         // Remember that HOME capture is wanted, so it can be restored after Android drops it.
         wanted(this, true)
         // A self-update restarts the app and leaves the stock launcher showing; come back to Couch.
@@ -37,12 +51,19 @@ class HomeAccessibilityService : AccessibilityService() {
 
     override fun onDestroy() {
         if (running === this) running = null
+        restartRun?.cancel()
+        restartRun = null
         super.onDestroy()
     }
 
-    private fun openCouch() = startActivity(
-        Intent(this, MainActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_NO_ANIMATION),
-    )
+    /** Through the HOME intent, never an explicit MainActivity start: that could make a second Home. */
+    private fun openCouch() = KevBox.goHome(this)
+
+    /** Starts a Restart app run for [pkg], cancelling any run still in progress. */
+    private fun runRestart(pkg: String) {
+        restartRun?.cancel()
+        restartRun = ForceStop(this, pkg).also { it.start() }
+    }
 
     companion object {
         private const val WANTED = "homeCaptureWanted"
@@ -73,11 +94,18 @@ class HomeAccessibilityService : AccessibilityService() {
         private const val REOPEN_WINDOW_MS = 10 * 60_000L
         private const val WRITE_SECURE_SETTINGS = "android.permission.WRITE_SECURE_SETTINGS"
 
-        /** The connected service, for godmode's global actions (sleep, screenshot); null when off. */
+        /** The connected service, so Restart app can hand it the Force stop presses; null when off. */
         @Volatile private var running: HomeAccessibilityService? = null
 
-        /** Android's own global action (screen off, screenshot), through the service; false without it. */
-        fun globalAction(action: Int): Boolean = running?.performGlobalAction(action) == true
+        /**
+         * Runs Restart app's Force stop and relaunch for [pkg] inside the connected service. False
+         * when no service is connected, so the caller can tell the member to do it by hand.
+         */
+        fun restart(pkg: String): Boolean {
+            val service = running ?: return false
+            service.runRestart(pkg)
+            return true
+        }
 
         fun wanted(context: Context, value: Boolean) =
             Prefs.of(context).edit().putBoolean(WANTED, value).apply()
