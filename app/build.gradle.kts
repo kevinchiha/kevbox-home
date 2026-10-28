@@ -103,9 +103,10 @@ android {
 
     // values-fr is Couch's untouched copy (AC-38) and the locale filter keeps it out of the APK.
     // Without this, strings deleted from values/ fail the build as ExtraTranslation (fatal), and
-    // new English strings raise MissingTranslation.
+    // new English strings raise MissingTranslation. Plurals deleted from values/ fail as
+    // MissingDefaultResource (an error) instead of ExtraTranslation.
     lint {
-        disable += setOf("ExtraTranslation", "MissingTranslation")
+        disable += setOf("ExtraTranslation", "MissingTranslation", "MissingDefaultResource")
     }
 }
 
