@@ -78,7 +78,7 @@ class Backdrop(context: Context, private val images: Images) : FrameLayout(conte
     }
 
     private fun crossfade(bitmap: Bitmap?) {
-        if (bitmap == null) shownUrl = null
+        if (bitmap == null) return fadeOut()
         above.animate().cancel()
         if (above.alpha > 0.5f) {
             // The top image is showing: put the new art underneath and fade the top away.
@@ -88,6 +88,24 @@ class Backdrop(context: Context, private val images: Images) : FrameLayout(conte
             above.setImageBitmap(bitmap)
             above.animate().alpha(1f).setDuration(Tokens.HERO_FADE_MS).setInterpolator(Tokens.ease).start()
         }
+    }
+
+    /**
+     * Fades the art away to the flat window background. Swapping layers cannot do it: when the
+     * art sits on [below], fading an empty [above] in leaves the art showing, since an ImageView
+     * with no bitmap is see-through. So the showing picture moves to [above] (same frame, no
+     * visible change), [below] empties, and [above] fades out and lets its bitmap go.
+     */
+    private fun fadeOut() {
+        shownUrl = null
+        above.animate().cancel()
+        if (above.alpha <= 0.5f) {
+            above.setImageDrawable(below.drawable)
+            above.alpha = 1f
+        }
+        below.setImageDrawable(null)
+        above.animate().alpha(0f).setDuration(Tokens.HERO_FADE_MS).setInterpolator(Tokens.ease)
+            .withEndAction { above.setImageDrawable(null) }.start()
     }
 
     private fun picture() = ImageView(context).apply { scaleType = ImageView.ScaleType.CENTER_CROP }
