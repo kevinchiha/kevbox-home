@@ -1,2 +1,3 @@
 task-1: done. Interfaces deviations: none.
 task-1 (fix round 1): done. Interfaces deviations: none. Brief deviation: added "MissingDefaultResource" to the lint disable set, because values-fr (untouchable, AC-38) keeps 7 plurals this task removed from values/, and lint reports those as MissingDefaultResource errors, not ExtraTranslation.
+- task 2: done. Interfaces deviation: none to the listed names. Extra: SystemWatchers(activity, onChanged) drops its rows and onInputWoke parameters (only HomeScreen used them); HomeData.index is non-null and HomeData.sections is gone, since build always makes IndexData; SettingsActivity.RESULT_ORGANIZE removed and HomeScreen.onSettingsResult kept as a no-op because MainActivity (not on the Files list) still calls it.

@@ -19,9 +19,8 @@ class HomeData(
     val config: Config,
     val wallpaper: String?,
     val weather: WeatherNow?,
-    val sections: List<SectionData>,
-    /** The Index layout's apps, when that is the chosen layout. */
-    val index: IndexData?,
+    /** The Index layout's apps: Index is the only layout KevBox shows. */
+    val index: IndexData,
     /** A newer release, when the daily check found one. */
     val update: Release?,
 )
@@ -72,10 +71,9 @@ class HomeLoader(
 
     private fun build(): HomeData {
         val config = Config.load(files.dir)
-        // Only the chosen layout's content is built.
-        val index = if (config.layout == Config.LAYOUT_INDEX) IndexBuilder.build(context, config, files.icons) else null
-        val sections = if (index == null) SectionBuilder.build(context, config, files.icons) else emptyList()
+        // The Rows layout's SectionBuilder stays in the source for upstream merges, never called.
+        val index = IndexBuilder.build(context, config, files.icons)
         val wallpaper = wallpapers.current(config, files.dir)
-        return HomeData(config, wallpaper, weather.now(config), sections, index, updates.pending(config))
+        return HomeData(config, wallpaper, weather.now(config), index, updates.pending(config))
     }
 }

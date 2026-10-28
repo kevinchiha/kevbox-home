@@ -25,7 +25,10 @@ class Config {
     var channels: Map<String, Boolean> = emptyMap()
 
     // Look
-    /** "index" (a list of apps beside what the focused one offers, the default) or "rows" (cards in rows). */
+    /**
+     * Always "index" (a list of apps beside what the focused one offers) after a load. The key
+     * stays in the file so old configs round-trip; "rows" is kept only for upstream's code.
+     */
     var layout: String = LAYOUT_INDEX
     var cardSize: String = "medium"
     var accent: String = Accents.default

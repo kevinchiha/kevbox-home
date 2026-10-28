@@ -4,7 +4,6 @@ import android.app.Activity
 import android.content.Intent
 import android.os.Handler
 import android.os.Looper
-import android.os.SystemClock
 import android.view.KeyEvent
 import android.widget.Toast
 import cloud.samlo.couch.HomeAccessibilityService
@@ -12,7 +11,6 @@ import cloud.samlo.couch.MediaListener
 import cloud.samlo.couch.data.Config
 import cloud.samlo.couch.data.Fetcher
 import cloud.samlo.couch.data.Images
-import cloud.samlo.couch.data.InputSource
 import cloud.samlo.couch.data.Prefs
 import cloud.samlo.couch.data.Programs
 import cloud.samlo.couch.data.UserFiles
@@ -26,7 +24,7 @@ import cloud.samlo.couch.update.Release
 import cloud.samlo.couch.update.UpdateCheck
 
 /**
- * The home screen's wiring and lifecycle: it owns the pieces (loader, binder, organizer, menus)
+ * The home screen's wiring and lifecycle: it owns the pieces (loader, organizer, menus)
  * and forwards the activity's callbacks to them. Create it in `onCreate`.
  */
 class HomeScreen(private val activity: Activity) {
@@ -45,20 +43,13 @@ class HomeScreen(private val activity: Activity) {
 
     private var config = Config.load(null)
     private var resumed = false
-    private var resumedAt = 0L
 
     private val organizer: Organizer = Organizer(activity, views.rows, views.hero, { config }, files) { load() }
     private val menus: CardMenus = CardMenus(activity, { config }, files, { load() }) { organizer.start(it) }
-    private val binder = SectionBinder(
-        activity, views.rows, images,
-        isOrganizing = { organizer.active },
-        onFocused = { card -> if (organizer.active) organizer.hint() else views.hero.show(card.tile) },
-        onLongPress = { menus.show(it) },
-    )
     private val loader = HomeLoader(
         activity, files, Wallpapers(fetcher, prefs), Weather(fetcher, prefs), UpdateCheck(activity, fetcher), ::onLoaded,
     )
-    private val watchers = SystemWatchers(activity, views.rows, { load() }) { offerInput(it) }
+    private val watchers = SystemWatchers(activity) { load() }
     private val reloadForRecommendations = Runnable { if (resumed) load() }
 
     fun onCreate() {
@@ -69,7 +60,6 @@ class HomeScreen(private val activity: Activity) {
 
     fun onResume() {
         resumed = true
-        resumedAt = SystemClock.elapsedRealtime()
         MediaListener.onRecommendationsChanged = {
             // Apps often post a batch at once: one reload for all of them.
             main.removeCallbacks(reloadForRecommendations)
@@ -87,8 +77,6 @@ class HomeScreen(private val activity: Activity) {
         main.removeCallbacks(reloadForRecommendations)
         if (organizer.active) organizer.stop()
         stopLive()
-        views.topBar.inputOffer.hide()
-        views.index.topBar.inputOffer.hide()
     }
 
     fun onDestroy() {
@@ -98,18 +86,15 @@ class HomeScreen(private val activity: Activity) {
 
     /** HOME while already home goes back to the start, like the stock launcher. */
     fun onHomePressed() {
-        if (!resumed) return
-        if (views.indexShown) {
-            views.index.reset()
-            return
-        }
-        views.rows.reset()
-        views.rows.sections().firstOrNull()?.row?.focusFirst()
+        if (resumed) views.index.reset()
     }
 
-    fun onSettingsResult(resultCode: Int) {
-        if (resultCode == SettingsActivity.RESULT_ORGANIZE && !views.indexShown) main.post { organizer.start() }
-    }
+    /**
+     * Settings no longer sends anything back: Rearrange apps, its only result, left with the Rows
+     * layout. Kept because MainActivity still forwards every result here.
+     */
+    @Suppress("UNUSED_PARAMETER")
+    fun onSettingsResult(resultCode: Int) = Unit
 
     fun load() = loader.load()
 
@@ -130,9 +115,9 @@ class HomeScreen(private val activity: Activity) {
             views.topBar.update.show(update?.version)
             views.index.topBar.update.show(update?.version)
         }
-        val index = data.index
-        switchLayout(index != null)
-        if (index != null) views.index.bind(index, config) else binder.bind(data.sections, config)
+        // Index is the only layout; the Rows views stay built but hidden, for upstream merges.
+        switchLayout(true)
+        views.index.bind(data.index, config)
     }
 
     /** Swaps layouts after a settings change; the live parts (now playing, readings) follow. */
@@ -189,14 +174,6 @@ class HomeScreen(private val activity: Activity) {
         }
     }
 
-    /** A device on an input just turned on: while home shows, offer to switch to it (unless hidden). */
-    private fun offerInput(inputId: String) {
-        // A TV waking up reports its inputs changing as it comes back; those are no news.
-        if (!resumed || SystemClock.elapsedRealtime() - resumedAt < WAKE_SETTLE_MS) return
-        val tile = InputSource.tiles(activity, config, null).firstOrNull { it.inputId == inputId } ?: return
-        if (views.indexShown) views.index.topBar.inputOffer.offer(tile) else views.topBar.inputOffer.offer(tile)
-    }
-
     @Suppress("DEPRECATION")
     private fun openSettings() {
         activity.startActivityForResult(Intent(activity, SettingsActivity::class.java), 1)
@@ -204,6 +181,5 @@ class HomeScreen(private val activity: Activity) {
 
     private companion object {
         const val RECOMMENDATIONS_SETTLE_MS = 2_000L
-        const val WAKE_SETTLE_MS = 10_000L
     }
 }

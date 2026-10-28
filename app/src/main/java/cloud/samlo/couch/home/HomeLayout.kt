@@ -19,7 +19,8 @@ import cloud.samlo.couch.ui.dp
 
 /**
  * The home screen's view tree, bottom to top: the rows layout (hero, rows, top bar) and the Index
- * layout over it. Only the layout the user chose is visible.
+ * layout over it. KevBox shows only Index; the rows views stay, hidden, so upstream merges into
+ * them stay clean.
  */
 class HomeViews(
     activity: Activity,
@@ -45,6 +46,11 @@ class HomeViews(
             marginEnd = activity.dp(Tokens.OVERSCAN_H)
         })
         addView(index, FrameLayout.LayoutParams(MATCH_PARENT, MATCH_PARENT))
+    }
+
+    init {
+        // Index from the first frame, so the hidden rows layout never flashes before the first load.
+        showIndex(true)
     }
 
     /** True when the Index layout is the one showing. */

@@ -81,13 +81,6 @@
             android:exported="false"
             android:screenOrientation="landscape" />
 
-        <activity
-            android:name=".settings.IconPickerActivity"
-            android:configChanges="keyboard|keyboardHidden|navigation|screenSize|smallestScreenSize|screenLayout|orientation|uiMode|density"
-            android:excludeFromRecents="true"
-            android:exported="false"
-            android:screenOrientation="landscape" />
-
         <service
             android:name=".MediaListener"
             android:exported="true"

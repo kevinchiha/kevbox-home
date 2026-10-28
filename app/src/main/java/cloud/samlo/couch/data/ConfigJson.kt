@@ -44,7 +44,8 @@ internal object ConfigJson {
         json.strings("hiddenSections")?.let { hiddenSections = it.toSet() }
         channels = json.optJSONObject("channels")?.let { o -> o.keys().asSequence().associateWith { o.optBoolean(it) } }
             ?: emptyMap()
-        layout = json.optString("layout", layout)
+        // Index is the only layout KevBox ships; an old "rows" file loads as index and saves that way.
+        layout = Config.LAYOUT_INDEX
         cardSize = json.optString("cardSize", cardSize)
         accent = Accents.migrate(json.optString("accent", accent))
         wallpaper = json.optString("wallpaper", wallpaper)

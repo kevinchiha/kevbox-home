@@ -7,7 +7,6 @@ import cloud.samlo.couch.data.AppSource
 import cloud.samlo.couch.data.AppUsage
 import cloud.samlo.couch.data.Banners
 import cloud.samlo.couch.data.Config
-import cloud.samlo.couch.data.InputSource
 import cloud.samlo.couch.data.Programs
 import cloud.samlo.couch.data.Tile
 import cloud.samlo.couch.data.Usage
@@ -37,7 +36,6 @@ class IndexData(
     val entries: List<IndexEntry>,
     /** False without usage access: no screen time, apps in the user's order. */
     val usageKnown: Boolean,
-    val inputs: List<Tile>,
 )
 
 /** Builds [IndexData] on the loader thread. */
@@ -61,7 +59,7 @@ object IndexBuilder {
                 usage = usage?.get(tile.key),
             )
         }
-        return IndexData(entries, usage != null, InputSource.tiles(context, config, iconsDir))
+        return IndexData(entries, usage != null)
     }
 
     /** The app's launcher icon as a small rounded square, rendered once per app version. */

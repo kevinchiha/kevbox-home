@@ -10,7 +10,7 @@ import cloud.samlo.couch.data.UserFiles
 import cloud.samlo.couch.ui.Tokens
 
 /**
- * Hosts one settings page (main, rows, channels or inputs, chosen by an extra) in the shared
+ * Hosts one settings page (main or channels, chosen by an extra) in the shared
  * layout. Each change is saved at once; the home screen picks it up when it comes back.
  */
 class SettingsActivity : Activity() {
@@ -25,9 +25,7 @@ class SettingsActivity : Activity() {
         layout = SettingsLayout(this)
         val ctx = SettingsContext(this, files, layout, config)
         page = when (intent.getStringExtra(EXTRA_PAGE)) {
-            PAGE_ROWS -> RowsPage(ctx)
             PAGE_CHANNELS -> ChannelsPage(ctx)
-            PAGE_INPUTS -> InputsPage(ctx)
             else -> MainPage(ctx)
         }
         setContentView(layout.root)
@@ -54,10 +52,7 @@ class SettingsActivity : Activity() {
 
     companion object {
         private const val EXTRA_PAGE = "page"
-        const val PAGE_ROWS = "rows"
         const val PAGE_CHANNELS = "channels"
-        const val PAGE_INPUTS = "inputs"
-        const val RESULT_ORGANIZE = RESULT_FIRST_USER
 
         fun intent(context: Context, page: String) =
             Intent(context, SettingsActivity::class.java).putExtra(EXTRA_PAGE, page)

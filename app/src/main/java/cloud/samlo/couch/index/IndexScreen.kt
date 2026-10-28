@@ -22,7 +22,7 @@ import cloud.samlo.couch.ui.dp
  * readings along the bottom.
  *
  * D-pad: up/down walks the list, right enters the app's channel row, left (from its first card),
- * up or down comes back. Up from the first app reaches Inputs and Settings.
+ * up or down comes back. Up from the first app reaches Settings.
  */
 @SuppressLint("ViewConstructor")
 class IndexScreen(
@@ -33,7 +33,7 @@ class IndexScreen(
     private val onAppMenu: (Tile) -> Unit,
     private val onProgramMenu: (Card) -> Unit,
 ) : FrameLayout(activity) {
-    val topBar = IndexTopBar(activity, { pickInput() }, onSettings, onUpdate)
+    val topBar = IndexTopBar(activity, onSettings, onUpdate)
     private val list = AppList(activity) { entry -> row(entry) }
     private val spotlight = Spotlight(activity)
     private val programs = FocusRow(activity).apply {
@@ -52,8 +52,6 @@ class IndexScreen(
     private var selectedKey: String? = null
     /** The app whose programs the channel row holds. */
     private var stripKey: String? = null
-    /** The Inputs pill's menu while it is open. */
-    private var inputMenu: InputMenu? = null
     /** Placed once, on the first bind; later binds keep focus where it is. */
     private var placedFocus = false
     /** Set while [bind] moves focus itself, so the focus listener doesn't fill the column twice. */
@@ -94,7 +92,6 @@ class IndexScreen(
         this.config = config
         val rebuild = look != config.look
         look = config.look
-        topBar.setHasInputs(data.inputs.isNotEmpty())
         binding = true
         list.bind(data.entries, rebuild) { it.requestFocus() }
         val rows = list.rows()
@@ -125,7 +122,6 @@ class IndexScreen(
 
     /** HOME while home: back to the first app. */
     fun reset() {
-        inputMenu?.dismiss()
         val first = list.rows().firstOrNull() ?: return
         // Focus first: its listener selects the row, then the jump lands the selection with the list.
         first.requestFocus()
@@ -248,7 +244,7 @@ class IndexScreen(
                 val rows = list.rows()
                 val i = rows.indexOf(focused)
                 when (direction) {
-                    FOCUS_UP -> rows.getOrNull(i - 1) ?: firstTopTarget() ?: focused
+                    FOCUS_UP -> rows.getOrNull(i - 1) ?: topBar.settings
                     FOCUS_DOWN -> rows.getOrNull(i + 1) ?: focused
                     FOCUS_RIGHT -> {
                         // Right before the row has filled: fill it now.
@@ -271,8 +267,6 @@ class IndexScreen(
     /** Back to the selected app; its focus listener puts the panel back on the first program. */
     private fun leaveStrip(row: AppRow?): View? = row
 
-    private fun firstTopTarget(): View? = listOf(topBar.inputs, topBar.settings).firstOrNull { it.visibility == VISIBLE }
-
     private fun View.isAncestorOf(view: View): Boolean {
         var p: View? = view
         while (p != null) {
@@ -280,21 +274,6 @@ class IndexScreen(
             p = p.parent as? View
         }
         return false
-    }
-
-    private fun pickInput() {
-        val inputs = data?.inputs.orEmpty()
-        if (inputs.isEmpty() || inputMenu != null) return
-        inputMenu = InputMenu(activity, inputs, topBar.inputs).apply {
-            setOnDismissListener { if (inputMenu === this) inputMenu = null }
-            show()
-        }
-    }
-
-    // The activity is going away: a dialog left open would leak its window.
-    override fun onDetachedFromWindow() {
-        inputMenu?.dismiss()
-        super.onDetachedFromWindow()
     }
 
     private fun place(view: View, x: Int, y: Int, w: Int, h: Int) {
