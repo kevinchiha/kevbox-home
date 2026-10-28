@@ -1,5 +1,8 @@
 package cloud.samlo.couch.data
 
+import cloud.samlo.couch.kevbox.config.KevBoxConfig
+import cloud.samlo.couch.kevbox.keys.KeyEntry
+import cloud.samlo.couch.kevbox.keys.KeyMap
 import java.io.File
 
 /**
@@ -49,8 +52,20 @@ class Config {
     var weatherCity = ""
     var fahrenheit = false
 
-    /** Once a day, look for a newer release on GitHub. */
+    /** Once a day, look for a newer release on tv.kevbox.dev. */
     var checkUpdates = true
+
+    // KevBox: read and written by KevBoxConfig, the one parser shared with the provision file
+    /** The left column, in order. */
+    var apps: List<String> = emptyList()
+    /** Shown first in the drawer, in order. */
+    var drawer: List<String> = emptyList()
+    /** Never in the column or the drawer. */
+    var hidden: Set<String> = emptySet()
+    /** Empty means KevBoxConfig.BUTTONS. */
+    var buttons: List<String> = emptyList()
+    var speedtestApp: String = KevBoxConfig.DEFAULT_SPEEDTEST
+    var keys: List<KeyEntry> = KeyMap.DEFAULT
 
     val cardScale: Float
         get() = when (cardSize) {
@@ -73,7 +88,7 @@ class Config {
     fun toJson(): String = ConfigJson.encode(this).toString(2)
 
     companion object {
-        private const val FILE = "config.json"
+        const val FILE = "config.json"
         const val DEFAULT_SUBREDDIT = "WidescreenWallpaper"
 
         const val LAYOUT_ROWS = "rows"

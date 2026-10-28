@@ -90,6 +90,19 @@
             android:exported="false"
             android:screenOrientation="landscape" />
 
+        <!-- KevBox Home's drawer: every other TV app. Only Home starts it, while Home is in front
+             (More apps, or KevBox.goHome(openDrawer = true) for ALL_APPS and drawer keys from any
+             app), so its task sits straight above Home's and Back lands on Home. -->
+        <activity
+            android:name=".kevbox.drawer.DrawerActivity"
+            android:configChanges="keyboard|keyboardHidden|navigation|screenSize|smallestScreenSize|screenLayout|orientation|uiMode|density"
+            android:enableOnBackInvokedCallback="false"
+            android:excludeFromRecents="true"
+            android:exported="false"
+            android:launchMode="singleTop"
+            android:screenOrientation="landscape"
+            tools:targetApi="33" />
+
         <service
             android:name=".MediaListener"
             android:exported="true"

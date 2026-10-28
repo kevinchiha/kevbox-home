@@ -128,6 +128,14 @@ class IndexScreen(
         list.reveal(0, animate = false)
     }
 
+    /** Stub: task 6 fills this in. Starts Move for [pkg] in the left column. */
+    @Suppress("UNUSED_PARAMETER")
+    fun startMove(pkg: String) = Unit
+
+    /** Stub: task 6 fills this in. Draws [wallpaper] behind the screen, dimmed by [dim]. */
+    @Suppress("UNUSED_PARAMETER")
+    fun showBackdrop(wallpaper: String?, dim: String) = Unit
+
     private fun row(entry: IndexEntry) = AppRow(activity, entry).apply {
         setOnFocusChangeListener { v, has -> if (has && !binding) select(v as AppRow, refresh = false) }
         setOnClickListener { this.entry.app.launch(activity) }

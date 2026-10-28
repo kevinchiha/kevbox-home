@@ -17,6 +17,7 @@ import cloud.samlo.couch.data.UserFiles
 import cloud.samlo.couch.data.Wallpapers
 import cloud.samlo.couch.data.Weather
 import cloud.samlo.couch.data.WeatherNow
+import cloud.samlo.couch.kevbox.menu.AppMenu
 import cloud.samlo.couch.settings.SettingsActivity
 import cloud.samlo.couch.ui.Tokens
 import cloud.samlo.couch.update.Installer
@@ -34,7 +35,10 @@ class HomeScreen(private val activity: Activity) {
     private val images = Images(activity, fetcher)
     private val views: HomeViews = HomeViews(
         activity, images, { openSettings() }, { installUpdate() },
-        onAppMenu = { menus.show(it) },
+        // A left-column app gets KevBox's menu; program cards keep Couch's.
+        onAppMenu = { tile ->
+            AppMenu.show(activity, tile.key, AppMenu.Place.COLUMN, config.apps) { views.index.startMove(tile.key) }
+        },
         onProgramMenu = { menus.show(it) },
     )
     private val installer = Installer(activity, fetcher)
@@ -107,6 +111,8 @@ class HomeScreen(private val activity: Activity) {
         config = data.config
         if (lookChanged) Tokens.applyAccent(config.accent)
         applyLook(config)
+        views.index.topBar.applyLook(config)
+        views.index.showBackdrop(data.wallpaper, config.dim)
         views.hero.wallpaperUrl = data.wallpaper
         showWeather(data.weather)
         update = data.update

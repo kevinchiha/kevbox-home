@@ -6,9 +6,11 @@ import android.graphics.drawable.Animatable
 import android.graphics.drawable.GradientDrawable
 import android.graphics.drawable.StateListDrawable
 import android.view.Gravity
+import android.view.View
 import android.widget.ImageView
 import android.widget.LinearLayout
 import cloud.samlo.couch.R
+import cloud.samlo.couch.data.Config
 import cloud.samlo.couch.data.WeatherNow
 import cloud.samlo.couch.ui.NowPlaying
 import cloud.samlo.couch.ui.Tokens
@@ -60,6 +62,13 @@ class IndexTopBar(context: Context, onSettings: () -> Unit, onUpdate: () -> Unit
         place.text = context.getString(R.string.index_place_range, now.place, now.high, now.low)
         weather.visibility = VISIBLE
     }
+
+    /** Stub: task 7 fills this in. The leftmost button, where Up from the first app lands. */
+    fun firstButton(): View? = settings
+
+    /** Stub: task 7 fills this in. Shows the buttons [config] asks for. */
+    @Suppress("UNUSED_PARAMETER")
+    fun applyLook(config: Config) = Unit
 
     private fun pill(icon: Int, label: Int, onClick: () -> Unit) = LinearLayout(context).apply {
         orientation = HORIZONTAL

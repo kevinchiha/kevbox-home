@@ -6,6 +6,8 @@ import android.content.Intent
 import android.os.Bundle
 import android.view.KeyEvent
 import cloud.samlo.couch.home.HomeScreen
+import cloud.samlo.couch.kevbox.KevBox
+import cloud.samlo.couch.kevbox.drawer.DrawerActivity
 
 /**
  * The launcher entry point. Named in the TV's settings, so it keeps its name and package; the
@@ -18,6 +20,8 @@ class MainActivity : Activity() {
         super.onCreate(savedInstanceState)
         home = HomeScreen(this)
         home.onCreate()
+        // A drawer key with no Home running yet still lands on the drawer.
+        openDrawerIfAsked(intent)
     }
 
     override fun onResume() {
@@ -38,6 +42,17 @@ class MainActivity : Activity() {
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         home.onHomePressed()
+        openDrawerIfAsked(intent)
+    }
+
+    /**
+     * Home starts the drawer itself, while in front, so the drawer's task sits straight above
+     * Home's and Back lands here. See [KevBox.goHome].
+     */
+    private fun openDrawerIfAsked(intent: Intent?) {
+        if (intent?.getBooleanExtra(KevBox.EXTRA_OPEN_DRAWER, false) == true) {
+            startActivity(DrawerActivity.intent(this))
+        }
     }
 
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {

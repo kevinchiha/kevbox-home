@@ -1,11 +1,14 @@
 package cloud.samlo.couch.data
 
+import cloud.samlo.couch.kevbox.config.KevBoxConfig
 import org.json.JSONArray
 import org.json.JSONObject
 
 /** The on-disk shape of [Config]. Key names are a user-facing contract: never rename them. */
 internal object ConfigJson {
-    fun encode(c: Config): JSONObject = JSONObject()
+    fun encode(c: Config): JSONObject = KevBoxConfig.encode(c, couch(c))
+
+    private fun couch(c: Config): JSONObject = JSONObject()
         .put("pinnedApps", JSONArray(c.pinnedApps))
         .put("hiddenApps", JSONArray(c.hiddenApps.sorted()))
         .put("hiddenInputs", JSONArray(c.hiddenInputs.sorted()))
@@ -33,8 +36,14 @@ internal object ConfigJson {
     /**
      * Every field is optional; a missing one keeps what [into] already holds. Keys of removed
      * features (godmode, hud, sync, pre-releases, ambient) are ignored and dropped on the next save.
+     * The KevBox keys, `wallpaper` among them, go through [KevBoxConfig.decode] at the end.
      */
-    fun decode(json: JSONObject, into: Config) = with(into) {
+    fun decode(json: JSONObject, into: Config) {
+        couch(json, into)
+        KevBoxConfig.decode(json, into)
+    }
+
+    private fun couch(json: JSONObject, into: Config) = with(into) {
         json.strings("pinnedApps")?.let { pinnedApps = it }
         json.strings("hiddenApps")?.let { hiddenApps = it.toSet() }
         json.strings("hiddenInputs")?.let { hiddenInputs = it.toSet() }
@@ -48,7 +57,6 @@ internal object ConfigJson {
         layout = Config.LAYOUT_INDEX
         cardSize = json.optString("cardSize", cardSize)
         accent = Accents.migrate(json.optString("accent", accent))
-        wallpaper = json.optString("wallpaper", wallpaper)
         dim = json.optString("dim", dim)
         showLabels = json.optBoolean("showLabels", showLabels)
         showDescriptions = json.optBoolean("showDescriptions", showDescriptions)
