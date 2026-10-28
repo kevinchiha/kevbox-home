@@ -5,6 +5,7 @@ import android.content.Intent
 import android.database.Cursor
 import android.media.tv.TvContract
 import cloud.samlo.couch.R
+import cloud.samlo.couch.kevbox.home.Watch
 
 /** Turns one preview-program row into a card. */
 internal object ProgramTile {
@@ -37,6 +38,13 @@ internal object ProgramTile {
             description = c.string("short_description") ?: c.string("long_description"),
             progress = if (started) (position.toFloat() / duration).coerceIn(0f, 1f) else -1f,
             intent = intent,
+            watch = Watch(
+                title,
+                c.string("season_display_number")?.takeIf { it.isNotBlank() },
+                c.string("episode_display_number")?.takeIf { it.isNotBlank() },
+                position,
+                duration,
+            ),
         )
     }
 

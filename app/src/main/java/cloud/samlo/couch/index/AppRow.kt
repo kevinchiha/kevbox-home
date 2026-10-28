@@ -8,12 +8,13 @@ import android.view.Gravity
 import android.widget.FrameLayout
 import android.widget.ImageView
 import android.widget.LinearLayout
+import cloud.samlo.couch.kevbox.home.StatusLine
 import cloud.samlo.couch.ui.Tokens
 import cloud.samlo.couch.ui.dp
 import cloud.samlo.couch.ui.dpf
 
 /**
- * One app in the list: icon, name, and its screen time on the right. Selecting it only swaps
+ * One app in the list: icon, then its name with one status line under it. Selecting it only swaps
  * the text colours; the background and accent marker belong to [AppList], which glides them
  * between rows. No size changes, so no layout pass.
  */
@@ -33,9 +34,10 @@ class AppRow(context: Context, entry: IndexEntry) : FrameLayout(context) {
         maxLines = 1
         ellipsize = TextUtils.TruncateAt.END
     }
-    private val hours = IndexText(context, 11f, 500, IndexTokens.hours).apply {
-        fontFeatureSettings = "tnum"
+    /** Where the show stands, else when the app was last opened (KevBox's [StatusLine]). */
+    private val status = IndexText(context, 11f, 500, IndexTokens.hours).apply {
         maxLines = 1
+        ellipsize = TextUtils.TruncateAt.END
     }
 
     /** The app the list (and the right column) is showing. */
@@ -55,8 +57,13 @@ class AppRow(context: Context, entry: IndexEntry) : FrameLayout(context) {
             gravity = Gravity.CENTER_VERTICAL
             setPadding(context.dp(15), 0, context.dp(13), 0)
             addView(icon, LinearLayout.LayoutParams(context.dp(IndexTokens.ICON), context.dp(IndexTokens.ICON)))
-            addView(name, LinearLayout.LayoutParams(0, LayoutParams.WRAP_CONTENT, 1f).apply { marginStart = context.dp(12) })
-            addView(hours, LinearLayout.LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT).apply { marginStart = context.dp(8) })
+            val text = LinearLayout(context).apply {
+                orientation = LinearLayout.VERTICAL
+                gravity = Gravity.CENTER_VERTICAL
+                addView(name, LinearLayout.LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT))
+                addView(status, LinearLayout.LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT))
+            }
+            addView(text, LinearLayout.LayoutParams(0, LayoutParams.WRAP_CONTENT, 1f).apply { marginStart = context.dp(12) })
         }
         addView(line, LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT))
         bind(entry)
@@ -64,16 +71,19 @@ class AppRow(context: Context, entry: IndexEntry) : FrameLayout(context) {
 
     fun bind(entry: IndexEntry) {
         this.entry = entry
-        contentDescription = entry.app.label
+        val line = StatusLine.of(context, entry, System.currentTimeMillis(), entry.clock24h)
+        contentDescription = if (line == null) entry.app.label else "${entry.app.label}, $line"
         icon.setImageBitmap(entry.icon)
         name.text = entry.app.label
-        hours.text = entry.usage?.let { Formats.short(context, it.weekMs) }.orEmpty()
+        status.text = line.orEmpty()
+        // Gone, not invisible, so the name centres alone.
+        status.visibility = if (line == null) GONE else VISIBLE
         restyle()
     }
 
     private fun restyle() {
         name.setTextColor(if (chosen) Tokens.textPrimary else Tokens.textMuted)
-        hours.setTextColor(if (chosen) Tokens.accent else IndexTokens.hours)
+        status.setTextColor(if (chosen) IndexTokens.description else IndexTokens.hours)
     }
 
     companion object {
