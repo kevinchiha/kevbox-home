@@ -1,0 +1,1 @@
+- task 12: done. Interfaces deviations: none. Extra: VersionJson.read(text) is internal, holding the shape rules that parse and Release.deserialize share.
