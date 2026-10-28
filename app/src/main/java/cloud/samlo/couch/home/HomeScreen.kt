@@ -4,29 +4,20 @@ import android.app.Activity
 import android.content.Intent
 import android.os.Handler
 import android.os.Looper
-import android.os.SystemClock
 import android.view.KeyEvent
 import android.widget.Toast
 import cloud.samlo.couch.HomeAccessibilityService
 import cloud.samlo.couch.MediaListener
-import cloud.samlo.couch.R
 import cloud.samlo.couch.data.Config
 import cloud.samlo.couch.data.Fetcher
 import cloud.samlo.couch.data.Images
-import cloud.samlo.couch.data.InputSource
 import cloud.samlo.couch.data.Prefs
 import cloud.samlo.couch.data.Programs
 import cloud.samlo.couch.data.UserFiles
 import cloud.samlo.couch.data.Wallpapers
 import cloud.samlo.couch.data.Weather
 import cloud.samlo.couch.data.WeatherNow
-import cloud.samlo.couch.godmode.GodmodePage
-import cloud.samlo.couch.godmode.Konami
-import cloud.samlo.couch.godmode.RealHome
-import cloud.samlo.couch.godmode.TvSettings
-import cloud.samlo.couch.measure.Benchmark
-import cloud.samlo.couch.measure.BenchmarkCard
-import cloud.samlo.couch.measure.FrameHud
+import cloud.samlo.couch.kevbox.menu.AppMenu
 import cloud.samlo.couch.settings.SettingsActivity
 import cloud.samlo.couch.ui.Tokens
 import cloud.samlo.couch.update.Installer
@@ -34,8 +25,8 @@ import cloud.samlo.couch.update.Release
 import cloud.samlo.couch.update.UpdateCheck
 
 /**
- * The home screen's wiring and lifecycle: it owns the pieces (loader, binder, organizer, menus,
- * ambient timer) and forwards the activity's callbacks to them. Create it in `onCreate`.
+ * The home screen's wiring and lifecycle: it owns the pieces (loader, organizer, menus)
+ * and forwards the activity's callbacks to them. Create it in `onCreate`.
  */
 class HomeScreen(private val activity: Activity) {
     private val files = UserFiles(activity)
@@ -44,7 +35,10 @@ class HomeScreen(private val activity: Activity) {
     private val images = Images(activity, fetcher)
     private val views: HomeViews = HomeViews(
         activity, images, { openSettings() }, { installUpdate() },
-        onAppMenu = { menus.show(it) },
+        // A left-column app gets KevBox's menu; program cards keep Couch's.
+        onAppMenu = { tile ->
+            AppMenu.show(activity, tile.key, AppMenu.Place.COLUMN, config.apps) { views.index.startMove(tile.key) }
+        },
         onProgramMenu = { menus.show(it) },
     )
     private val installer = Installer(activity, fetcher)
@@ -53,29 +47,14 @@ class HomeScreen(private val activity: Activity) {
 
     private var config = Config.load(null)
     private var resumed = false
-    private var resumedAt = 0L
 
-    private val ambientMode = AmbientMode(views.ambient, { resumed }, { organizer.active })
-        .also { it.minutes = config.ambientMinutes }
     private val organizer: Organizer = Organizer(activity, views.rows, views.hero, { config }, files) { load() }
     private val menus: CardMenus = CardMenus(activity, { config }, files, { load() }) { organizer.start(it) }
-    private val binder = SectionBinder(
-        activity, views.rows, images,
-        isOrganizing = { organizer.active },
-        onFocused = { card -> if (organizer.active) organizer.hint() else views.hero.show(card.tile) },
-        onLongPress = { menus.show(it) },
-    )
     private val loader = HomeLoader(
         activity, files, Wallpapers(fetcher, prefs), Weather(fetcher, prefs), UpdateCheck(activity, fetcher), ::onLoaded,
     )
-    private val watchers = SystemWatchers(activity, views.rows, { load() }) { offerInput(it) }
+    private val watchers = SystemWatchers(activity) { load() }
     private val reloadForRecommendations = Runnable { if (resumed) load() }
-    private val hud = FrameHud(activity)
-    private val benchmark = Benchmark(activity)
-    private var card: android.view.View? = null
-    private val konami = Konami()
-    /** The OK that completed the Konami code: its key-up is swallowed too, so no card opens. */
-    private var swallowUp = false
 
     fun onCreate() {
         activity.setContentView(views.root)
@@ -85,8 +64,6 @@ class HomeScreen(private val activity: Activity) {
 
     fun onResume() {
         resumed = true
-        swallowUp = false
-        resumedAt = SystemClock.elapsedRealtime()
         MediaListener.onRecommendationsChanged = {
             // Apps often post a batch at once: one reload for all of them.
             main.removeCallbacks(reloadForRecommendations)
@@ -96,7 +73,6 @@ class HomeScreen(private val activity: Activity) {
         // Watch progress moves while you're in an app; unchanged rows are not rebuilt.
         load()
         startLive()
-        ambientMode.schedule(activity = true)
     }
 
     fun onPause() {
@@ -104,14 +80,7 @@ class HomeScreen(private val activity: Activity) {
         MediaListener.onRecommendationsChanged = null
         main.removeCallbacks(reloadForRecommendations)
         if (organizer.active) organizer.stop()
-        hud.enable(Config.HUD_OFF)
-        benchmark.cancel()
-        closeCard()
-        swallowUp = false
         stopLive()
-        ambientMode.cancel()
-        views.topBar.inputOffer.hide()
-        views.index.topBar.inputOffer.hide()
     }
 
     fun onDestroy() {
@@ -121,95 +90,30 @@ class HomeScreen(private val activity: Activity) {
 
     /** HOME while already home goes back to the start, like the stock launcher. */
     fun onHomePressed() {
-        if (!resumed) return
-        benchmark.cancel()
-        if (views.indexShown) {
-            views.index.reset()
-            return
-        }
-        views.rows.reset()
-        views.rows.sections().firstOrNull()?.row?.focusFirst()
+        if (resumed) views.index.reset()
     }
 
-    fun onSettingsResult(resultCode: Int) {
-        if (resultCode == SettingsActivity.RESULT_ORGANIZE && !views.indexShown) main.post { organizer.start() }
-    }
+    /**
+     * Settings no longer sends anything back: Rearrange apps, its only result, left with the Rows
+     * layout. Kept because MainActivity still forwards every result here.
+     */
+    @Suppress("UNUSED_PARAMETER")
+    fun onSettingsResult(resultCode: Int) = Unit
 
     fun load() = loader.load()
 
-    /**
-     * True when the key was consumed (waking from ambient, reorder mode, a benchmark or its card).
-     * The HUD sees every press first, before anything can swallow it.
-     */
-    fun consumesKey(event: KeyEvent): Boolean {
-        hud.onKey(event)
-        card?.let {
-            if (event.action == KeyEvent.ACTION_UP) closeCard()
-            return true
-        }
-        if (konamiConsumes(event)) return true
-        return benchmark.abortOn(event) || ambientMode.consumesKey(event) || organizer.consumesKey(event) ||
-            (views.indexShown && views.index.consumesKey(event))
-    }
-
-    private fun konamiConsumes(event: KeyEvent): Boolean {
-        if (event.action == KeyEvent.ACTION_UP && swallowUp) {
-            swallowUp = false
-            return true
-        }
-        if (event.action != KeyEvent.ACTION_DOWN || event.repeatCount > 0 || !konami.press(event.keyCode, event.eventTime)) return false
-        swallowUp = true
-        if (!config.godmode) {
-            config.godmode = true
-            config.save(files.dir)
-        }
-        activity.startActivity(SettingsActivity.intent(activity, GodmodePage.page))
-        return true
-    }
-
-    /** Godmode's benchmark: back to the first card, then the script; the result shows over home. */
-    fun runBenchmark() {
-        // Android delivers the intent before onResume, and the reset needs the screen resumed.
-        main.postDelayed({ startBenchmark() }, BENCHMARK_SETTLE_MS)
-    }
-
-    private fun startBenchmark() {
-        if (benchmark.running || !resumed) return
-        closeCard()
-        onHomePressed()
-        val layout = if (views.indexShown) Config.LAYOUT_INDEX else Config.LAYOUT_ROWS
-        benchmark.run(views.indexShown) { result ->
-            if (result == null) return@run
-            // The HUD's panel sits where the card's corner lands; it comes back with the card gone.
-            hud.enable(Config.HUD_OFF)
-            card = BenchmarkCard.show(activity, layout, result, Benchmark.last(activity, layout), config.hud == Config.HUD_FPS)
-            Benchmark.save(activity, layout, result)
-        }
-    }
-
-    /** The HUD only runs while the home screen is up and godmode is unlocked. */
-    private fun hudUnit() = if (resumed && config.godmode) config.hud else Config.HUD_OFF
-
-    private fun closeCard() {
-        card?.let { (it.parent as? android.view.ViewGroup)?.removeView(it) } ?: return
-        card = null
-        hud.enable(hudUnit())
-    }
+    /** True when the key was consumed (reorder mode, or the Index layout's own keys). */
+    fun consumesKey(event: KeyEvent): Boolean =
+        organizer.consumesKey(event) || (views.indexShown && views.index.consumesKey(event))
 
     private fun onLoaded(data: HomeData) {
         val lookChanged = config.look != data.config.look
         config = data.config
         if (lookChanged) Tokens.applyAccent(config.accent)
         applyLook(config)
-        // Not while the result card is up: the panel would sit under it.
-        if (card == null) hud.enable(hudUnit())
-        // Godmode locked costs one boolean here; unlocked, a couple of cached settings reads.
-        val god = config.godmode && (config.hud != Config.HUD_OFF || TvSettings.changed(activity) > 0 || RealHome.active(activity))
-        views.topBar.god.show(god)
-        views.index.topBar.god.show(god)
+        views.index.topBar.applyLook(config)
+        views.index.showBackdrop(data.wallpaper, config.dim)
         views.hero.wallpaperUrl = data.wallpaper
-        ambientMode.minutes = config.ambientMinutes
-        ambientMode.pictures = data.pictures
         showWeather(data.weather)
         update = data.update
         // A reload mid-download keeps the "Downloading" label.
@@ -217,10 +121,9 @@ class HomeScreen(private val activity: Activity) {
             views.topBar.update.show(update?.version)
             views.index.topBar.update.show(update?.version)
         }
-        val index = data.index
-        switchLayout(index != null)
-        if (index != null) views.index.bind(index, config) else binder.bind(data.sections, config)
-        ambientMode.schedule()
+        // Index is the only layout; the Rows views stay built but hidden, for upstream merges.
+        switchLayout(true)
+        views.index.bind(data.index, config)
     }
 
     /** Swaps layouts after a settings change; the live parts (now playing, readings) follow. */
@@ -258,16 +161,11 @@ class HomeScreen(private val activity: Activity) {
         views.hero.setShowDescription(config.showDescriptions)
         val time = if (config.clock24h) "HH:mm" else "h:mm"
         views.topBar.applyLook(config, time)
-        views.ambient.setTimeFormat(time)
     }
 
     private fun showWeather(now: WeatherNow?) {
         views.topBar.showWeather(now)
         views.index.topBar.showWeather(now)
-        ambientMode.weatherLine = now?.let {
-            val label = if (it.condition.label != 0) activity.getString(it.condition.label) else ""
-            activity.getString(R.string.weather_line, it.temperature, label, it.place)
-        }
     }
 
     private fun installUpdate() {
@@ -282,14 +180,6 @@ class HomeScreen(private val activity: Activity) {
         }
     }
 
-    /** A device on an input just turned on: while home shows, offer to switch to it (unless hidden). */
-    private fun offerInput(inputId: String) {
-        // A TV waking up reports its inputs changing as it comes back; those are no news.
-        if (!resumed || SystemClock.elapsedRealtime() - resumedAt < WAKE_SETTLE_MS) return
-        val tile = InputSource.tiles(activity, config, null).firstOrNull { it.inputId == inputId } ?: return
-        if (views.indexShown) views.index.topBar.inputOffer.offer(tile) else views.topBar.inputOffer.offer(tile)
-    }
-
     @Suppress("DEPRECATION")
     private fun openSettings() {
         activity.startActivityForResult(Intent(activity, SettingsActivity::class.java), 1)
@@ -297,7 +187,5 @@ class HomeScreen(private val activity: Activity) {
 
     private companion object {
         const val RECOMMENDATIONS_SETTLE_MS = 2_000L
-        const val WAKE_SETTLE_MS = 10_000L
-        const val BENCHMARK_SETTLE_MS = 700L
     }
 }

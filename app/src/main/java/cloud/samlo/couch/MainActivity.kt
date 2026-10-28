@@ -5,9 +5,9 @@ import android.app.Activity
 import android.content.Intent
 import android.os.Bundle
 import android.view.KeyEvent
-import cloud.samlo.couch.debloat.Keepalive
 import cloud.samlo.couch.home.HomeScreen
-import cloud.samlo.couch.sync.Sync
+import cloud.samlo.couch.kevbox.KevBox
+import cloud.samlo.couch.kevbox.drawer.DrawerActivity
 
 /**
  * The launcher entry point. Named in the TV's settings, so it keeps its name and package; the
@@ -20,13 +20,13 @@ class MainActivity : Activity() {
         super.onCreate(savedInstanceState)
         home = HomeScreen(this)
         home.onCreate()
+        // A drawer key with no Home running yet still lands on the drawer.
+        openDrawerIfAsked(intent)
     }
 
     override fun onResume() {
         super.onResume()
         home.onResume()
-        Keepalive.maybe(this)
-        Sync.start(this)
     }
 
     override fun onPause() {
@@ -41,7 +41,18 @@ class MainActivity : Activity() {
 
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
-        if (intent.getBooleanExtra(EXTRA_BENCHMARK, false)) home.runBenchmark() else home.onHomePressed()
+        home.onHomePressed()
+        openDrawerIfAsked(intent)
+    }
+
+    /**
+     * Home starts the drawer itself, while in front, so the drawer's task sits straight above
+     * Home's and Back lands here. See [KevBox.goHome].
+     */
+    private fun openDrawerIfAsked(intent: Intent?) {
+        if (intent?.getBooleanExtra(KevBox.EXTRA_OPEN_DRAWER, false) == true) {
+            startActivity(DrawerActivity.intent(this))
+        }
     }
 
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
@@ -60,9 +71,4 @@ class MainActivity : Activity() {
     override fun onBackPressed() = Unit
 
     override fun dispatchKeyEvent(event: KeyEvent): Boolean = home.consumesKey(event) || super.dispatchKeyEvent(event)
-
-    companion object {
-        /** Godmode asks home to run its benchmark: back to the home screen, then the script. */
-        const val EXTRA_BENCHMARK = "cloud.samlo.couch.BENCHMARK"
-    }
 }

@@ -10,6 +10,7 @@ import cloud.samlo.couch.data.Weather
 import cloud.samlo.couch.data.WeatherNow
 import cloud.samlo.couch.index.IndexBuilder
 import cloud.samlo.couch.index.IndexData
+import cloud.samlo.couch.kevbox.provision.Provisioner
 import cloud.samlo.couch.update.Release
 import cloud.samlo.couch.update.UpdateCheck
 import java.util.concurrent.Executors
@@ -18,11 +19,9 @@ import java.util.concurrent.Executors
 class HomeData(
     val config: Config,
     val wallpaper: String?,
-    val pictures: List<String>,
     val weather: WeatherNow?,
-    val sections: List<SectionData>,
-    /** The Index layout's apps, when that is the chosen layout. */
-    val index: IndexData?,
+    /** The Index layout's apps: Index is the only layout KevBox shows. */
+    val index: IndexData,
     /** A newer release, when the daily check found one. */
     val update: Release?,
 )
@@ -40,7 +39,7 @@ class HomeLoader(
     private val onLoaded: (HomeData) -> Unit,
 ) {
     private val executor = Executors.newSingleThreadExecutor()
-    /** The daily update check, apart so a slow GitHub never delays the rows. */
+    /** The daily update check, apart so a slow tv.kevbox.dev never delays the rows. */
     private val checker = Executors.newSingleThreadExecutor()
     private val main = Handler(Looper.getMainLooper())
     private var loading = false
@@ -72,12 +71,12 @@ class HomeLoader(
     }
 
     private fun build(): HomeData {
+        // A pushed provision file lands in config.json first, so this same load already shows it.
+        Provisioner.applyIfPresent(files.dir)
         val config = Config.load(files.dir)
-        // Only the chosen layout's content is built.
-        val index = if (config.layout == Config.LAYOUT_INDEX) IndexBuilder.build(context, config, files.icons) else null
-        val sections = if (index == null) SectionBuilder.build(context, config, files.icons) else emptyList()
+        // The Rows layout's SectionBuilder stays in the source for upstream merges, never called.
+        val index = IndexBuilder.build(context, config, files.icons)
         val wallpaper = wallpapers.current(config, files.dir)
-        val pictures = if (config.ambientMinutes > 0) wallpapers.all(config, files.dir) else emptyList()
-        return HomeData(config, wallpaper, pictures, weather.now(config), sections, index, updates.pending(config))
+        return HomeData(config, wallpaper, weather.now(config), index, updates.pending(config))
     }
 }

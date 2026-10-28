@@ -8,8 +8,9 @@ import java.util.Date
 import java.util.Locale
 
 /**
- * Durations and dates in the TV's language. Date patterns come from ICU, which is slow
- * enough to drop frames, so formats are built once per locale and reused (main thread only).
+ * Durations and dates, always in English: the APK ships English copy only, so a French TV must
+ * still read "Opened Wednesday at 22:37", not "mercredi". Date patterns come from ICU, which is
+ * slow enough to drop frames, so formats are built once and reused (main thread only).
  */
 object Formats {
     private const val MINUTE = 60_000L
@@ -53,7 +54,7 @@ object Formats {
         val day = when (dayKey.format(date)) {
             dayKey.format(Date(now)) -> context.getString(R.string.index_today)
             dayKey.format(Date(now - DAY)) -> context.getString(R.string.index_yesterday)
-            // Within the week, the weekday alone says which day: "Wednesday", "mercredi".
+            // Within the week, the weekday alone says which day: "Wednesday".
             else -> weekday.format(date)
         }
         return context.getString(R.string.index_day_at, day, time)
@@ -70,9 +71,9 @@ object Formats {
         return letters
     }
 
-    /** Builds the formats when the locale changed; returns the current locale. */
+    /** Builds the formats on first use; returns the locale they use. */
     private fun formats(): Locale {
-        val current = Locale.getDefault()
+        val current = Locale.ENGLISH
         if (current != locale) {
             locale = current
             time24 = SimpleDateFormat(DateFormat.getBestDateTimePattern(current, "Hm"), current)

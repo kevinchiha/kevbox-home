@@ -11,10 +11,9 @@ import cloud.samlo.couch.data.Config
 import cloud.samlo.couch.data.Tile
 import cloud.samlo.couch.data.UserFiles
 import cloud.samlo.couch.settings.Dialogs
-import cloud.samlo.couch.settings.IconPickerActivity
 import cloud.samlo.couch.ui.Card
 
-/** The long-press menu on a card, and the actions it offers: move, rename, icon, hide, app info. */
+/** The long-press menu on a card, and the actions it offers: move, rename, hide, app info. */
 class CardMenus(
     private val activity: Activity,
     private val config: () -> Config,
@@ -42,7 +41,6 @@ class CardMenus(
         )
         Tile.Kind.INPUT -> listOf(
             activity.getString(R.string.menu_rename) to { rename(tile) },
-            activity.getString(R.string.menu_icon) to { pickIcon(tile) },
             activity.getString(R.string.menu_hide) to { hide(tile) },
         )
         Tile.Kind.PROGRAM -> tile.packageName?.let { pkg ->
@@ -61,11 +59,6 @@ class CardMenus(
             config.save(files.dir)
             reload()
         }
-    }
-
-    /** The picker saves the choice; coming back to home reloads the row. */
-    private fun pickIcon(tile: Tile) {
-        activity.startActivity(IconPickerActivity.intent(activity, tile.key, tile.label))
     }
 
     private fun hide(tile: Tile) {

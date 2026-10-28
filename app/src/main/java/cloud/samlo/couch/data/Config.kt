@@ -1,5 +1,8 @@
 package cloud.samlo.couch.data
 
+import cloud.samlo.couch.kevbox.config.KevBoxConfig
+import cloud.samlo.couch.kevbox.keys.KeyEntry
+import cloud.samlo.couch.kevbox.keys.KeyMap
 import java.io.File
 
 /**
@@ -25,7 +28,10 @@ class Config {
     var channels: Map<String, Boolean> = emptyMap()
 
     // Look
-    /** "index" (a list of apps beside what the focused one offers, the default) or "rows" (cards in rows). */
+    /**
+     * Always "index" (a list of apps beside what the focused one offers) after a load. The key
+     * stays in the file so old configs round-trip; "rows" is kept only for upstream's code.
+     */
     var layout: String = LAYOUT_INDEX
     var cardSize: String = "medium"
     var accent: String = Accents.default
@@ -46,26 +52,20 @@ class Config {
     var weatherCity = ""
     var fahrenheit = false
 
-    /** Minutes idle on the home screen before ambient mode; 0 turns it off. */
-    var ambientMinutes = 5
-
-    /** Once a day, look for a newer release on GitHub. */
+    /** Once a day, look for a newer release on tv.kevbox.dev. */
     var checkUpdates = true
 
-    /** Seven OK presses on About unlocked it; the hidden Godmode page is then in Customize. */
-    var godmode = false
-
-    /** Share screen time with the TVs this one is paired with, over the home network only. */
-    var syncEnabled = false
-
-    /** With sync on: Index adds the other TVs' screen time to this one's. */
-    var syncAllTvs = true
-
-    /** Godmode's update channel: pre-releases too, never older than what's installed. */
-    var preReleases = false
-
-    /** Godmode's frame HUD on the home screen: [HUD_OFF], [HUD_MS] or [HUD_FPS]. */
-    var hud = HUD_OFF
+    // KevBox: read and written by KevBoxConfig, the one parser shared with the provision file
+    /** The left column, in order. */
+    var apps: List<String> = emptyList()
+    /** Shown first in the drawer, in order. */
+    var drawer: List<String> = emptyList()
+    /** Never in the column or the drawer. */
+    var hidden: Set<String> = emptySet()
+    /** Empty means KevBoxConfig.BUTTONS. */
+    var buttons: List<String> = emptyList()
+    var speedtestApp: String = KevBoxConfig.DEFAULT_SPEEDTEST
+    var keys: List<KeyEntry> = KeyMap.DEFAULT
 
     val cardScale: Float
         get() = when (cardSize) {
@@ -88,15 +88,8 @@ class Config {
     fun toJson(): String = ConfigJson.encode(this).toString(2)
 
     companion object {
-        private const val FILE = "config.json"
+        const val FILE = "config.json"
         const val DEFAULT_SUBREDDIT = "WidescreenWallpaper"
-        const val HUD_OFF = "off"
-
-        /** How long each frame took: slow frames stand out, and fast ones still show their headroom. */
-        const val HUD_MS = "ms"
-
-        /** The same frames as a rate, capped at what the screen can actually show. */
-        const val HUD_FPS = "fps"
 
         const val LAYOUT_ROWS = "rows"
         const val LAYOUT_INDEX = "index"

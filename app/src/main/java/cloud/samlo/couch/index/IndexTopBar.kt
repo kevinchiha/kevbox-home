@@ -10,27 +10,20 @@ import android.view.View
 import android.widget.ImageView
 import android.widget.LinearLayout
 import cloud.samlo.couch.R
+import cloud.samlo.couch.data.Config
 import cloud.samlo.couch.data.WeatherNow
-import cloud.samlo.couch.ui.GodBadge
-import cloud.samlo.couch.ui.InputChip
 import cloud.samlo.couch.ui.NowPlaying
 import cloud.samlo.couch.ui.Tokens
 import cloud.samlo.couch.ui.UpdateChip
 import cloud.samlo.couch.ui.dp
 import cloud.samlo.couch.ui.dpf
 
-/**
- * Top right: an input that just turned on, what's playing, an update when there is one, the
- * weather, then Inputs and Settings.
- */
+/** Top right: what's playing, an update when there is one, the weather, then Settings. */
 @SuppressLint("ViewConstructor")
-class IndexTopBar(context: Context, onInputs: () -> Unit, onSettings: () -> Unit, onUpdate: () -> Unit) : LinearLayout(context) {
+class IndexTopBar(context: Context, onSettings: () -> Unit, onUpdate: () -> Unit) : LinearLayout(context) {
     val nowPlaying = NowPlaying(context)
-    val inputOffer = InputChip(context)
     val update = UpdateChip(context).apply { setOnClickListener { onUpdate() } }
-    val inputs = pill(R.drawable.ic_pill_inputs, R.string.section_inputs, onInputs)
     val settings = pill(R.drawable.ic_pill_settings, R.string.settings, onSettings)
-    val god = GodBadge(context, 9.5f)
     private val weather = LinearLayout(context).apply {
         orientation = HORIZONTAL
         gravity = Gravity.CENTER_VERTICAL
@@ -43,7 +36,6 @@ class IndexTopBar(context: Context, onInputs: () -> Unit, onSettings: () -> Unit
     init {
         orientation = HORIZONTAL
         gravity = Gravity.CENTER_VERTICAL
-        addView(inputOffer, LayoutParams(LayoutParams.WRAP_CONTENT, context.dp(26)).apply { marginEnd = context.dp(15) })
         addView(nowPlaying, LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT).apply { marginEnd = context.dp(15) })
         addView(update, LayoutParams(LayoutParams.WRAP_CONTENT, context.dp(26)).apply { marginEnd = context.dp(15) })
         // Meteocons leave a margin around the drawing; 30dp draws the sky at about 20dp.
@@ -56,8 +48,6 @@ class IndexTopBar(context: Context, onInputs: () -> Unit, onSettings: () -> Unit
         weather.addView(temperature)
         weather.addView(place, LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT).apply { marginStart = context.dp(7) })
         addView(weather, LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT).apply { marginEnd = context.dp(15) })
-        addView(god, LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT).apply { marginEnd = context.dp(10) })
-        addView(inputs, LayoutParams(LayoutParams.WRAP_CONTENT, context.dp(26)).apply { marginEnd = context.dp(6) })
         addView(settings, LayoutParams(LayoutParams.WRAP_CONTENT, context.dp(26)))
     }
 
@@ -72,6 +62,13 @@ class IndexTopBar(context: Context, onInputs: () -> Unit, onSettings: () -> Unit
         place.text = context.getString(R.string.index_place_range, now.place, now.high, now.low)
         weather.visibility = VISIBLE
     }
+
+    /** Stub: task 7 fills this in. The leftmost button, where Up from the first app lands. */
+    fun firstButton(): View? = settings
+
+    /** Stub: task 7 fills this in. Shows the buttons [config] asks for. */
+    @Suppress("UNUSED_PARAMETER")
+    fun applyLook(config: Config) = Unit
 
     private fun pill(icon: Int, label: Int, onClick: () -> Unit) = LinearLayout(context).apply {
         orientation = HORIZONTAL
@@ -107,10 +104,5 @@ class IndexTopBar(context: Context, onInputs: () -> Unit, onSettings: () -> Unit
     fun animateWeather(on: Boolean) {
         animating = on
         (weatherIcon.drawable as? Animatable)?.let { if (on) it.start() else it.stop() }
-    }
-
-    /** Hidden when the TV has no inputs to switch to. */
-    fun setHasInputs(has: Boolean) {
-        inputs.visibility = if (has) View.VISIBLE else View.GONE
     }
 }

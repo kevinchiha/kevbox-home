@@ -6,7 +6,6 @@ import android.os.Handler
 import android.os.Looper
 import android.text.SpannableStringBuilder
 import android.text.Spanned
-import android.text.format.Formatter
 import android.text.style.ForegroundColorSpan
 import android.text.style.TypefaceSpan
 import android.widget.LinearLayout
@@ -72,7 +71,7 @@ class SystemLine(context: Context) : LinearLayout(context) {
         }
         set(2, c.getString(R.string.index_percent, r.memoryUsedPercent), c.getString(R.string.index_memory))
         set(3, c.getString(R.string.index_percent, r.storageUsedPercent),
-            c.getString(R.string.index_storage, Formatter.formatShortFileSize(c, r.storageFreeBytes)))
+            c.getString(R.string.index_storage, size(r.storageFreeBytes)))
         val minutes = r.uptimeMs / 60_000
         val uptime = if (minutes >= 24 * 60) {
             c.getString(R.string.index_days_hours, (minutes / (24 * 60)).toInt(), ((minutes / 60) % 24).toInt())
@@ -97,7 +96,23 @@ class SystemLine(context: Context) : LinearLayout(context) {
         if (items[i].text.toString() != text.toString()) items[i].text = text
     }
 
-    private fun rate(value: Double) = String.format(Locale.getDefault(), if (value >= 100) "%.0f" else "%.1f", value)
+    /** English figures whatever the TV's language, so the traffic keeps a decimal point. */
+    private fun rate(value: Double) = String.format(Locale.ENGLISH, if (value >= 100) "%.0f" else "%.1f", value)
+
+    /**
+     * Free storage as "12 GB" or "3.4 GB". Android's own short formatter names units in the TV's
+     * language ("Go" in French), and the copy is English only. Decimal units, as Android's are.
+     */
+    private fun size(bytes: Long): String {
+        var value = bytes.coerceAtLeast(0).toDouble()
+        var unit = 0
+        while (value >= 1000 && unit < SIZE_UNITS.lastIndex) {
+            value /= 1000
+            unit++
+        }
+        val number = if (unit == 0 || value >= 10) "%.0f" else "%.1f"
+        return String.format(Locale.ENGLISH, number, value) + " " + SIZE_UNITS[unit]
+    }
 
     /** A real minus sign reads better than a hyphen. */
     private fun minus(value: Int) = if (value < 0) "−${-value}" else value.toString()
@@ -109,5 +124,6 @@ class SystemLine(context: Context) : LinearLayout(context) {
 
     private companion object {
         const val REFRESH_MS = 3_000L
+        val SIZE_UNITS = listOf("B", "KB", "MB", "GB", "TB")
     }
 }

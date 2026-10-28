@@ -25,4 +25,10 @@ class HomeCaptureTest {
         assertTrue(home("com.amazon.tv.launcher", "com.amazon.tv.launcher.ui.HomeActivity_vNext"))
         assertFalse(home("com.amazon.tv.launcher", "com.amazon.tv.launcher.settings.SettingsActivity"))
     }
+
+    @Test
+    fun settingsAppIsNeverStockHome() {
+        assertFalse(home("com.android.tv.settings", "com.android.tv.settings.MainSettings"))
+        assertFalse(home("com.android.settings", "com.android.settings.Settings"))
+    }
 }

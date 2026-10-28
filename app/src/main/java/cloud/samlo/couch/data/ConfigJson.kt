@@ -1,11 +1,14 @@
 package cloud.samlo.couch.data
 
+import cloud.samlo.couch.kevbox.config.KevBoxConfig
 import org.json.JSONArray
 import org.json.JSONObject
 
 /** The on-disk shape of [Config]. Key names are a user-facing contract: never rename them. */
 internal object ConfigJson {
-    fun encode(c: Config): JSONObject = JSONObject()
+    fun encode(c: Config): JSONObject = KevBoxConfig.encode(c, couch(c))
+
+    private fun couch(c: Config): JSONObject = JSONObject()
         .put("pinnedApps", JSONArray(c.pinnedApps))
         .put("hiddenApps", JSONArray(c.hiddenApps.sorted()))
         .put("hiddenInputs", JSONArray(c.hiddenInputs.sorted()))
@@ -28,16 +31,19 @@ internal object ConfigJson {
         .put("weather", c.weather)
         .put("weatherCity", c.weatherCity)
         .put("fahrenheit", c.fahrenheit)
-        .put("ambientMinutes", c.ambientMinutes)
         .put("checkUpdates", c.checkUpdates)
-        .put("godmode", c.godmode)
-        .put("preReleases", c.preReleases)
-        .put("syncEnabled", c.syncEnabled)
-        .put("syncAllTvs", c.syncAllTvs)
-        .put("hud", c.hud)
 
-    /** Every field is optional; a missing one keeps what [into] already holds. */
-    fun decode(json: JSONObject, into: Config) = with(into) {
+    /**
+     * Every field is optional; a missing one keeps what [into] already holds. Keys of removed
+     * features (godmode, hud, sync, pre-releases, ambient) are ignored and dropped on the next save.
+     * The KevBox keys, `wallpaper` among them, go through [KevBoxConfig.decode] at the end.
+     */
+    fun decode(json: JSONObject, into: Config) {
+        couch(json, into)
+        KevBoxConfig.decode(json, into)
+    }
+
+    private fun couch(json: JSONObject, into: Config) = with(into) {
         json.strings("pinnedApps")?.let { pinnedApps = it }
         json.strings("hiddenApps")?.let { hiddenApps = it.toSet() }
         json.strings("hiddenInputs")?.let { hiddenInputs = it.toSet() }
@@ -47,10 +53,10 @@ internal object ConfigJson {
         json.strings("hiddenSections")?.let { hiddenSections = it.toSet() }
         channels = json.optJSONObject("channels")?.let { o -> o.keys().asSequence().associateWith { o.optBoolean(it) } }
             ?: emptyMap()
-        layout = json.optString("layout", layout)
+        // Index is the only layout KevBox ships; an old "rows" file loads as index and saves that way.
+        layout = Config.LAYOUT_INDEX
         cardSize = json.optString("cardSize", cardSize)
         accent = Accents.migrate(json.optString("accent", accent))
-        wallpaper = json.optString("wallpaper", wallpaper)
         dim = json.optString("dim", dim)
         showLabels = json.optBoolean("showLabels", showLabels)
         showDescriptions = json.optBoolean("showDescriptions", showDescriptions)
@@ -61,18 +67,7 @@ internal object ConfigJson {
         weather = json.optBoolean("weather", weather)
         weatherCity = json.optString("weatherCity", weatherCity)
         fahrenheit = json.optBoolean("fahrenheit", fahrenheit)
-        ambientMinutes = json.optInt("ambientMinutes", ambientMinutes)
         checkUpdates = json.optBoolean("checkUpdates", checkUpdates)
-        godmode = json.optBoolean("godmode", godmode)
-        preReleases = json.optBoolean("preReleases", preReleases)
-        syncEnabled = json.optBoolean("syncEnabled", syncEnabled)
-        syncAllTvs = json.optBoolean("syncAllTvs", syncAllTvs)
-        // Was a boolean before the HUD could show either unit.
-        hud = when (val value = json.opt("hud")) {
-            is Boolean -> if (value) Config.HUD_MS else Config.HUD_OFF
-            is String -> value
-            else -> hud
-        }
     }
 
     private fun JSONObject.strings(name: String): List<String>? {

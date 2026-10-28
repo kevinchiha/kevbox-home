@@ -2,6 +2,7 @@ package cloud.samlo.couch
 
 import cloud.samlo.couch.data.Accents
 import cloud.samlo.couch.data.Config
+import org.json.JSONObject
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -20,7 +21,6 @@ class ConfigTest {
         assertTrue("com.sony.dtv.promos" in config.hiddenApps)
         assertEquals("medium", config.cardSize)
         assertEquals("index", config.layout)
-        assertEquals(5, config.ambientMinutes)
         assertEquals(3, config.wallpaperHours)
         assertEquals(Config.DEFAULT_SUBREDDIT, config.subreddit)
     }
@@ -36,7 +36,6 @@ class ConfigTest {
             sectionOrder = listOf("inputs", "apps", "ch:7")
             hiddenSections = setOf("ch:7")
             channels = mapOf("7" to true, "8" to false)
-            layout = "rows"
             cardSize = "large"
             accent = "#34D399"
             wallpaper = "reddit"
@@ -50,7 +49,6 @@ class ConfigTest {
             weather = false
             weatherCity = "Montréal"
             fahrenheit = true
-            ambientMinutes = 0
         }
         val copy = Config.fromJson(config.toJson())
         assertEquals(config.toJson(), copy.toJson())
@@ -59,16 +57,32 @@ class ConfigTest {
         assertEquals("ps5", copy.inputIcons["hdmi4"])
         assertEquals("Montréal", copy.weatherCity)
         assertFalse(copy.showDescriptions)
-        assertEquals("rows", copy.layout)
     }
 
     @Test
-    fun syncIsOffByDefaultAndKeepsItsChoices() {
-        assertFalse(Config().syncEnabled)
-        assertTrue(Config().syncAllTvs)
-        val back = Config.fromJson(Config().apply { syncEnabled = true; syncAllTvs = false }.toJson())
-        assertTrue(back.syncEnabled)
-        assertFalse(back.syncAllTvs)
+    fun rowsLayoutLoadsAsIndex() {
+        val config = Config.fromJson("""{"layout":"rows"}""")
+        assertEquals("index", config.layout)
+        assertEquals("index", JSONObject(config.toJson()).getString("layout"))
+        assertEquals("index", Config.fromJson(config.toJson()).layout)
+    }
+
+    @Test
+    fun missingLayoutIsIndex() {
+        assertEquals("index", Config.fromJson("{}").layout)
+    }
+
+    @Test
+    fun configWithRemovedKeysLoadsAndSavesWithoutThem() {
+        val config = Config.fromJson(
+            """{"godmode":true,"hud":"fps","ambientMinutes":5,"syncEnabled":true,"syncAllTvs":false,"preReleases":true,"cardSize":"large"}""",
+        )
+        assertEquals("large", config.cardSize)
+        assertEquals(Config().apply { cardSize = "large" }.toJson(), config.toJson())
+        val saved = JSONObject(config.toJson())
+        for (key in listOf("godmode", "hud", "ambientMinutes", "syncEnabled", "syncAllTvs", "preReleases")) {
+            assertFalse(key, saved.has(key))
+        }
     }
 
     @Test

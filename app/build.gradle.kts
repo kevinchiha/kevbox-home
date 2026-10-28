@@ -13,15 +13,23 @@ kotlin {
 }
 
 /**
- * The version comes from the latest `vX.Y.Z` tag, so a release is just a tag. Builds between
- * tags keep the last tag's version; the code is derived from it so it always increases.
+ * The version is the highest `vX.Y.Z[.N]` tag reachable from HEAD, so a release is just a tag.
+ * Every merged tag is compared rather than trusting `git describe`, which picks the nearest tag
+ * and can land on an older one. A three-part tag counts as `.0`; a tag that doesn't parse is
+ * skipped. The code is derived from the four numbers so it always increases.
  */
-val gitTag: String = providers.exec {
-    commandLine("git", "describe", "--tags", "--abbrev=0", "--match", "v*")
+val version4: List<Int> = providers.exec {
+    commandLine("git", "tag", "--merged", "HEAD", "--list", "v*")
     isIgnoreExitValue = true
-}.standardOutput.asText.get().trim().ifEmpty { "v0.1.0" }
-
-val semver = gitTag.removePrefix("v").split('.', '-').take(3).map { it.toIntOrNull() ?: 0 }
+}.standardOutput.asText.get().lines()
+    .mapNotNull { tag ->
+        val parts = tag.trim().removePrefix("v").split('.')
+        val numbers = parts.mapNotNull { it.toIntOrNull()?.takeIf { n -> n >= 0 } }
+        if (parts.size > 4 || numbers.size != parts.size) null
+        else numbers + List(4 - numbers.size) { 0 }
+    }
+    .maxWithOrNull { a, b -> a.zip(b).map { (x, y) -> x.compareTo(y) }.firstOrNull { it != 0 } ?: 0 }
+    ?: listOf(0, 1, 0, 0)
 
 /**
  * Release signing, from environment variables (CI) or an env-style file named by the
@@ -53,12 +61,18 @@ android {
     compileSdk = 36
 
     defaultConfig {
-        applicationId = "cloud.samlo.couch"
+        applicationId = "tv.kevbox.home"
         // Fire OS 7 (Android 9) is the oldest target.
         minSdk = 28
         targetSdk = 36
-        versionCode = (semver[0] * 10_000 + semver[1] * 100 + semver[2]).coerceAtLeast(1)
-        versionName = semver.joinToString(".")
+        versionCode = (version4[0] * 1_000_000 + version4[1] * 10_000 + version4[2] * 100 +
+            version4[3]).coerceAtLeast(1)
+        versionName = version4.joinToString(".")
+    }
+
+    // English only: values-fr stays in the source untouched (AC-38) but never ships.
+    androidResources {
+        localeFilters += "en"
     }
 
     signingConfigs {
@@ -73,7 +87,7 @@ android {
     }
 
     buildTypes {
-        // Installs beside the release build, so a dev build never replaces the Couch in use.
+        // Installs beside the release build, so a dev build never replaces the KevBox Home in use.
         debug {
             applicationIdSuffix = ".dev"
         }
@@ -99,6 +113,14 @@ android {
         resources {
             excludes += "kotlin/**"
         }
+    }
+
+    // values-fr is Couch's untouched copy (AC-38) and the locale filter keeps it out of the APK.
+    // Without this, strings deleted from values/ fail the build as ExtraTranslation (fatal), and
+    // new English strings raise MissingTranslation. Plurals deleted from values/ fail as
+    // MissingDefaultResource (an error) instead of ExtraTranslation.
+    lint {
+        disable += setOf("ExtraTranslation", "MissingTranslation", "MissingDefaultResource")
     }
 }
 

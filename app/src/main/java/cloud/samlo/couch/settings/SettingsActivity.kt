@@ -7,12 +7,10 @@ import android.os.Bundle
 import android.view.KeyEvent
 import cloud.samlo.couch.data.Config
 import cloud.samlo.couch.data.UserFiles
-import cloud.samlo.couch.debloat.DebloatPage
-import cloud.samlo.couch.godmode.GodmodePage
 import cloud.samlo.couch.ui.Tokens
 
 /**
- * Hosts one settings page (main, rows, channels or inputs, chosen by an extra) in the shared
+ * Hosts one settings page (main or channels, chosen by an extra) in the shared
  * layout. Each change is saved at once; the home screen picks it up when it comes back.
  */
 class SettingsActivity : Activity() {
@@ -27,12 +25,7 @@ class SettingsActivity : Activity() {
         layout = SettingsLayout(this)
         val ctx = SettingsContext(this, files, layout, config)
         page = when (intent.getStringExtra(EXTRA_PAGE)) {
-            PAGE_ROWS -> RowsPage(ctx)
             PAGE_CHANNELS -> ChannelsPage(ctx)
-            PAGE_INPUTS -> InputsPage(ctx)
-            GodmodePage.page -> GodmodePage(ctx)
-            DebloatPage.page -> DebloatPage(ctx)
-            PAGE_TVS -> OtherTvsPage(ctx)
             else -> MainPage(ctx)
         }
         setContentView(layout.root)
@@ -40,14 +33,8 @@ class SettingsActivity : Activity() {
         layout.list.post { layout.items().firstOrNull { it.isFocusable }?.requestFocus() }
     }
 
-    /** The godmode pages paint phosphor green; put the user's accent back once they leave. */
     override fun onDestroy() {
-        if (this::page.isInitialized) {
-            page.onDestroy()
-            if (page is GodmodePage || page is DebloatPage) {
-                Tokens.applyAccent(Config.load(UserFiles(this).dir).accent)
-            }
-        }
+        if (this::page.isInitialized) page.onDestroy()
         super.onDestroy()
     }
 
@@ -65,11 +52,7 @@ class SettingsActivity : Activity() {
 
     companion object {
         private const val EXTRA_PAGE = "page"
-        const val PAGE_ROWS = "rows"
         const val PAGE_CHANNELS = "channels"
-        const val PAGE_INPUTS = "inputs"
-        const val PAGE_TVS = "tvs"
-        const val RESULT_ORGANIZE = RESULT_FIRST_USER
 
         fun intent(context: Context, page: String) =
             Intent(context, SettingsActivity::class.java).putExtra(EXTRA_PAGE, page)
