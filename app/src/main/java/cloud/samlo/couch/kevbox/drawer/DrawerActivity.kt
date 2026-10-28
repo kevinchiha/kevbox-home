@@ -1,5 +1,6 @@
 package cloud.samlo.couch.kevbox.drawer
 
+import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.BroadcastReceiver
 import android.content.Context
@@ -75,6 +76,8 @@ class DrawerActivity : Activity() {
     /** Keys reach Move before focus search, the way MainActivity routes them to Home. */
     override fun dispatchKeyEvent(event: KeyEvent): Boolean = consumesKey(event) || super.dispatchKeyEvent(event)
 
+    // The manifest opts the drawer out of predictive back, so reading Back here is the only hook.
+    @SuppressLint("GestureBackNavigation")
     private fun consumesKey(event: KeyEvent): Boolean {
         val down = event.action == KeyEvent.ACTION_DOWN
         val up = event.action == KeyEvent.ACTION_UP
