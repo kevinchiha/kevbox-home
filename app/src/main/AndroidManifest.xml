@@ -16,14 +16,23 @@
     <uses-permission
         android:name="android.permission.WRITE_SECURE_SETTINGS"
         tools:ignore="ProtectedPermissions" />
-    <!-- Godmode's debloat scan checks a few hundred system packages by name (assets/debloat/lists.txt);
-         declaring each in <queries> would cost about 20 KB. Lookups stay on the TV. -->
+    <!-- Restart app reads the TV settings app's own "Force stop" string, and the remote keys and
+         the hold-OK menu look apps up by package; <queries> can't name the settings app on every TV. -->
     <uses-permission
         android:name="android.permission.QUERY_ALL_PACKAGES"
         tools:ignore="QueryAllPackagesPermission" />
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
     <!-- Self-update: Android still asks the user before installing. -->
     <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
+    <!-- The Bluetooth button: whether Bluetooth is on and how many devices are connected. -->
+    <uses-permission
+        android:name="android.permission.BLUETOOTH"
+        android:maxSdkVersion="30" />
+    <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />
+    <!-- The Wi-Fi button's signal level. -->
+    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
+    <!-- Hold-OK menu: Uninstall opens Android's own confirmation; nothing is removed without it. -->
+    <uses-permission android:name="android.permission.REQUEST_DELETE_PACKAGES" />
 
     <uses-feature
         android:name="android.software.leanback"

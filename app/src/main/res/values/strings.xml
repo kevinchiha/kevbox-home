@@ -2,9 +2,9 @@
 <!-- English is the default; values-fr holds the French translation. -->
 <!-- aapt2 collapses runs of spaces; strings whose double spaces matter are quoted. -->
 <resources>
-    <string name="app_name">Couch</string>
-    <string name="accessibility_label">Couch: Home button</string>
-    <string name="accessibility_description">Opens Couch when you press Home.</string>
+    <string name="app_name">KevBox Home</string>
+    <string name="accessibility_label">KevBox Home</string>
+    <string name="accessibility_description">Opens KevBox Home when you press Home, and opens your apps from the remote’s app buttons.</string>
 
     <!-- Home -->
     <string name="section_inputs">Inputs</string>
@@ -35,7 +35,7 @@
     <string name="index_day_at">%1$s at %2$s</string>
     <string name="index_not_opened">Not opened this week</string>
     <string name="index_no_channel">%1$s has no channel on this TV. Press OK to open it.</string>
-    <string name="index_no_usage">Screen time shows here once Couch has usage access. The setup guide shows how to turn it on.</string>
+    <string name="index_no_usage">Screen time shows here once KevBox Home has usage access. The setup guide shows how to turn it on.</string>
     <string name="index_place_range">%1$s\n%2$d° / %3$d°</string>
     <string name="index_ethernet">Ethernet</string>
     <string name="index_wifi">Wi-Fi</string>
@@ -162,27 +162,47 @@
     <string name="setup_turn_on">Turn on  ›</string>
     <string name="setup_no_screen">This TV has no settings screen for this. The help on the right gives another way.</string>
     <string name="setup_home">HOME button</string>
-    <string name="setup_home_help">Opens Couch when you press HOME, on TVs that send HOME to their own launcher. Turn on “Couch: Home button” in the accessibility settings. Not needed if HOME already opens Couch.</string>
+    <string name="setup_home_help">Opens KevBox Home when you press HOME and lets the remote’s app buttons open your apps. Turn on “KevBox Home” in the accessibility settings.</string>
     <string name="setup_notifications">Notification access</string>
-    <string name="setup_notifications_help">Shows what’s playing in the top bar and, on Fire TV, the recommendations apps post. If the TV has no screen for it: adb shell cmd notification allow_listener cloud.samlo.couch/cloud.samlo.couch.MediaListener</string>
+    <string name="setup_notifications_help">Shows what’s playing in the top bar and, on Fire TV, the recommendations apps post. If the TV has no screen for it: adb shell cmd notification allow_listener tv.kevbox.home/cloud.samlo.couch.MediaListener</string>
     <string name="setup_usage">Usage access</string>
-    <string name="setup_usage_help">Screen time in the Index layout and the Recent row. If the TV has no screen for it: adb shell appops set cloud.samlo.couch GET_USAGE_STATS allow</string>
+    <string name="setup_usage_help">Screen time in the Index layout and the Recent row. If the TV has no screen for it: adb shell appops set tv.kevbox.home GET_USAGE_STATS allow</string>
     <string name="setup_channels">TV listings</string>
-    <string name="setup_channels_help">The preview channels apps publish (YouTube, Jellyfin and others). If the TV has no screen for it: adb shell pm grant cloud.samlo.couch android.permission.READ_TV_LISTINGS</string>
+    <string name="setup_channels_help">The preview channels apps publish (YouTube, Jellyfin and others). If the TV has no screen for it: adb shell pm grant tv.kevbox.home android.permission.READ_TV_LISTINGS</string>
     <string name="group_system">System</string>
     <string name="about">About</string>
-    <string name="about_help">Couch, your launcher.</string>
+    <string name="about_help">KevBox Home, the KevBox launcher.</string>
 
     <!-- Settings: sub-pages -->
     <string name="channels_hint">Check the rows to show on the home screen.</string>
     <string name="channels_empty">No channels yet. Apps publish them once you open them.</string>
     <!-- Updates -->
     <string name="check_updates">Check for updates</string>
-    <string name="check_updates_help">Once a day, Couch asks GitHub for its latest release and shows an Update button left of the weather when there is one.</string>
+    <string name="check_updates_help">Once a day, KevBox Home checks tv.kevbox.dev for a new version and shows an Update button left of the top buttons when there is one.</string>
     <string name="about_update">Version %1$s is available. Press OK to install it.</string>
     <string name="update_chip">Update %1$s</string>
     <string name="update_downloading">Downloading the update…</string>
     <string name="update_failed">Couldn’t install the update. Try again later.</string>
     <string name="update_corrupt">The download didn’t match its checksum, so it wasn’t installed.</string>
-    <string name="update_signature">This version is signed with a different key. Uninstall Couch, then install it.</string>
+    <string name="update_signature">This version is signed with a different key. Uninstall KevBox Home, then install it.</string>
+    <!-- KevBox Home -->
+    <string name="kevbox_opened">Opened %1$s</string>
+    <string name="kevbox_more_apps">More apps</string>
+    <string name="kevbox_wifi_strong">Wi-Fi · strong</string>
+    <string name="kevbox_wifi_fair">Wi-Fi · fair</string>
+    <string name="kevbox_wifi_weak">Wi-Fi · weak</string>
+    <string name="kevbox_ethernet">Ethernet</string>
+    <string name="kevbox_no_network">No network</string>
+    <string name="kevbox_bluetooth_off">Bluetooth · off</string>
+    <string name="kevbox_bluetooth_on">Bluetooth · on</string>
+    <string name="kevbox_bluetooth_connected">Bluetooth · %1$d connected</string>
+    <string name="kevbox_speedtest">Speed test</string>
+    <string name="kevbox_settings">Settings</string>
+    <string name="kevbox_vpn">VPN</string>
+    <string name="kevbox_menu_info">App info</string>
+    <string name="kevbox_menu_move">Move</string>
+    <string name="kevbox_menu_restart">Restart app</string>
+    <string name="kevbox_menu_uninstall">Uninstall</string>
+    <string name="kevbox_move_hint">Use the arrows to move it, then press OK</string>
+    <string name="kevbox_restart_by_hand">Press Force stop, then reopen the app</string>
 </resources>

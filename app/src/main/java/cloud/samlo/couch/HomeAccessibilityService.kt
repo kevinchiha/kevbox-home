@@ -57,8 +57,15 @@ class HomeAccessibilityService : AccessibilityService() {
             "com.google.android.apps.tv.launcherx" to "com.google.android.apps.tv.launcherx.home.HomeActivity",
         )
 
+        /**
+         * The TV settings apps, listed in `res/xml/home_accessibility.xml` only so Restart app can
+         * press Force stop there. They are never a home screen, so opening settings never bounces.
+         */
+        private val SETTINGS_APPS = setOf("com.android.tv.settings", "com.android.settings")
+
         /** True when a window from [pkg] with [cls] is the stock home screen Couch should replace. */
         fun isStockHome(pkg: String?, cls: String?): Boolean {
+            if (pkg in SETTINGS_APPS) return false
             val home = SHARED_LAUNCHERS[pkg] ?: return true
             return cls == home
         }
