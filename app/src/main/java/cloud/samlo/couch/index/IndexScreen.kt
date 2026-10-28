@@ -11,18 +11,25 @@ import cloud.samlo.couch.R
 import cloud.samlo.couch.data.Config
 import cloud.samlo.couch.data.Images
 import cloud.samlo.couch.data.Tile
+import cloud.samlo.couch.kevbox.drawer.DrawerActivity
+import cloud.samlo.couch.kevbox.home.Backdrop
+import cloud.samlo.couch.kevbox.home.MoveMode
+import cloud.samlo.couch.kevbox.home.TopFocus
 import cloud.samlo.couch.ui.Card
 import cloud.samlo.couch.ui.FocusRow
 import cloud.samlo.couch.ui.Tokens
 import cloud.samlo.couch.ui.dp
+import cloud.samlo.couch.ui.fill
 
 /**
  * The Index layout: apps listed on the left; on the right, what the selected app offers (the
  * focused program's text over its first channel's cards), its last week of use, and the TV's
  * readings along the bottom.
  *
- * D-pad: up/down walks the list, right enters the app's channel row, left (from its first card),
- * up or down comes back. Up from the first app reaches Settings.
+ * D-pad: up/down walks the list down to More apps, right enters the app's channel row, left (from
+ * its first card) or down comes back. Up from the first app or from a card reaches the top
+ * buttons, and down from them returns where it came from. KevBox's pieces (backdrop, More apps,
+ * Move) live in `kevbox/home`; this class only calls them.
  */
 @SuppressLint("ViewConstructor")
 class IndexScreen(
@@ -34,7 +41,10 @@ class IndexScreen(
     private val onProgramMenu: (Card) -> Unit,
 ) : FrameLayout(activity) {
     val topBar = IndexTopBar(activity, onSettings, onUpdate)
+    private val backdrop = Backdrop(activity, images)
     private val list = AppList(activity) { entry -> row(entry) }
+    private val topFocus = TopFocus()
+    private val move: MoveMode = MoveMode(activity, list, { config }) { held, config -> placed(held, config) }
     private val spotlight = Spotlight(activity)
     private val programs = FocusRow(activity).apply {
         gapDp = IndexTokens.CARD_GAP
@@ -65,8 +75,9 @@ class IndexScreen(
     private val buildMore = Runnable { selectedRow()?.entry?.takeIf { it.key == stripKey }?.let { buildStep(it) } }
 
     init {
-        // The window paints the background (HomeViews swaps it to Index's flat colour), and no
-        // layer here covers the screen: each full-screen layer costs the TV's GPU.
+        // The one full-screen layer, under everything: the focused program's art or the wallpaper
+        // (the spec's choice, AC-13). The window's flat colour shows until the first image lands.
+        addView(backdrop, fill())
         place(list, IndexTokens.LIST_X, IndexTokens.LIST_Y, IndexTokens.LIST_W, IndexTokens.LIST_H)
         place(spotlight, IndexTokens.COLUMN_X, IndexTokens.HEADER_Y, IndexTokens.COLUMN_W, LayoutParams.WRAP_CONTENT)
         // The row starts a little left of the column so a scaled card's ring isn't clipped.
@@ -77,6 +88,8 @@ class IndexScreen(
         })
         place(banner, IndexTokens.COLUMN_X, IndexTokens.STRIP_Y, IndexTokens.cardWidth(-1), IndexTokens.CARD_H)
         place(stats, IndexTokens.COLUMN_X, IndexTokens.STATS_Y, IndexTokens.COLUMN_W, LayoutParams.WRAP_CONTENT)
+        list.moreApps.setOnFocusChangeListener { _, has -> if (has) onMoreApps() }
+        list.moreApps.setOnClickListener { activity.startActivity(DrawerActivity.intent(activity)) }
         addView(systemLine, LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT, Gravity.BOTTOM or Gravity.START).apply {
             leftMargin = activity.dp(IndexTokens.LIST_X)
             bottomMargin = activity.dp(IndexTokens.FOOTER_BOTTOM) - systemLine.inset
@@ -88,6 +101,11 @@ class IndexScreen(
     }
 
     fun bind(data: IndexData, config: Config) {
+        // Binding the loader's order mid-move would snap the moving row back: Move keeps it for later.
+        if (move.active) {
+            move.hold(data, config)
+            return
+        }
         this.data = data
         this.config = config
         val rebuild = look != config.look
@@ -95,8 +113,14 @@ class IndexScreen(
         binding = true
         list.bind(data.entries, rebuild) { it.requestFocus() }
         val rows = list.rows()
+        val more = list.moreApps
         if (rows.isEmpty()) {
+            // A card about to be cleared hands focus to More apps too, not to wherever Android picks.
+            if (!placedFocus || !hasFocus() || programs.hasFocus()) more.requestFocus()
+            placedFocus = true
             binding = false
+            clearColumn()
+            if (more.hasFocus()) list.selectMore()
             return
         }
         // The selected app may be gone (hidden, uninstalled): follow focus, which arrange moved.
@@ -108,36 +132,92 @@ class IndexScreen(
             target.requestFocus()
         }
         binding = false
-        select(target, refresh = true)
+        if (more.hasFocus()) {
+            // Focus and the selection stay on More apps (Back from the drawer lands there).
+            selectedKey = target.entry.key
+            list.selectMore()
+            show(target.entry, deferStrip = false)
+        } else {
+            select(target, refresh = true)
+        }
     }
 
-    /** Back from the channel row or the top pills returns to the selected app. True when handled. */
+    /** Move's keys, then Back from the channel row or the top pills to the selected app. True when handled. */
     fun consumesKey(event: KeyEvent): Boolean {
+        if (move.consumes(event)) return true
         if (event.keyCode != KeyEvent.KEYCODE_BACK) return false
         val focused = activity.currentFocus ?: return false
         if (!programs.isAncestorOf(focused) && !topBar.isAncestorOf(focused)) return false
-        if (event.action == KeyEvent.ACTION_UP) selectedRow()?.requestFocus()
+        if (event.action == KeyEvent.ACTION_UP) (selectedRow() ?: list.moreApps).requestFocus()
         return true
     }
 
-    /** HOME while home: back to the first app. */
+    /** HOME while home: Move places the app, then back to the first app, else More apps. */
     fun reset() {
-        val first = list.rows().firstOrNull() ?: return
+        move.place()
+        val first = list.rows().firstOrNull()
+        if (first == null) {
+            list.moreApps.requestFocus()
+            return
+        }
         // Focus first: its listener selects the row, then the jump lands the selection with the list.
         first.requestFocus()
         list.reveal(0, animate = false)
     }
 
-    /** Stub: task 6 fills this in. Starts Move for [pkg] in the left column. */
-    @Suppress("UNUSED_PARAMETER")
-    fun startMove(pkg: String) = Unit
+    /** Starts Move for [pkg] in the left column: the row keeps focus and the spotlight says what to do. */
+    fun startMove(pkg: String) {
+        val row = list.rows().firstOrNull { it.entry.key == pkg } ?: return
+        if (!move.start(row)) return
+        row.requestFocus()
+        select(row, refresh = false)
+        spotlight.showApp(row.entry.app, activity.getString(R.string.kevbox_move_hint))
+    }
 
-    /** Stub: task 6 fills this in. Draws [wallpaper] behind the screen, dimmed by [dim]. */
-    @Suppress("UNUSED_PARAMETER")
-    fun showBackdrop(wallpaper: String?, dim: String) = Unit
+    /** Draws [wallpaper] behind the screen, dimmed by [dim]. Called on every load. */
+    fun showBackdrop(wallpaper: String?, dim: String) {
+        backdrop.setDim(dim)
+        backdrop.setWallpaper(wallpaper)
+    }
+
+    /** Leaving (a mapped key opened an app) places a moving app; Back from the drawer lands on More apps. */
+    override fun onWindowFocusChanged(hasWindowFocus: Boolean) {
+        super.onWindowFocusChanged(hasWindowFocus)
+        if (!hasWindowFocus) {
+            move.place()
+            move.forgetKeys()
+        } else if (DrawerActivity.takeClosedByBack()) {
+            list.moreApps.requestFocus()
+        }
+    }
+
+    /** Move ended: the held reload, in the placed order, or the app shown normally again. */
+    private fun placed(held: IndexData?, config: Config) {
+        if (held != null) return bind(held, config)
+        selectedRow()?.let { select(it, refresh = true) }
+    }
+
+    private fun onMoreApps() {
+        list.selectMore()
+        backdrop.show(null)
+    }
+
+    /** No app left in the column: nothing of a departed app stays on the right. */
+    private fun clearColumn() {
+        selectedKey = null
+        stripKey = null
+        removeCallbacks(fillStrip)
+        removeCallbacks(buildMore)
+        removeCallbacks(statsLater)
+        programs.update(emptyList(), "") { error("no cards") }
+        banner.visibility = GONE
+        spotlight.visibility = INVISIBLE
+        stats.visibility = INVISIBLE
+        backdrop.show(null)
+    }
 
     private fun row(entry: IndexEntry) = AppRow(activity, entry).apply {
-        setOnFocusChangeListener { v, has -> if (has && !binding) select(v as AppRow, refresh = false) }
+        setOnFocusChangeListener { v, has -> if (has && !binding && !move.active) select(v as AppRow, refresh = false) }
         setOnClickListener { this.entry.app.launch(activity) }
         setOnLongClickListener {
             onAppMenu(this.entry.app)
@@ -151,7 +231,10 @@ class IndexScreen(
         selectedKey = row.entry.key
         val inRow = programs.hasFocus()
         list.select(row, inRow)
-        if (row.hasFocus()) list.reveal(list.rows().indexOf(row))
+        if (row.hasFocus()) {
+            list.reveal(list.rows().indexOf(row))
+            backdrop.show(row.entry.programs.firstOrNull()?.backdropUrl)
+        }
         if (changed || refresh) show(row.entry, deferStrip = changed && !refresh)
         else if (!inRow) showProgram(row.entry, null)
     }
@@ -159,6 +242,8 @@ class IndexScreen(
     /** Fills the right column with [entry]: its channel row (or banner), the text above it, the week. */
     private fun show(entry: IndexEntry, deferStrip: Boolean) {
         if (data == null) return
+        spotlight.visibility = VISIBLE
+        stats.visibility = VISIBLE
         removeCallbacks(fillStrip)
         if (deferStrip) {
             // Another app's cards must not linger under this one while the row waits.
@@ -239,6 +324,7 @@ class IndexScreen(
         val row = selectedRow() ?: return
         list.select(row, inRow = true)
         showProgram(row.entry, card.tile)
+        backdrop.show(card.tile.backdropUrl)
     }
 
     private fun selectedRow() = list.rows().firstOrNull { it.entry.key == selectedKey }
@@ -252,8 +338,8 @@ class IndexScreen(
                 val rows = list.rows()
                 val i = rows.indexOf(focused)
                 when (direction) {
-                    FOCUS_UP -> rows.getOrNull(i - 1) ?: topBar.settings
-                    FOCUS_DOWN -> rows.getOrNull(i + 1) ?: focused
+                    FOCUS_UP -> rows.getOrNull(i - 1) ?: topFocus.up(focused, topBar.firstButton()) ?: focused
+                    FOCUS_DOWN -> rows.getOrNull(i + 1) ?: list.moreApps
                     FOCUS_RIGHT -> {
                         // Right before the row has filled: fill it now.
                         if (stripKey != focused.entry.key) fill(focused.entry)
@@ -262,12 +348,17 @@ class IndexScreen(
                     else -> focused
                 }
             }
+            focused === list.moreApps -> if (direction != FOCUS_UP) focused else {
+                list.rows().lastOrNull() ?: topFocus.up(focused, topBar.firstButton()) ?: focused
+            }
             inStrip -> when (direction) {
-                FOCUS_UP, FOCUS_DOWN -> leaveStrip(row) ?: focused
+                // The spec's call: Up from a card goes to the buttons, not out of the strip.
+                FOCUS_UP -> topFocus.up(focused, topBar.firstButton()) ?: focused
+                FOCUS_DOWN -> leaveStrip(row) ?: focused
                 FOCUS_LEFT -> if (programs.cards().firstOrNull() === focused) leaveStrip(row) ?: focused else super.focusSearch(focused, direction)
                 else -> super.focusSearch(focused, direction)
             }
-            inTop -> if (direction == FOCUS_DOWN) row ?: focused else super.focusSearch(focused, direction)?.takeIf { topBar.isAncestorOf(it) } ?: focused
+            inTop -> if (direction == FOCUS_DOWN) topFocus.down(row, list.moreApps) ?: focused else super.focusSearch(focused, direction)?.takeIf { topBar.isAncestorOf(it) } ?: focused
             else -> super.focusSearch(focused, direction)
         }
     }

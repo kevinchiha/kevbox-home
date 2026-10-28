@@ -7,7 +7,6 @@ import android.view.View
 import android.view.ViewGroup.LayoutParams.MATCH_PARENT
 import android.view.ViewGroup.LayoutParams.WRAP_CONTENT
 import android.widget.FrameLayout
-import cloud.samlo.couch.R
 import cloud.samlo.couch.data.Images
 import cloud.samlo.couch.data.Tile
 import cloud.samlo.couch.index.IndexScreen
@@ -49,6 +48,9 @@ class HomeViews(
     }
 
     init {
+        // Painted once, flat: what shows under Index's backdrop before its first image arrives,
+        // and whenever there is neither program art nor a wallpaper.
+        window.setBackgroundDrawable(ColorDrawable(Tokens.background))
         // Index from the first frame, so the hidden rows layout never flashes before the first load.
         showIndex(true)
     }
@@ -59,8 +61,6 @@ class HomeViews(
     /** Shows one layout and hides the other, so the hidden one costs nothing to draw. */
     fun showIndex(show: Boolean) {
         if (show == indexShown) return
-        // Index sits on a flat colour; painting it as the window background avoids a full-screen layer.
-        if (show) window.setBackgroundDrawable(ColorDrawable(Tokens.background)) else window.setBackgroundDrawableResource(R.drawable.background)
         index.visibility = if (show) View.VISIBLE else View.GONE
         val rowsVisibility = if (show) View.GONE else View.VISIBLE
         hero.visibility = rowsVisibility
