@@ -18,7 +18,6 @@ import java.util.concurrent.Executors
 class HomeData(
     val config: Config,
     val wallpaper: String?,
-    val pictures: List<String>,
     val weather: WeatherNow?,
     val sections: List<SectionData>,
     /** The Index layout's apps, when that is the chosen layout. */
@@ -77,7 +76,6 @@ class HomeLoader(
         val index = if (config.layout == Config.LAYOUT_INDEX) IndexBuilder.build(context, config, files.icons) else null
         val sections = if (index == null) SectionBuilder.build(context, config, files.icons) else emptyList()
         val wallpaper = wallpapers.current(config, files.dir)
-        val pictures = if (config.ambientMinutes > 0) wallpapers.all(config, files.dir) else emptyList()
-        return HomeData(config, wallpaper, pictures, weather.now(config), sections, index, updates.pending(config))
+        return HomeData(config, wallpaper, weather.now(config), sections, index, updates.pending(config))
     }
 }

@@ -100,6 +100,13 @@ android {
             excludes += "kotlin/**"
         }
     }
+
+    // values-fr is Couch's untouched copy (AC-38) and the locale filter keeps it out of the APK.
+    // Without this, strings deleted from values/ fail the build as ExtraTranslation (fatal), and
+    // new English strings raise MissingTranslation.
+    lint {
+        disable += setOf("ExtraTranslation", "MissingTranslation")
+    }
 }
 
 dependencies {

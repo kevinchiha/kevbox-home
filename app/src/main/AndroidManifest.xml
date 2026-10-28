@@ -110,11 +110,6 @@
             android:name=".update.InstallResult"
             android:exported="false" />
 
-        <!-- Godmode's sleep timer. -->
-        <receiver
-            android:name=".godmode.SleepReceiver"
-            android:exported="false" />
-
         <service
             android:name=".HomeAccessibilityService"
             android:exported="false"

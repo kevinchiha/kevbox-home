@@ -28,15 +28,12 @@ internal object ConfigJson {
         .put("weather", c.weather)
         .put("weatherCity", c.weatherCity)
         .put("fahrenheit", c.fahrenheit)
-        .put("ambientMinutes", c.ambientMinutes)
         .put("checkUpdates", c.checkUpdates)
-        .put("godmode", c.godmode)
-        .put("preReleases", c.preReleases)
-        .put("syncEnabled", c.syncEnabled)
-        .put("syncAllTvs", c.syncAllTvs)
-        .put("hud", c.hud)
 
-    /** Every field is optional; a missing one keeps what [into] already holds. */
+    /**
+     * Every field is optional; a missing one keeps what [into] already holds. Keys of removed
+     * features (godmode, hud, sync, pre-releases, ambient) are ignored and dropped on the next save.
+     */
     fun decode(json: JSONObject, into: Config) = with(into) {
         json.strings("pinnedApps")?.let { pinnedApps = it }
         json.strings("hiddenApps")?.let { hiddenApps = it.toSet() }
@@ -61,18 +58,7 @@ internal object ConfigJson {
         weather = json.optBoolean("weather", weather)
         weatherCity = json.optString("weatherCity", weatherCity)
         fahrenheit = json.optBoolean("fahrenheit", fahrenheit)
-        ambientMinutes = json.optInt("ambientMinutes", ambientMinutes)
         checkUpdates = json.optBoolean("checkUpdates", checkUpdates)
-        godmode = json.optBoolean("godmode", godmode)
-        preReleases = json.optBoolean("preReleases", preReleases)
-        syncEnabled = json.optBoolean("syncEnabled", syncEnabled)
-        syncAllTvs = json.optBoolean("syncAllTvs", syncAllTvs)
-        // Was a boolean before the HUD could show either unit.
-        hud = when (val value = json.opt("hud")) {
-            is Boolean -> if (value) Config.HUD_MS else Config.HUD_OFF
-            is String -> value
-            else -> hud
-        }
     }
 
     private fun JSONObject.strings(name: String): List<String>? {

@@ -11,7 +11,6 @@ import cloud.samlo.couch.R
 import cloud.samlo.couch.data.Images
 import cloud.samlo.couch.data.Tile
 import cloud.samlo.couch.index.IndexScreen
-import cloud.samlo.couch.ui.Ambient
 import cloud.samlo.couch.ui.Card
 import cloud.samlo.couch.ui.Hero
 import cloud.samlo.couch.ui.Rows
@@ -19,8 +18,8 @@ import cloud.samlo.couch.ui.Tokens
 import cloud.samlo.couch.ui.dp
 
 /**
- * The home screen's view tree, bottom to top: the rows layout (hero, rows, top bar), the Index
- * layout over it, and the ambient overlay. Only the layout the user chose is visible.
+ * The home screen's view tree, bottom to top: the rows layout (hero, rows, top bar) and the Index
+ * layout over it. Only the layout the user chose is visible.
  */
 class HomeViews(
     activity: Activity,
@@ -34,7 +33,6 @@ class HomeViews(
     val rows = Rows(activity)
     val topBar = TopBar(activity, onSettings, onUpdate)
     val index = IndexScreen(activity, images, onSettings, onUpdate, onAppMenu, onProgramMenu).apply { visibility = View.GONE }
-    val ambient = Ambient(activity, images)
     private val window = activity.window
 
     val root = FrameLayout(activity).apply {
@@ -47,7 +45,6 @@ class HomeViews(
             marginEnd = activity.dp(Tokens.OVERSCAN_H)
         })
         addView(index, FrameLayout.LayoutParams(MATCH_PARENT, MATCH_PARENT))
-        addView(ambient, FrameLayout.LayoutParams(MATCH_PARENT, MATCH_PARENT))
     }
 
     /** True when the Index layout is the one showing. */

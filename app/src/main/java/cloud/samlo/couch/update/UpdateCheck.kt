@@ -24,7 +24,7 @@ class UpdateCheck(context: Context, private val fetcher: Fetcher) {
         if (now - prefs.getLong(CHECKED_AT, 0L) in 0 until DAY_MS) return false
         // Recorded before the request, so an unreachable GitHub is asked once a day, not on every resume.
         prefs.edit().putLong(CHECKED_AT, now).apply()
-        val release = if (config.preReleases) fetcher.text(LIST)?.let(Release::newestOf) else fetcher.text(LATEST)?.let(Release::fromGitHub)
+        val release = fetcher.text(LATEST)?.let(Release::fromGitHub)
         if (release == null) return false
         prefs.edit().putString(LATEST_RELEASE, release.serialize()).apply()
         return pending(config) != null
@@ -39,8 +39,6 @@ class UpdateCheck(context: Context, private val fetcher: Fetcher) {
 
     companion object {
         private const val LATEST = "https://api.github.com/repos/samuelloranger/couch/releases/latest"
-        /** The pre-release channel: the newest few releases, drafts and pre-releases included. */
-        private const val LIST = "https://api.github.com/repos/samuelloranger/couch/releases?per_page=10"
         private const val CHECKED_AT = "update:checkedAt"
         private const val LATEST_RELEASE = "update:latest"
         private const val DAY_MS = 24 * 60 * 60_000L
