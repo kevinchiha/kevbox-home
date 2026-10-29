@@ -78,11 +78,12 @@ class CardMenus(
         }
     }
 
+    /** CLEAR_TASK starts the page fresh, so Back returns here and Settings never reopens on it later. */
     private fun appInfo(pkg: String?) {
         pkg ?: return
         activity.startActivity(
             Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.fromParts("package", pkg, null))
-                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK),
+                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK),
         )
     }
 }
