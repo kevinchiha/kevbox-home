@@ -15,17 +15,6 @@ upstream merges stay small. What it changes, and why, is in
 Couch's own pages and describe Couch, including features this fork removed (Godmode, Other TVs, the
 Rows layout, HDMI inputs). Leave them as they are: editing them only adds merge conflicts.
 
-## Licence first
-
-Couch has no licence yet. Kevin asked for one in samuelloranger/couch#17. Until Couch carries a
-licence:
-
-- Commits go only to `origin`, the **private** repo kevinchiha/kevbox-home (Kevin's call,
-  2026-10-29). Never make it public, never push to `upstream`, and never push a tag (see below).
-- Nothing is published, released or installed on a member's box. Kevin's own TCL test TV and his
-  own Xiaomi box are the only devices it runs on.
-- If the author refuses, the repo is deleted, the private GitHub copy included.
-
 ## How Couch updates come in
 
 Couch changes arrive by merge, never by rebase and never with a force push:
@@ -47,7 +36,7 @@ highest `v*` tag reachable from HEAD, counting Couch's three-part tags as `.0`, 
   boxes never see the update as newer. KevBox Home ignores that file's `profiles`.
 - Couch's `.github/workflows/release.yml` publishes a signed GitHub release for any pushed `v*` tag,
   and `ci.yml` still gates the APK at Couch's 614400 bytes (AC-35's limit is 1048576). Both run only
-  on a push, so no tag is pushed while the licence rule stands. Leave the workflows unedited.
+  on a push, so never push a tag: release.sh keeps its tags local. Leave the workflows unedited.
 
 The fork point is upstream commit `76be0dc` (Couch v0.8.1). As of 2026-10-29, upstream has moved
 on to `6d5638c` ("Let the remote's Input and Settings buttons open Couch's panels"), which is not
@@ -86,9 +75,9 @@ KEVBOX_HOME_PACKAGE=tv.kevbox.home.dev kevbox/provision/provision.sh kevbox/prov
 [docs/kevbox/provisioning.md](docs/kevbox/provisioning.md) describes the provision file and every
 script failure line. [docs/kevbox/test-on-tv.md](docs/kevbox/test-on-tv.md) is the checklist Kevin
 runs on the TCL test TV and the Xiaomi box. Provisioning and the checklist touch a real device, so
-only Kevin runs them; the licence rule above still applies.
-[docs/kevbox/releasing.md](docs/kevbox/releasing.md) covers `release.sh` (never run while the licence
-rule stands) and the emulator check of the silent update.
+only Kevin runs them.
+[docs/kevbox/releasing.md](docs/kevbox/releasing.md) covers `release.sh` (Kevin runs it, or asks for
+it in the moment) and the emulator check of the silent update.
 
 ## Where new code goes
 

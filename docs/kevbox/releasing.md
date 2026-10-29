@@ -1,9 +1,9 @@
 # Releasing KevBox Home
 
-**Nothing is published while the licence rule in `AGENTS.md` stands.** Until Couch carries a
-licence, `release.sh` stays unrun, no tag leaves this computer, and no member's box gets KevBox
-Home. This page describes the release for when that changes, and the emulator check (AC-15 of
-`docs/superpowers/quick/2026-10-29-silent-update.md`) that proves the silent update works.
+Couch still has no licence (samuelloranger/couch#17); on 2026-10-29 Kevin chose to release KevBox
+Home anyway and accepted that risk. Tags never leave this computer: Couch's release workflow would
+publish any pushed `v*` tag on GitHub. This page describes the release and the emulator check (AC-15
+of `docs/superpowers/quick/2026-10-29-silent-update.md`) that proves the silent update works.
 
 ## What Kevin runs
 

@@ -2,8 +2,7 @@
 # KevBox Home fork only: this file does not exist upstream (samuelloranger/couch).
 #
 # Builds, checks and publishes one KevBox Home release to https://tv.kevbox.dev/home/ (AC-14).
-# Kevin runs it by hand, and not while AGENTS.md's "Licence first" rule stands: until Couch has a
-# licence, nothing is published. docs/kevbox/releasing.md explains each step.
+# Kevin runs it by hand, or asks for it in the moment. docs/kevbox/releasing.md explains each step.
 #
 #   ./release.sh [--no-silent] <A.B.C.K> [release notes...]
 #
@@ -259,4 +258,4 @@ if ! curl -fsS --max-time 30 "$release_url" | cmp -s - <(printf '%s\n' "$manifes
   note "warning: $release_url does not serve the new version.json yet; check it by hand"
 fi
 note "published KevBox Home $version (versionCode $version_code, sha256 ${host_sha:0:16}...) at $base_url/$remote_apk"
-note "the tag $tag is local; never push it while AGENTS.md's licence rule stands (Couch's release workflow would publish it)"
+note "the tag $tag is local; never push it (Couch's release workflow would publish it on GitHub)"
