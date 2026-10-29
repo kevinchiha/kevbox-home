@@ -117,6 +117,7 @@ class ForceStop(private val service: AccessibilityService, private val pkg: Stri
         val res = try {
             service.packageManager.getResourcesForApplication(settings)
         } catch (e: PackageManager.NameNotFoundException) {
+            Log.w(KevBox.TAG, "restart $pkg: cannot read $settings's strings", e)
             return Strings(null, null)
         }
         return if (settings == TV_SETTINGS) {

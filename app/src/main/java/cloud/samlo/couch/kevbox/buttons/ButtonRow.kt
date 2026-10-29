@@ -39,7 +39,7 @@ class ButtonRow(context: Context, onCustomize: () -> Unit) : LinearLayout(contex
         setText(context.getString(R.string.kevbox_speedtest))
         setOnClickListener { openSpeedtest() }
     }
-    val settings = TopButton(context, alwaysText = true, focusable = true).apply {
+    private val settings = TopButton(context, alwaysText = true, focusable = true).apply {
         setIcon(R.drawable.ic_pill_settings)
         setText(context.getString(R.string.kevbox_settings))
         setOnClickListener { openSettings(Settings.ACTION_SETTINGS) }
@@ -117,8 +117,7 @@ class ButtonRow(context: Context, onCustomize: () -> Unit) : LinearLayout(contex
                 else -> R.drawable.ic_kb_bluetooth_on
             },
         )
-        val (res, count) = ButtonText.bluetooth(state)
-        bluetooth.setText(if (count == null) context.getString(res) else context.getString(res, count))
+        bluetooth.setText(ButtonText.bluetoothText(state) { context.getString(it) })
     }
 
     private fun launchIntent(): Intent? {

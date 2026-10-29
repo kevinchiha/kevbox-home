@@ -93,13 +93,6 @@ class HomeScreen(private val activity: Activity) {
         if (resumed) views.index.reset()
     }
 
-    /**
-     * Settings no longer sends anything back: Rearrange apps, its only result, left with the Rows
-     * layout. Kept because MainActivity still forwards every result here.
-     */
-    @Suppress("UNUSED_PARAMETER")
-    fun onSettingsResult(resultCode: Int) = Unit
-
     fun load() = loader.load()
 
     /** True when the key was consumed (reorder mode, or the Index layout's own keys). */
@@ -180,9 +173,8 @@ class HomeScreen(private val activity: Activity) {
         }
     }
 
-    @Suppress("DEPRECATION")
     private fun openSettings() {
-        activity.startActivityForResult(Intent(activity, SettingsActivity::class.java), 1)
+        activity.startActivity(Intent(activity, SettingsActivity::class.java))
     }
 
     private companion object {

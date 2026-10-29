@@ -20,8 +20,9 @@ class MainActivity : Activity() {
         super.onCreate(savedInstanceState)
         home = HomeScreen(this)
         home.onCreate()
-        // A drawer key with no Home running yet still lands on the drawer.
-        openDrawerIfAsked(intent)
+        // A drawer key with no Home running yet still lands on the drawer. Only on a fresh start:
+        // a rebuild after process death replays the same launch intent, and no key was pressed.
+        if (savedInstanceState == null) openDrawerIfAsked(intent)
     }
 
     override fun onResume() {
@@ -57,12 +58,6 @@ class MainActivity : Activity() {
 
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
         home.load()
-    }
-
-    @Deprecated("Settings only reports back one action.")
-    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        super.onActivityResult(requestCode, resultCode, data)
-        home.onSettingsResult(resultCode)
     }
 
     // Opted out of predictive back in the manifest, so this legacy hook still swallows Back.

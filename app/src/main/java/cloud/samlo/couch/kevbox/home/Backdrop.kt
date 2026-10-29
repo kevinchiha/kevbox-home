@@ -63,6 +63,9 @@ class Backdrop(context: Context, private val images: Images) : FrameLayout(conte
     }
 
     private fun request(url: String?) {
+        // Already on its way: a second load would decode the same picture again on a weak TV.
+        // A load that failed is retried once something else has been asked for in between.
+        if (url != null && url == pendingUrl && url != shownUrl) return
         // Set first, so a load still on its way for something else is dropped.
         pendingUrl = url
         if (url == shownUrl) return

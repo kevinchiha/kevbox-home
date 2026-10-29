@@ -25,8 +25,6 @@ class IndexTopBar(context: Context, onSettings: () -> Unit, onUpdate: () -> Unit
     val nowPlaying = NowPlaying(context)
     val update = UpdateChip(context).apply { setOnClickListener { onUpdate() } }
     private val buttons = ButtonRow(context, onSettings)
-    /** The Settings button, where IndexScreen sent Up before [firstButton] existed. */
-    val settings: View = buttons.settings
     private val clock = TextClock(context).apply {
         format12Hour = "HH:mm"
         format24Hour = "HH:mm"
