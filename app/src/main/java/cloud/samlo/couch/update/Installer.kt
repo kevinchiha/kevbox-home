@@ -19,10 +19,12 @@ import java.util.concurrent.atomic.AtomicBoolean
 
 /**
  * Downloads a release's APK, checks it against the SHA-256 in version.json and hands it to
- * Android's package installer. On Android 12 and later, once KevBox Home installed itself, Android
- * applies the update with no screen; otherwise it asks the user to confirm (and, the first time, to
- * let KevBox Home install apps). [InstallResult] receives the outcome. One install runs at a time,
- * app-wide, member-started or silent ([SilentInstall] shares the download, the check and the slot).
+ * Android's package installer. On Android 12 and later, when KevBox Home may install apps, Android
+ * applies the update with no screen: an app updating itself needs only the manifest's
+ * UPDATE_PACKAGES_WITHOUT_USER_ACTION, whoever installed it first. Otherwise it asks the user to
+ * confirm (and, the first time, to let KevBox Home install apps). [InstallResult] receives the
+ * outcome. One install runs at a time, app-wide, member-started or silent ([SilentInstall] shares
+ * the download, the check and the slot).
  */
 class Installer(context: Context, private val fetcher: Fetcher) {
     private val context = context.applicationContext
@@ -78,8 +80,9 @@ class Installer(context: Context, private val fetcher: Fetcher) {
         val installer = context.packageManager.packageInstaller
         val params = PackageInstaller.SessionParams(PackageInstaller.SessionParams.MODE_FULL_INSTALL).apply {
             setAppPackageName(context.packageName)
-            // With UPDATE_PACKAGES_WITHOUT_USER_ACTION in the manifest, Android 12+ applies the
-            // update with no screen once KevBox Home installed itself; member-started too.
+            // With UPDATE_PACKAGES_WITHOUT_USER_ACTION in the manifest and the "install unknown
+            // apps" permission, Android 12+ applies the update with no screen, member-started too:
+            // AOSP skips the screen for the installer of record or for an app updating itself.
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
                 setRequireUserAction(PackageInstaller.SessionParams.USER_ACTION_NOT_REQUIRED)
             }

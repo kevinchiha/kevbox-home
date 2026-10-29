@@ -87,6 +87,8 @@ KEVBOX_HOME_PACKAGE=tv.kevbox.home.dev kevbox/provision/provision.sh kevbox/prov
 script failure line. [docs/kevbox/test-on-tv.md](docs/kevbox/test-on-tv.md) is the checklist Kevin
 runs on the TCL test TV and the Xiaomi box. Provisioning and the checklist touch a real device, so
 only Kevin runs them; the licence rule above still applies.
+[docs/kevbox/releasing.md](docs/kevbox/releasing.md) covers `release.sh` (never run while the licence
+rule stands) and the emulator check of the silent update.
 
 ## Where new code goes
 

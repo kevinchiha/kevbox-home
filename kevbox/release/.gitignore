@@ -1,0 +1,2 @@
+# The gate runs these tests; their bytecode must not dirty the tree release.sh checks.
+__pycache__/
