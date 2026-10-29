@@ -216,3 +216,8 @@ ocr medium data/Fetcher.kt:33 (a cached response's Date is old): fix, send Cache
 review: gate green (also with --rerun-tasks, APK 400719 B); AC-1..AC-14 met in code, AC-15 emulator-only; no critical or important
 review minor release.sh:84-86,213-216 (after upload, a failed version.json write still deletes the tag and says nothing was published; latest link moved too early): fix, merged with the ocr medium on release.sh.
 review minor SilentJob.kt:84-93 (afterLeaving re-schedules the same id and stops a running job, so the process can freeze mid-install): fix, return early while a run is in progress.
+fix round 1: release.sh link/trap order, Fetcher no-cache + Age, SilentJob no reschedule while running (db7fc61, 8707382, fa20db7); re-review: all 3 fixed, gate green
+re-review minor SilentJob.kt:86 (a leave during any run queued nothing): fixed, the run queues the 15-minute one when it ends.
+re-review minor Fetcher.kt:43 (huge Age): fixed, capped at 86400 s.
+re-review minor releasing.md:44 and Fetched KDoc: fixed.
+final review: done
