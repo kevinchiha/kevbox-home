@@ -31,7 +31,8 @@ internal fun pickSettingsRoot(windows: List<WindowRoot>, active: WindowRoot?, se
 /**
  * What a timeout line says the last poll saw: [picked], the package of the settings root it used,
  * when there was one; else the packages of every window root and of [active], comma-joined, with
- * `?` for a root that has no package; `none` only when it saw no window at all.
+ * `?` for a root that has no package; `none` only when it saw no window root at all
+ * (windows without a root node are dropped before this).
  */
 internal fun seenText(picked: String?, windows: List<WindowRoot>, active: WindowRoot?): String =
     picked ?: (windows + listOfNotNull(active)).map { it.pkg ?: "?" }.distinct().joinToString(",").ifEmpty { "none" }
