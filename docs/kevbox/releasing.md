@@ -39,17 +39,19 @@ Each check runs before anything changes. A failed one prints why and exits with 
 
 1. Creates the local tag `vA.B.C.K` at HEAD. `app/build.gradle.kts` takes the version from it.
    The tag is never pushed: Couch's `.github/workflows/release.yml` would publish any pushed `v*`
-   tag on GitHub. If anything fails before version.json is written, the script deletes the tag
-   again.
+   tag on GitHub. If anything fails before the upload, the script deletes the tag again. If
+   something fails after it, the APK may already be on the host, so the script keeps the tag and
+   says what to check: when `version.json` already names the version, the release is out; when it
+   does not, delete the tag (`git tag -d vA.B.C.K`) and rerun with the same version.
 2. Runs the Gradle gate (`testReleaseUnitTest lintRelease assembleRelease`) with the KevBox TV key,
    passed to Gradle as `COUCH_KEYSTORE`, `COUCH_KEYSTORE_PASSWORD`, `COUCH_KEY_ALIAS` and
    `COUCH_KEY_PASSWORD`.
 3. Checks the APK: package `tv.kevbox.home`, versionName and versionCode equal to the version's
    (`aapt2 dump badging`), the signing certificate's SHA-256 equal to the KevBox TV key's
    (`apksigner verify --print-certs`), and 1048576 bytes or less (AC-35).
-4. Copies the APK to persovps and installs it as `kevbox-home-<version>.apk` in the web root,
-   points `kevbox-home-latest.apk` at it, and takes its SHA-256 on the host. A SHA-256 that differs
-   from the built APK's stops the script before version.json changes.
+4. Copies the APK to persovps, installs it as `kevbox-home-<version>.apk` in the web root, and
+   takes its SHA-256 on the host. A SHA-256 that differs from the built APK's stops the script
+   before version.json changes.
 5. Writes `version.json` (rendered by `kevbox/release/release_manifest.py`) beside the old one and
    moves it into place, so a box never reads half a file:
 
@@ -68,6 +70,8 @@ Each check runs before anything changes. A failed one prints why and exits with 
    install the release from then on, once nobody is watching. Home has no sign-in, so there is no
    early-user list and no 24 h wait. With `--no-silent` the `silent` block is left out and every box
    shows the Update chip instead.
+6. Points `kevbox-home-latest.apk` at the new APK, last, so the link never names a release that
+   `version.json` does not offer yet.
 
 Where it uploads, overridable through the environment:
 

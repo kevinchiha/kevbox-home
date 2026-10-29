@@ -27,11 +27,12 @@
 #   - the rest of the gate: kevbox/provision/provision-test.sh and kevbox/release's tests
 #
 # Then it creates the LOCAL tag v<A.B.C.K> at HEAD (Gradle takes the version from it; the tag is
-# never pushed, and is deleted again if anything fails before version.json is written), runs the
-# Gradle gate with the KevBox TV key, and checks the APK: package tv.kevbox.home, versionName and
-# versionCode, the signing certificate's SHA-256 against the KevBox TV key's, at most 1048576 bytes.
-# Only then it uploads the APK to persovps as kevbox-home-<version>.apk, points
-# kevbox-home-latest.apk at it, takes the SHA-256 on the host, and writes version.json.
+# never pushed, and is deleted again if anything fails before the upload; after the upload a
+# failure keeps it and says what is on the host), runs the Gradle gate with the KevBox TV key, and
+# checks the APK: package tv.kevbox.home, versionName and versionCode, the signing certificate's
+# SHA-256 against the KevBox TV key's, at most 1048576 bytes. Only then it uploads the APK to
+# persovps as kevbox-home-<version>.apk, takes the SHA-256 on the host and compares it with the
+# built one, writes version.json, and last points kevbox-home-latest.apk at the new APK.
 set -euo pipefail
 
 repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -77,12 +78,19 @@ source_env_quietly() {
 work="$(mktemp -d)"
 tag=""
 tag_created=0
+# Set once the APK has reached the host: from then on a failure keeps the tag and says what is there.
+uploaded=0
 published=0
 cleanup() {
   local status=$?
   rm -rf -- "$work"
   if (( tag_created == 1 && published == 0 )); then
-    git tag -d "$tag" >/dev/null 2>&1 && echo "release: deleted the local tag $tag again; nothing was published" >&2
+    if (( uploaded == 0 )); then
+      git tag -d "$tag" >/dev/null 2>&1 && echo "release: deleted the local tag $tag again; nothing was published" >&2
+    else
+      echo "release: kevbox-home-$version.apk may be on $ssh_alias in $web_root, but version.json may not name it, so boxes may not be offered it." >&2
+      echo "release: kept the local tag $tag. Open $release_url: if it names $version, the release is out and only kevbox-home-latest.apk still needs repointing by hand; if not, run 'git tag -d $tag' and rerun ./release.sh with the same version." >&2
+    fi
   fi
   exit "$status"
 }
@@ -211,8 +219,11 @@ remote_apk="kevbox-home-$version.apk"
 remote_root="$(printf '%q' "$web_root")"
 note "uploading $remote_apk to $ssh_alias:$web_root"
 scp -P "$ssh_port" "$built_apk" "$ssh_alias:/tmp/$remote_apk" || die "scp failed; version.json was not written"
-# Install it, point the stable kevbox-home-latest.apk at it, and print its SHA-256 computed ON THE HOST.
-host_sha="$(ssh -p "$ssh_port" "$ssh_alias" "set -e; sudo install -D -m 644 /tmp/$remote_apk $remote_root/$remote_apk; rm -f /tmp/$remote_apk; sudo ln -sfn $remote_apk $remote_root/kevbox-home-latest.apk; cd $remote_root && sha256sum $remote_apk" \
+# From here the APK can be in the web root, so the EXIT trap keeps the tag.
+uploaded=1
+# Install it and print its SHA-256 computed ON THE HOST. kevbox-home-latest.apk moves only after
+# version.json is written.
+host_sha="$(ssh -p "$ssh_port" "$ssh_alias" "set -e; sudo install -D -m 644 /tmp/$remote_apk $remote_root/$remote_apk; rm -f /tmp/$remote_apk; cd $remote_root && sha256sum $remote_apk" \
   | awk -v f="$remote_apk" '$2 == f { print $1 }')" || die "installing $remote_apk on $ssh_alias failed; version.json was not written"
 [[ -n "$host_sha" ]] || die "no SHA-256 for $remote_apk from $ssh_alias; version.json was not written"
 [[ "$host_sha" == "$local_sha" ]] \
@@ -230,8 +241,14 @@ manifest="$(python3 "$manifest_py" render "${render_args[@]}")" || die "could no
 # Written beside it, then moved, so a box never reads half a file. `$(...)` dropped the final newline.
 printf '%s\n' "$manifest" | ssh -p "$ssh_port" "$ssh_alias" \
   "sudo tee $remote_root/version.json.new >/dev/null && sudo chmod 644 $remote_root/version.json.new && sudo mv -f $remote_root/version.json.new $remote_root/version.json" \
-  || die "writing version.json on $ssh_alias failed; the APK is on the host but no box is offered it"
+  || die "writing version.json on $ssh_alias failed"
 published=1
+
+# --- The stable link, last: it names a release only once version.json does. ---
+
+link_cmd="sudo ln -sfn $remote_apk $remote_root/kevbox-home-latest.apk"
+ssh -p "$ssh_port" "$ssh_alias" "$link_cmd" \
+  || die "version.json is written, so the release is out, but kevbox-home-latest.apk was not repointed; run on $ssh_alias: $link_cmd"
 
 if (( no_silent == 1 )); then
   note "--no-silent: no silent block, every box shows the Update chip"
