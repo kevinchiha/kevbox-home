@@ -262,9 +262,22 @@ Preferences > Language > Français).
   TV opens again from its start.
 - [ ] Force-stop SmartTube first (`adb shell am force-stop org.smarttube.stable`), then "Restart
   app" on it: Force stop is greyed out, so it goes straight to opening SmartTube.
-- [ ] Switch KevBox Home's accessibility service off in Android's accessibility settings, then
-  "Restart app": the details page stays open and the toast reads "Press Force stop, then reopen the
-  app". Switch the service back on.
+- [ ] Service off. KevBox Home turns its own accessibility service back on every time Home opens,
+  as long as it holds `WRITE_SECURE_SETTINGS`, so take that grant away first:
+
+  ```sh
+  adb shell pm revoke tv.kevbox.home android.permission.WRITE_SECURE_SETTINGS
+  ```
+
+  Then switch KevBox Home's accessibility service off in Android's accessibility settings, press
+  Home, hold OK on KevBox TV and pick "Restart app": the details page stays open and the toast
+  reads "Press Force stop, then reopen the app".
+- [ ] Switch the service back on in Android's accessibility settings, then give the grant back
+  before the AC-27 to AC-30 checks:
+
+  ```sh
+  kevbox/provision/provision.sh kevbox/provision/kevbox-home.example.json
+  ```
 
 ## AC-27: the key filter
 
