@@ -1,0 +1,719 @@
+{
+  "status": "complete",
+  "llm": {
+    "provider": "anthropic",
+    "model": "claude-opus-5-5"
+  },
+  "message": "Review complete: 11 finding(s) across 45 selected item(s).",
+  "summary": {
+    "files_reviewed": 45,
+    "comments": 11,
+    "total_tokens": 2482103,
+    "input_tokens": 2430145,
+    "output_tokens": 51958,
+    "cache_read_tokens": 1911130,
+    "cache_write_tokens": 518823,
+    "elapsed": "3m50s"
+  },
+  "tool_calls": {
+    "total": 94,
+    "by_tool": {
+      "code_comment": 6,
+      "code_search": 58,
+      "file_find": 1,
+      "file_read": 27,
+      "file_read_diff": 2
+    },
+    "failure": 1,
+    "failure_by_tool": {
+      "code_search": 1
+    },
+    "failure_details": [
+      {
+        "tool_call_number": 64,
+        "tool_name": "code_search",
+        "file_path": "app/src/main/java/cloud/samlo/couch/settings/Groups.kt,app/src/main/java/cloud/samlo/couch/settings/MainPage.kt,app/src/main/java/cloud/samlo/couch/settings/Rail.kt,app/src/main/java/cloud/samlo/couch/settings/SettingsActivity.kt,app/src/main/java/cloud/samlo/couch/settings/SettingsLayout.kt,app/src/main/java/cloud/samlo/couch/settings/SettingsPage.kt,app/src/main/res/drawable/ic_group_clock.xml,app/src/main/res/drawable/ic_group_couch.xml,app/src/main/res/drawable/ic_group_home.xml,app/src/main/res/drawable/ic_group_look.xml",
+        "arguments": "{\"search_text\":\"OptionList(|var config|help.text|help.visibility\",\"file_patterns\":[\"app/src/main/java/cloud/samlo/couch/settings/\"],\"use_perl_regexp\":true}",
+        "error": "git grep failed: exit status 128: fatal: -e option, 'OptionList(|var config|help.text|help.visibility': missing closing parenthesis"
+      }
+    ]
+  },
+  "comments": [
+    {
+      "path": "app/src/main/java/cloud/samlo/couch/data/Recommendations.kt",
+      "content": "The merge took upstream's removal of `backdropUrl = item.image` here. KevBox still uses `backdropUrl`, though: `Tile.kt` and `ProgramTile.kt` deliberately keep it, and `IndexScreen` calls `backdrop.show(card.tile.backdropUrl)` and `backdrop.show(row.entry.programs.firstOrNull()?.backdropUrl)`. `Programs.programs()` puts recommendation tiles into Index channel rows. So on Fire TV, apps that post recommendations instead of preview channels now get `null` and fall back to the wallpaper rather than showing the program's art. That breaks AC-13 for those apps. Put the line back, and add this file to the KevBox-kept list in UPSTREAM-SYNC.md.",
+      "suggestion_code": "            imageUrl = item.image,\n            // KevBox: the Index backdrop shows the focused recommendation's art.\n            backdropUrl = item.image,\n            description = item.text,",
+      "existing_code": "            imageUrl = item.image,\n            description = item.text,",
+      "start_line": 63,
+      "end_line": 64,
+      "category": "bug",
+      "severity": "medium"
+    },
+    {
+      "path": "release.sh",
+      "content": "The script runs under `set -euo pipefail` (line 35). When `KEVBOX_SSH_PORT` is unset, these arrays are empty. On bash older than 4.4 (for example macOS's stock bash 3.2), `\"${arr[@]}\"` on an empty array fails with \"unbound variable\" under `set -u`. The release would then abort at the upload, after the tag and build steps. The same applies to the three `ssh \"${ssh_port_args[@]}\"` calls. The `${arr[@]+\"${arr[@]}\"}` form works on every bash version. The other option is to require bash ≥ 4.4 explicitly.",
+      "suggestion_code": "scp ${scp_port_args[@]+\"${scp_port_args[@]}\"} \"$built_apk\" \"$ssh_alias:/tmp/$remote_apk\" || die \"scp failed; version.json was not written\"",
+      "existing_code": "scp \"${scp_port_args[@]}\" \"$built_apk\" \"$ssh_alias:/tmp/$remote_apk\" || die \"scp failed; version.json was not written\"",
+      "start_line": 222,
+      "end_line": 222,
+      "category": "bug",
+      "severity": "low"
+    },
+    {
+      "path": ".github/workflows/ci.yml",
+      "content": "The budget is now 716800, but AGENTS.md (line 60) still says `ci.yml` gates the APK at Couch's 614400 bytes. Please update that line. Note also that the project gate and release.sh allow 1048576 bytes (AC-35), so a build between 700 KB and 1 MB passes locally and in release.sh but fails CI. If the 700 KB figure is deliberate, document it next to AC-35.",
+      "existing_code": "          if [ \"$size\" -gt 716800 ]; then",
+      "start_line": 45,
+      "end_line": 45,
+      "category": "documentation",
+      "severity": "low"
+    },
+    {
+      "path": "app/src/main/res/values-fr/strings.xml",
+      "content": "This merge removes the French `program_season_episode`, `program_episode`, `program_remaining_hours` and `program_remaining_minutes` strings, but KevBox's `kevbox/home/StatusLine.kt` (lines 64-67) still uses all four. The English `values/strings.xml` keeps them. Because lint has `MissingTranslation` turned off, the build still passes. French users will now see English text such as \"S1 E2\" and \"12 min left\" in the status line. Restore the four French translations (`S%1$s É%2$s`, `É%1$s`, `Reste %1$d h %2$s`, `Reste %1$d min`).",
+      "suggestion_code": "    \u003cstring name=\"channel_recommended\"\u003eSuggestions\u003c/string\u003e\n    \u003cstring name=\"program_season_episode\"\u003eS%1$s É%2$s\u003c/string\u003e\n    \u003cstring name=\"program_episode\"\u003eÉ%1$s\u003c/string\u003e\n    \u003cstring name=\"program_remaining_hours\"\u003eReste %1$d h %2$s\u003c/string\u003e\n    \u003cstring name=\"program_remaining_minutes\"\u003eReste %1$d min\u003c/string\u003e",
+      "existing_code": "    \u003cstring name=\"channel_recommended\"\u003eSuggestions\u003c/string\u003e",
+      "start_line": 18,
+      "end_line": 18,
+      "category": "bug",
+      "severity": "medium"
+    },
+    {
+      "path": "app/src/main/res/values-fr/strings.xml",
+      "content": "These French strings came straight from upstream without being rebranded. `group_system` becomes \"Couch\", while English is \"System\". `setup_page_help` says \"Ce que Couch peut utiliser…\", while English says KevBox Home. Existing French values such as `about_help` (\"Couch, ton lanceur\") and the adb commands using `cloud.samlo.couch` were also missed; English uses `tv.kevbox.home`. French users will therefore see the wrong product name and copy adb commands that use the wrong package name. Please rebrand these French strings to match the English ones.",
+      "suggestion_code": "    \u003cstring name=\"group_system\"\u003eSystème\u003c/string\u003e",
+      "existing_code": "    \u003cstring name=\"group_system\"\u003eCouch\u003c/string\u003e",
+      "start_line": 169,
+      "end_line": 169,
+      "category": "other",
+      "severity": "medium"
+    },
+    {
+      "path": "app/src/main/res/values-fr/strings.xml",
+      "content": "This new string still says Couch. The English version says \"KevBox Home\". Change it to \"Ce que KevBox Home peut utiliser…\".",
+      "existing_code": "    \u003cstring name=\"setup_page_help\"\u003eCe que Couch peut utiliser sur cette télé : le bouton HOME, ce qui joue, le temps d’écran et les chaînes des applis.\u003c/string\u003e",
+      "start_line": 597,
+      "end_line": 597,
+      "category": "other",
+      "severity": "low"
+    },
+    {
+      "path": "app/src/main/res/values-fr/strings.xml",
+      "content": "This block adds about 90 French strings that have no default in `values/` and are not used by any code: `remote_*`, `quick_*`, `picture_*`, `output_*`, `power_*`, `pin_*`, `bt_*`, `summary_ambient`, `summary_no_ambient`, `summary_no_hidden`, `summary_hidden`, `apps_hint`, `inputs_names` and `inputs_shown`. They only get past lint because `ExtraTranslation` and `MissingDefaultResource` are turned off. Most of them belong to upstream's remote relay (#18), which this task explicitly excludes. Please drop them so the French file matches the English one. Also add a French `kevbox_licence`, because the GPL notice in About currently falls back to English.",
+      "existing_code": "    \u003c!-- Remote buttons --\u003e",
+      "start_line": 512,
+      "end_line": 512,
+      "category": "maintainability",
+      "severity": "low"
+    },
+    {
+      "path": "app/src/main/java/cloud/samlo/couch/kevbox/drawer/MoveLook.kt",
+      "content": "The listener is added to `anchor.viewTreeObserver` when it's registered, but it's removed through whatever `anchor.viewTreeObserver` returns at draw time. If the anchor is detached before that pre-draw (for example, a package broadcast reloads the grid and drops the held card), the getter returns a different floating observer, so the remove call does nothing. The listener then stays on the window's observer and runs on every frame after that: it keeps resetting translations and starting new glides on cards that may already be gone. The usual fix is to capture the observer once and check `isAlive`.",
+      "suggestion_code": "        val observer = anchor.viewTreeObserver\n        observer.addOnPreDrawListener(object : ViewTreeObserver.OnPreDrawListener {\n            override fun onPreDraw(): Boolean {\n                if (observer.isAlive) observer.removeOnPreDrawListener(this)\n                else anchor.viewTreeObserver.removeOnPreDrawListener(this)",
+      "existing_code": "                anchor.viewTreeObserver.removeOnPreDrawListener(this)",
+      "start_line": 59,
+      "end_line": 59,
+      "category": "bug",
+      "severity": "low"
+    },
+    {
+      "path": "app/src/main/java/cloud/samlo/couch/settings/MainPage.kt",
+      "content": "`accessValue()` repeats the logic of `offCount()`, and its local `off` hides the `off` property, which tracks the warning state. Calling `offCount()` here instead removes both the duplicate and the confusing name.",
+      "suggestion_code": "    private fun accessValue(): String {\n        val missing = offCount()\n        return if (missing == 0) ctx.str(R.string.setup_all_on) else ctx.activity.resources.getQuantityString(R.plurals.setup_off, missing, missing)\n    }",
+      "existing_code": "    private fun accessValue(): String {\n        val off = Setup.items.count { !it.isOn(ctx.activity) }",
+      "start_line": 204,
+      "end_line": 205,
+      "category": "maintainability",
+      "severity": "low"
+    },
+    {
+      "path": "app/src/main/java/cloud/samlo/couch/settings/MainPage.kt",
+      "content": "`onResume` and `reshow` both do the same steps: remember whether focus is in the page and which row label it's on, rebuild, then call `refocus`. One helper (e.g. `keepingFocus(rebuild: () -\u003e Unit)`) would keep the two paths from drifting apart.",
+      "existing_code": "    private fun reshow() {\n        val inPage = inPage()\n        val focus = (ctx.activity.currentFocus as? OptionRow)?.label?.text?.toString()",
+      "start_line": 258,
+      "end_line": 260,
+      "category": "maintainability",
+      "severity": "low"
+    },
+    {
+      "path": "app/src/main/java/cloud/samlo/couch/settings/Groups.kt",
+      "content": "This maps wallpaper values to labels a second time. `MainPage.wallpaper()` already has the same value→label list, and it keeps `\"reddit\"` in a private `REDDIT` constant. If a source is added or renamed in only one place, the rail summary and the Look page will show different names, and the summary will quietly fall back to \"Daily\". Put the wallpaper `Option` list (or at least the value constants) in one shared place and use it in both files.",
+      "existing_code": "    private fun wallpaperLabel(value: String) = when (value) {\n        \"reddit\" -\u003e R.string.wallpaper_reddit\n        \"gradient\" -\u003e R.string.wallpaper_gradient\n        \"custom\" -\u003e R.string.wallpaper_custom\n        else -\u003e R.string.wallpaper_daily\n    }",
+      "start_line": 43,
+      "end_line": 48,
+      "category": "maintainability",
+      "severity": "low"
+    }
+  ],
+  "groups": [
+    {
+      "label": "CI, release tooling and license",
+      "files": [
+        ".github/workflows/ci.yml",
+        "LICENSE",
+        "package.json",
+        "release.sh"
+      ]
+    },
+    {
+      "label": "Data model cleanup (config, tiles, sources)",
+      "files": [
+        "app/src/main/java/cloud/samlo/couch/data/Config.kt",
+        "app/src/main/java/cloud/samlo/couch/data/ConfigJson.kt",
+        "app/src/main/java/cloud/samlo/couch/data/Images.kt",
+        "app/src/main/java/cloud/samlo/couch/data/InputSource.kt",
+        "app/src/main/java/cloud/samlo/couch/data/ProgramTile.kt",
+        "app/src/main/java/cloud/samlo/couch/data/Recommendations.kt",
+        "app/src/main/java/cloud/samlo/couch/data/Tile.kt",
+        "app/src/main/java/cloud/samlo/couch/data/Wallpapers.kt"
+      ]
+    },
+    {
+      "label": "Home screen and shared UI cleanup",
+      "files": [
+        "app/src/main/java/cloud/samlo/couch/home/CardMenus.kt",
+        "app/src/main/java/cloud/samlo/couch/home/HomeLayout.kt",
+        "app/src/main/java/cloud/samlo/couch/home/HomeLoader.kt",
+        "app/src/main/java/cloud/samlo/couch/home/HomeScreen.kt",
+        "app/src/main/java/cloud/samlo/couch/index/IndexScreen.kt",
+        "app/src/main/java/cloud/samlo/couch/ui/Card.kt",
+        "app/src/main/java/cloud/samlo/couch/ui/FocusRow.kt",
+        "app/src/main/java/cloud/samlo/couch/ui/Tokens.kt",
+        "app/src/main/java/cloud/samlo/couch/ui/Views.kt"
+      ]
+    },
+    {
+      "label": "Kevbox drawer and home visuals",
+      "files": [
+        "app/src/main/java/cloud/samlo/couch/kevbox/drawer/DrawerGrid.kt",
+        "app/src/main/java/cloud/samlo/couch/kevbox/drawer/MoveLook.kt",
+        "app/src/main/java/cloud/samlo/couch/kevbox/home/Backdrop.kt",
+        "app/src/main/java/cloud/samlo/couch/kevbox/home/Scrim.kt"
+      ]
+    },
+    {
+      "label": "Settings rail navigation and grouped layout",
+      "files": [
+        "app/src/main/java/cloud/samlo/couch/settings/MainPage.kt",
+        "app/src/main/java/cloud/samlo/couch/settings/Rail.kt",
+        "app/src/main/java/cloud/samlo/couch/settings/SettingsActivity.kt",
+        "app/src/main/java/cloud/samlo/couch/settings/SettingsLayout.kt",
+        "app/src/main/java/cloud/samlo/couch/settings/SettingsPage.kt",
+        "app/src/main/java/cloud/samlo/couch/settings/Groups.kt",
+        "app/src/main/res/drawable/ic_group_clock.xml",
+        "app/src/main/res/drawable/ic_group_couch.xml",
+        "app/src/main/res/drawable/ic_group_home.xml",
+        "app/src/main/res/drawable/ic_group_look.xml"
+      ]
+    },
+    {
+      "label": "Settings controls, option rows and dialogs",
+      "files": [
+        "app/src/main/java/cloud/samlo/couch/settings/AccessPage.kt",
+        "app/src/main/java/cloud/samlo/couch/settings/ChannelsPage.kt",
+        "app/src/main/java/cloud/samlo/couch/settings/Controls.kt",
+        "app/src/main/java/cloud/samlo/couch/settings/Dialogs.kt",
+        "app/src/main/java/cloud/samlo/couch/settings/OptionList.kt",
+        "app/src/main/java/cloud/samlo/couch/settings/OptionRow.kt",
+        "app/src/main/java/cloud/samlo/couch/settings/Setup.kt",
+        "app/src/main/res/drawable/ic_group_warning.xml"
+      ]
+    },
+    {
+      "label": "String resources and translations",
+      "files": [
+        "app/src/main/res/values-fr/strings.xml",
+        "app/src/main/res/values/strings.xml"
+      ]
+    }
+  ],
+  "session_id": "1a19e547-bf3f-467f-8cad-8b626ea366a1",
+  "manifest": {
+    "schema_version": "ocr.run-manifest/v1",
+    "run_id": "1a19e547-bf3f-467f-8cad-8b626ea366a1",
+    "operation": "review",
+    "terminal_state": "complete",
+    "repository": {
+      "identity_sha256": "0ffbddada3a18bb79301393e0fb4f5d70356a2ba979408b8ab1408c455adf725"
+    },
+    "input": {
+      "mode": "range",
+      "requested_from": "main",
+      "requested_head": "quick/gpl-merge",
+      "resolved_base": "7406ca20fd885081d9da0b7802a87fd50bb7c5d5",
+      "resolved_head": "882f06dfe726414b6408db4f8413c1109a0b8860",
+      "exact_range": "7406ca20fd885081d9da0b7802a87fd50bb7c5d5..882f06dfe726414b6408db4f8413c1109a0b8860",
+      "source_artifact_sha256": "e67bb295ca13a3bf4fd7e3bf7c69f7ae1d0b7ee6e67fdf458ac81a7c480ca623"
+    },
+    "execution": {
+      "ocr_version": "v1.13.3",
+      "provider": "anthropic",
+      "model": "claude-opus-5-5",
+      "configured_concurrency": 8,
+      "rule_config_sha256": "7bdde30da0c66ee5643876474d879e4d72b8803bf0501749f82291f5b9b2b87a",
+      "runtime_config_sha256": "93c1bae68fa824e3eb9a388b389d2b0cdbe98c00e45b7638e3c4d5afe2dbc39f"
+    },
+    "coverage": {
+      "selected": [
+        {
+          "item_id": "0155182b93ef0aa3d97ce7e7268f2f2fa9dd10c57201091a2fd886605d5a9990",
+          "path": "app/src/main/java/cloud/samlo/couch/settings/Setup.kt",
+          "fingerprint": "2474d1b9e7f7cb096f88151f1223e33ec5f51a9a23efa01912715687b95adff5"
+        },
+        {
+          "item_id": "0180725183880b7fdc918381ee961cc63eb95c71cfad60d509afd689cad7b338",
+          "path": "app/src/main/java/cloud/samlo/couch/settings/MainPage.kt",
+          "fingerprint": "bf3c54769efc7622f4cfd13f379efb7a3a5eedcac982c1c7a669f37fcc7a1d5c"
+        },
+        {
+          "item_id": "01c37f5098247329b85dec93a9268d499d9882d8f328821ce05a089fc811a5b5",
+          "path": "app/src/main/java/cloud/samlo/couch/home/HomeScreen.kt",
+          "fingerprint": "f79fbb7a72824d4fd2580bf45413b7d818dfc561c727aaae18668a5babe037aa"
+        },
+        {
+          "item_id": "07b7a139f46b31719bc5656d24357d99e28673e6ba03c5ad3342b51f37c25371",
+          "path": "app/src/main/java/cloud/samlo/couch/kevbox/drawer/DrawerGrid.kt",
+          "fingerprint": "34bb9f12a35015b1c3e4a2165091977d5d97a7312efae8149276cc9c04508760"
+        },
+        {
+          "item_id": "084b531a2ebe5a15547dde1fad3b4929075c7e7559a19159811a99a5ee8b1d30",
+          "path": "app/src/main/java/cloud/samlo/couch/kevbox/home/Backdrop.kt",
+          "fingerprint": "b8ea71f46b75babecc50d3667c5b9ccee8383535f4bf2a420abc8851799849f3"
+        },
+        {
+          "item_id": "0b65c0edf3e0c75bf33172e37e5444236838d970f1e71ab4312f006fdf4018c4",
+          "path": "app/src/main/java/cloud/samlo/couch/home/CardMenus.kt",
+          "fingerprint": "d6a07dc39cb7a759b29b0e68dad05dd0358dc6ebb4f6ca23fdc2f45aae40c169"
+        },
+        {
+          "item_id": "0ea1bfda87ee18b0a1978f5fc3d5253ac47de5e079de09954b6475bb84dbd0b7",
+          "path": "app/src/main/java/cloud/samlo/couch/settings/Controls.kt",
+          "fingerprint": "6db8f52d69753410c6786ba9c023c2088b924577e1b9477c5a846764e4bde7ee"
+        },
+        {
+          "item_id": "21d3af29cd59ae7270fd9c41832df1573038ee753d5290f39df5fa3a99419857",
+          "path": "app/src/main/java/cloud/samlo/couch/settings/SettingsPage.kt",
+          "fingerprint": "451047363d51548a7b434e3a8c60c1628405267c7381e7a1f09a759120f8f593"
+        },
+        {
+          "item_id": "283629ceeac3de045609817bb08d14b33af40b35f2bada7ae6fc9b9fef3da68f",
+          "path": "app/src/main/java/cloud/samlo/couch/data/Config.kt",
+          "fingerprint": "0f43cf91f312571f50e1384a4e0927197dfa5656fc673b50bf700c58522f8807"
+        },
+        {
+          "item_id": "3af6836cdc119d058190526f847ee65943ea14bef05de8a1af4908b57a0de2ff",
+          "path": "app/src/main/java/cloud/samlo/couch/data/InputSource.kt",
+          "fingerprint": "8b8316d4744c91227f444c09cca44ea87c7f110f94c1e54709c5881450bbf1f0"
+        },
+        {
+          "item_id": "3f9a3b5ddbb1d763d16e39a8c22bd083a370d99a2030e605d5515147bbf657e8",
+          "path": "app/src/main/java/cloud/samlo/couch/settings/SettingsActivity.kt",
+          "fingerprint": "489373fbf706a89248731794e18d0884c7811e4ed48d70f5403009fb178b7082"
+        },
+        {
+          "item_id": "44baa810080e23003f19148967fdb768de284ace5cba170af47223050596dda6",
+          "path": "app/src/main/java/cloud/samlo/couch/settings/Rail.kt",
+          "fingerprint": "a8264bc822605d09bde952d8eb17c1cb749379784c7bb38f32e461cc31a58a94"
+        },
+        {
+          "item_id": "4b6844a7e4e14d36183071ac9d49ec6e0720d2b6e14587bca8b37b692d323101",
+          "path": "app/src/main/java/cloud/samlo/couch/settings/ChannelsPage.kt",
+          "fingerprint": "99c453f91c077e65cc2f513a725c1993549deab2e00272a50fc7e732594ffd40"
+        },
+        {
+          "item_id": "4dc9793b739d48e32ff012eac7df23f309a9a1f142194dfad88c0b068f798c7c",
+          "path": "app/src/main/java/cloud/samlo/couch/data/Recommendations.kt",
+          "fingerprint": "648cc34fc6e805c064cef362c21ac37050961d668f48da08c997289ad2e9c04a"
+        },
+        {
+          "item_id": "57a59a9f4b5b1cc254a04618af9a79446ef3acff5f2a8f3b74cc1aa8a4937cbb",
+          "path": "app/src/main/java/cloud/samlo/couch/home/HomeLoader.kt",
+          "fingerprint": "74576ba39cf9b92017129af27595fa6d9a3302fff32c6a6432b74b540b570fbe"
+        },
+        {
+          "item_id": "5c2e9da40c77d5343de68c49081e9d5f089e9570e5d5be17d9f674f988ec75a3",
+          "path": "app/src/main/java/cloud/samlo/couch/data/Images.kt",
+          "fingerprint": "f409193aa1cc223fc5a3f329e82c8263809b67aa0683783e446856d912d8e369"
+        },
+        {
+          "item_id": "5ca144fe7266a98f05ae1c8c1a42b0cb655f24ae88a7db28df15ea0adf5033fc",
+          "path": "app/src/main/java/cloud/samlo/couch/ui/FocusRow.kt",
+          "fingerprint": "79325adfa4c01f635bbed484b43cadb00d531a09b1d98149a314bc56916129f1"
+        },
+        {
+          "item_id": "5e7d6a88a5a164713ce358b248d91fd86457f0a09cde30cda0fa6b0f94df2087",
+          "path": "app/src/main/java/cloud/samlo/couch/ui/Tokens.kt",
+          "fingerprint": "4baa03fcd1c724961b6d62b4fa3ce9f8134241fd684a4eef970666c2418e0fb4"
+        },
+        {
+          "item_id": "609af9fc73580d47302c3d4342c473803927bb2c173c56d74c6405937e446ce0",
+          "path": ".github/workflows/ci.yml",
+          "fingerprint": "0e730352135640883467b9d52413e1d6ae6302a5389804e8e30c75d8ddd15c65"
+        },
+        {
+          "item_id": "6cc63c74eb7dbac4acef8dfd52f3c86a88a63c604eb462b87450269f58d5f765",
+          "path": "app/src/main/java/cloud/samlo/couch/kevbox/home/Scrim.kt",
+          "old_path": "app/src/main/java/cloud/samlo/couch/ui/Scrim.kt",
+          "fingerprint": "d23eecd800f2b761b7866cb202e50eedac6686f7bba9e45863551f52c2b1b09a"
+        },
+        {
+          "item_id": "6cd57b06a8deba560bff40be616860a8bdc7165505c02b0104ab9fc8caffd28d",
+          "path": "app/src/main/res/drawable/ic_group_look.xml",
+          "fingerprint": "181350a7807f6de3ba57db17e575f47d9d347e27d016883f5ceed504598d6487"
+        },
+        {
+          "item_id": "7592939c2efc528db02b51cdf5e5b6f6478dc483abd7d9516c9181198b2d1563",
+          "path": "app/src/main/java/cloud/samlo/couch/data/Wallpapers.kt",
+          "fingerprint": "53b4d4e17dc30315543ac1545399226264d70f9af9395a4e231fdf698b1183a6"
+        },
+        {
+          "item_id": "83d56c3156009233f354b4725e1b2909ed2669216afcd34b5de6e800d088b8b6",
+          "path": "app/src/main/java/cloud/samlo/couch/kevbox/drawer/MoveLook.kt",
+          "fingerprint": "bd8e6c3cbb426a315a39a334d3710b1516ea5fbead7a0b60e1a926cf63799de4"
+        },
+        {
+          "item_id": "8c3014fb60cb49c4988056104381e140d71a958a23c1df046a6efb3f92c40f96",
+          "path": "app/src/main/java/cloud/samlo/couch/settings/OptionList.kt",
+          "fingerprint": "45ac56ce634ba7bfd034922be23c633313386ba3e8688d57b5fd6d2862943164"
+        },
+        {
+          "item_id": "8db844197e21f180cf3fd7ef577cb65788bc3a7902c27f25e8716bcdc8f43db1",
+          "path": "app/src/main/res/values/strings.xml",
+          "fingerprint": "53460ffad33c2710fe5e66e395c7f1b0e8dbfa21e0937917e8500bc598332b04"
+        },
+        {
+          "item_id": "8ebb8184b41d816fc187c03279a9de16e2d893e1b03a34edc0e288bfaff1b543",
+          "path": "release.sh",
+          "fingerprint": "d73752f83243c4c611c9d67e9435dfda63146f04fd44cf3e81d85b0e1db0b34d"
+        },
+        {
+          "item_id": "97af15ff0061f4f3b389f10d1caa58a82cfdc1834a1a30656909a2c4e12e7d73",
+          "path": "app/src/main/java/cloud/samlo/couch/settings/SettingsLayout.kt",
+          "fingerprint": "a233d011c9aed65b0fddd5cad9782dfde23b79116d97a3188b308e4abde2ae13"
+        },
+        {
+          "item_id": "9e92479f7381bb190b92c31fb44dfb8da268487cc786fd79b9da9b450ad723e8",
+          "path": "app/src/main/res/drawable/ic_group_home.xml",
+          "fingerprint": "c240501fe6182c1e3f023ec4b18b41dd517a0e3ae513b4f3cd2716b060876700"
+        },
+        {
+          "item_id": "a2a6cf1c8075757a72e9767953b4241397919843842c9a77a9bd6e449d2dfd64",
+          "path": "app/src/main/java/cloud/samlo/couch/data/Tile.kt",
+          "fingerprint": "2183706acea287d30071e4397b810c89997af1611c1dc9b3194dacf57b0cb2d9"
+        },
+        {
+          "item_id": "a8470b4b36657f8f20d7e95b597933d409bf70ba36cea3e9321fc065cb4d7afc",
+          "path": "app/src/main/java/cloud/samlo/couch/data/ProgramTile.kt",
+          "fingerprint": "552940521e6ce7d132abeb4b22dd79caeac2d1d55021ec5e801a177669a5589a"
+        },
+        {
+          "item_id": "b1de79b0e6a7f1708513de7f68dc7760a09ed9163b03b0fc5570078fc2e8024d",
+          "path": "app/src/main/java/cloud/samlo/couch/data/ConfigJson.kt",
+          "fingerprint": "6f983aad4373105fdbe044096522d0962f140a724bdd6d90022bbc547c0fd342"
+        },
+        {
+          "item_id": "b7e1ede3b74f68b54bb9452610fb303facb630222825968a7cf2a88f3e9ad41c",
+          "path": "app/src/main/java/cloud/samlo/couch/settings/Dialogs.kt",
+          "fingerprint": "0c9423721eec60506b04ccb8f2b9103bef2554acf4c5a40523dbfe31dc994b7d"
+        },
+        {
+          "item_id": "bea478d10ab2054fa6a3ac5a5512a0762e5a471040a1e1201e9ac37c539eb8e9",
+          "path": "app/src/main/java/cloud/samlo/couch/ui/Card.kt",
+          "fingerprint": "b2fe8718136bd2f2919346bf9161ab890646b70fad2ac4482d0a0d3b3f0fe2c6"
+        },
+        {
+          "item_id": "c189ed1761cb017eba1615fe422931276bf9f7d1f8106b8463d6dc2737ab6352",
+          "path": "app/src/main/res/drawable/ic_group_clock.xml",
+          "fingerprint": "8140e90115ad9a78a0451df6d23470bc68e33657a08c88cf16d6b0eb0f38f377"
+        },
+        {
+          "item_id": "c266190f33bb4abcf8bf9e86b29a62d2e20b529dc275ef5389fdd7aae8f02c7e",
+          "path": "app/src/main/java/cloud/samlo/couch/index/IndexScreen.kt",
+          "fingerprint": "9f342c1abbcc30f3482d47346de90e56fe9098ccb99dd7f842feeb14d1dcbdf5"
+        },
+        {
+          "item_id": "c478da319f8f96b029845289b632dc731413fc9a4c380ad230439dae95212b75",
+          "path": "app/src/main/java/cloud/samlo/couch/home/HomeLayout.kt",
+          "fingerprint": "f77ce004dc389d9039e0cdb1efa246318a7013b00c324f1001b8bc77bcb98725"
+        },
+        {
+          "item_id": "c64ecc5e054aee3c4651c60ce81cf94192409a6b0dc53019a8e1a21e1d0b7937",
+          "path": "app/src/main/res/drawable/ic_group_couch.xml",
+          "fingerprint": "306fc9ebce9409f9a2635656573b5b8a0fb9e8274b901da104a8bf99cf83d9c7"
+        },
+        {
+          "item_id": "c9b4aea50107f310ff655fc89855214afd7032cfdb5716845c84dfd3c499d373",
+          "path": "app/src/main/res/drawable/ic_group_warning.xml",
+          "fingerprint": "b06f8d127cdf3ec7bc6022e9dd24039d6a2f2275de579ed84d6727908263360e"
+        },
+        {
+          "item_id": "e2b4a48b9dd0aeee8d77abf978fcc31f02a4a392637729e32c7c820db39c88b1",
+          "path": "LICENSE",
+          "fingerprint": "4bd20acecb1001bbc87cb4916330595f6f1e528874f83b74b7cb458b08fa81b3"
+        },
+        {
+          "item_id": "e3c7cbe310881d0348390239b00c219aa81fd9d09b83da3f90f33ba209ea7b6a",
+          "path": "package.json",
+          "fingerprint": "124453146b3e35394cfaf609436291fe051d53e7a439c9cb0420b0ed291a9450"
+        },
+        {
+          "item_id": "e4b0b3d78ca5d88ee07364a4d85df023a3237d66af6e9763a7571341a3073360",
+          "path": "app/src/main/java/cloud/samlo/couch/ui/Views.kt",
+          "fingerprint": "b354873ecb799d67054a8f0fd4b3b2a17181af4a79b0b218b0cae9a01c9e69d2"
+        },
+        {
+          "item_id": "f59e4fe3f866ffbc50c72fe81b20a9f7b04483c6a2744f0a7fdf2bd846c6bf3d",
+          "path": "app/src/main/res/values-fr/strings.xml",
+          "fingerprint": "1c14ba160ac62a44091bf10f0e474d6da23dd6ae711aecd81486a62f39d5770c"
+        },
+        {
+          "item_id": "fc19f7bf241366ac087c48c1cecc179331a1bc8962eb936848d5299a691a9a5b",
+          "path": "app/src/main/java/cloud/samlo/couch/settings/Groups.kt",
+          "fingerprint": "f2771d9d6360c8c4db25ef13b53571dc9e8d44b4a42d3d7a6d1f4f5eadfed247"
+        },
+        {
+          "item_id": "fc6c49133b039abd2771162bd6f9231f0201e6096d5af9bd5bfd12ddeeb21892",
+          "path": "app/src/main/java/cloud/samlo/couch/settings/AccessPage.kt",
+          "fingerprint": "cc8f38be3b18ee723af784167df4d7ecce7bf8e080e7f555844930ca235e5500"
+        },
+        {
+          "item_id": "ff9a154f9de9623b55fb1b92afc88e5f71a76b01d1dc8e3a4904975449335843",
+          "path": "app/src/main/java/cloud/samlo/couch/settings/OptionRow.kt",
+          "fingerprint": "13b9aaba83d3bd3fe458af815cfc0635e12ec8d3a04e0cf0ac1891e9311dc972"
+        }
+      ],
+      "completed": [
+        {
+          "item_id": "0155182b93ef0aa3d97ce7e7268f2f2fa9dd10c57201091a2fd886605d5a9990",
+          "path": "app/src/main/java/cloud/samlo/couch/settings/Setup.kt",
+          "fingerprint": "2474d1b9e7f7cb096f88151f1223e33ec5f51a9a23efa01912715687b95adff5"
+        },
+        {
+          "item_id": "0180725183880b7fdc918381ee961cc63eb95c71cfad60d509afd689cad7b338",
+          "path": "app/src/main/java/cloud/samlo/couch/settings/MainPage.kt",
+          "fingerprint": "bf3c54769efc7622f4cfd13f379efb7a3a5eedcac982c1c7a669f37fcc7a1d5c"
+        },
+        {
+          "item_id": "01c37f5098247329b85dec93a9268d499d9882d8f328821ce05a089fc811a5b5",
+          "path": "app/src/main/java/cloud/samlo/couch/home/HomeScreen.kt",
+          "fingerprint": "f79fbb7a72824d4fd2580bf45413b7d818dfc561c727aaae18668a5babe037aa"
+        },
+        {
+          "item_id": "07b7a139f46b31719bc5656d24357d99e28673e6ba03c5ad3342b51f37c25371",
+          "path": "app/src/main/java/cloud/samlo/couch/kevbox/drawer/DrawerGrid.kt",
+          "fingerprint": "34bb9f12a35015b1c3e4a2165091977d5d97a7312efae8149276cc9c04508760"
+        },
+        {
+          "item_id": "084b531a2ebe5a15547dde1fad3b4929075c7e7559a19159811a99a5ee8b1d30",
+          "path": "app/src/main/java/cloud/samlo/couch/kevbox/home/Backdrop.kt",
+          "fingerprint": "b8ea71f46b75babecc50d3667c5b9ccee8383535f4bf2a420abc8851799849f3"
+        },
+        {
+          "item_id": "0b65c0edf3e0c75bf33172e37e5444236838d970f1e71ab4312f006fdf4018c4",
+          "path": "app/src/main/java/cloud/samlo/couch/home/CardMenus.kt",
+          "fingerprint": "d6a07dc39cb7a759b29b0e68dad05dd0358dc6ebb4f6ca23fdc2f45aae40c169"
+        },
+        {
+          "item_id": "0ea1bfda87ee18b0a1978f5fc3d5253ac47de5e079de09954b6475bb84dbd0b7",
+          "path": "app/src/main/java/cloud/samlo/couch/settings/Controls.kt",
+          "fingerprint": "6db8f52d69753410c6786ba9c023c2088b924577e1b9477c5a846764e4bde7ee"
+        },
+        {
+          "item_id": "21d3af29cd59ae7270fd9c41832df1573038ee753d5290f39df5fa3a99419857",
+          "path": "app/src/main/java/cloud/samlo/couch/settings/SettingsPage.kt",
+          "fingerprint": "451047363d51548a7b434e3a8c60c1628405267c7381e7a1f09a759120f8f593"
+        },
+        {
+          "item_id": "283629ceeac3de045609817bb08d14b33af40b35f2bada7ae6fc9b9fef3da68f",
+          "path": "app/src/main/java/cloud/samlo/couch/data/Config.kt",
+          "fingerprint": "0f43cf91f312571f50e1384a4e0927197dfa5656fc673b50bf700c58522f8807"
+        },
+        {
+          "item_id": "3af6836cdc119d058190526f847ee65943ea14bef05de8a1af4908b57a0de2ff",
+          "path": "app/src/main/java/cloud/samlo/couch/data/InputSource.kt",
+          "fingerprint": "8b8316d4744c91227f444c09cca44ea87c7f110f94c1e54709c5881450bbf1f0"
+        },
+        {
+          "item_id": "3f9a3b5ddbb1d763d16e39a8c22bd083a370d99a2030e605d5515147bbf657e8",
+          "path": "app/src/main/java/cloud/samlo/couch/settings/SettingsActivity.kt",
+          "fingerprint": "489373fbf706a89248731794e18d0884c7811e4ed48d70f5403009fb178b7082"
+        },
+        {
+          "item_id": "44baa810080e23003f19148967fdb768de284ace5cba170af47223050596dda6",
+          "path": "app/src/main/java/cloud/samlo/couch/settings/Rail.kt",
+          "fingerprint": "a8264bc822605d09bde952d8eb17c1cb749379784c7bb38f32e461cc31a58a94"
+        },
+        {
+          "item_id": "4b6844a7e4e14d36183071ac9d49ec6e0720d2b6e14587bca8b37b692d323101",
+          "path": "app/src/main/java/cloud/samlo/couch/settings/ChannelsPage.kt",
+          "fingerprint": "99c453f91c077e65cc2f513a725c1993549deab2e00272a50fc7e732594ffd40"
+        },
+        {
+          "item_id": "4dc9793b739d48e32ff012eac7df23f309a9a1f142194dfad88c0b068f798c7c",
+          "path": "app/src/main/java/cloud/samlo/couch/data/Recommendations.kt",
+          "fingerprint": "648cc34fc6e805c064cef362c21ac37050961d668f48da08c997289ad2e9c04a"
+        },
+        {
+          "item_id": "57a59a9f4b5b1cc254a04618af9a79446ef3acff5f2a8f3b74cc1aa8a4937cbb",
+          "path": "app/src/main/java/cloud/samlo/couch/home/HomeLoader.kt",
+          "fingerprint": "74576ba39cf9b92017129af27595fa6d9a3302fff32c6a6432b74b540b570fbe"
+        },
+        {
+          "item_id": "5c2e9da40c77d5343de68c49081e9d5f089e9570e5d5be17d9f674f988ec75a3",
+          "path": "app/src/main/java/cloud/samlo/couch/data/Images.kt",
+          "fingerprint": "f409193aa1cc223fc5a3f329e82c8263809b67aa0683783e446856d912d8e369"
+        },
+        {
+          "item_id": "5ca144fe7266a98f05ae1c8c1a42b0cb655f24ae88a7db28df15ea0adf5033fc",
+          "path": "app/src/main/java/cloud/samlo/couch/ui/FocusRow.kt",
+          "fingerprint": "79325adfa4c01f635bbed484b43cadb00d531a09b1d98149a314bc56916129f1"
+        },
+        {
+          "item_id": "5e7d6a88a5a164713ce358b248d91fd86457f0a09cde30cda0fa6b0f94df2087",
+          "path": "app/src/main/java/cloud/samlo/couch/ui/Tokens.kt",
+          "fingerprint": "4baa03fcd1c724961b6d62b4fa3ce9f8134241fd684a4eef970666c2418e0fb4"
+        },
+        {
+          "item_id": "609af9fc73580d47302c3d4342c473803927bb2c173c56d74c6405937e446ce0",
+          "path": ".github/workflows/ci.yml",
+          "fingerprint": "0e730352135640883467b9d52413e1d6ae6302a5389804e8e30c75d8ddd15c65"
+        },
+        {
+          "item_id": "6cc63c74eb7dbac4acef8dfd52f3c86a88a63c604eb462b87450269f58d5f765",
+          "path": "app/src/main/java/cloud/samlo/couch/kevbox/home/Scrim.kt",
+          "old_path": "app/src/main/java/cloud/samlo/couch/ui/Scrim.kt",
+          "fingerprint": "d23eecd800f2b761b7866cb202e50eedac6686f7bba9e45863551f52c2b1b09a"
+        },
+        {
+          "item_id": "6cd57b06a8deba560bff40be616860a8bdc7165505c02b0104ab9fc8caffd28d",
+          "path": "app/src/main/res/drawable/ic_group_look.xml",
+          "fingerprint": "181350a7807f6de3ba57db17e575f47d9d347e27d016883f5ceed504598d6487"
+        },
+        {
+          "item_id": "7592939c2efc528db02b51cdf5e5b6f6478dc483abd7d9516c9181198b2d1563",
+          "path": "app/src/main/java/cloud/samlo/couch/data/Wallpapers.kt",
+          "fingerprint": "53b4d4e17dc30315543ac1545399226264d70f9af9395a4e231fdf698b1183a6"
+        },
+        {
+          "item_id": "83d56c3156009233f354b4725e1b2909ed2669216afcd34b5de6e800d088b8b6",
+          "path": "app/src/main/java/cloud/samlo/couch/kevbox/drawer/MoveLook.kt",
+          "fingerprint": "bd8e6c3cbb426a315a39a334d3710b1516ea5fbead7a0b60e1a926cf63799de4"
+        },
+        {
+          "item_id": "8c3014fb60cb49c4988056104381e140d71a958a23c1df046a6efb3f92c40f96",
+          "path": "app/src/main/java/cloud/samlo/couch/settings/OptionList.kt",
+          "fingerprint": "45ac56ce634ba7bfd034922be23c633313386ba3e8688d57b5fd6d2862943164"
+        },
+        {
+          "item_id": "8db844197e21f180cf3fd7ef577cb65788bc3a7902c27f25e8716bcdc8f43db1",
+          "path": "app/src/main/res/values/strings.xml",
+          "fingerprint": "53460ffad33c2710fe5e66e395c7f1b0e8dbfa21e0937917e8500bc598332b04"
+        },
+        {
+          "item_id": "8ebb8184b41d816fc187c03279a9de16e2d893e1b03a34edc0e288bfaff1b543",
+          "path": "release.sh",
+          "fingerprint": "d73752f83243c4c611c9d67e9435dfda63146f04fd44cf3e81d85b0e1db0b34d"
+        },
+        {
+          "item_id": "97af15ff0061f4f3b389f10d1caa58a82cfdc1834a1a30656909a2c4e12e7d73",
+          "path": "app/src/main/java/cloud/samlo/couch/settings/SettingsLayout.kt",
+          "fingerprint": "a233d011c9aed65b0fddd5cad9782dfde23b79116d97a3188b308e4abde2ae13"
+        },
+        {
+          "item_id": "9e92479f7381bb190b92c31fb44dfb8da268487cc786fd79b9da9b450ad723e8",
+          "path": "app/src/main/res/drawable/ic_group_home.xml",
+          "fingerprint": "c240501fe6182c1e3f023ec4b18b41dd517a0e3ae513b4f3cd2716b060876700"
+        },
+        {
+          "item_id": "a2a6cf1c8075757a72e9767953b4241397919843842c9a77a9bd6e449d2dfd64",
+          "path": "app/src/main/java/cloud/samlo/couch/data/Tile.kt",
+          "fingerprint": "2183706acea287d30071e4397b810c89997af1611c1dc9b3194dacf57b0cb2d9"
+        },
+        {
+          "item_id": "a8470b4b36657f8f20d7e95b597933d409bf70ba36cea3e9321fc065cb4d7afc",
+          "path": "app/src/main/java/cloud/samlo/couch/data/ProgramTile.kt",
+          "fingerprint": "552940521e6ce7d132abeb4b22dd79caeac2d1d55021ec5e801a177669a5589a"
+        },
+        {
+          "item_id": "b1de79b0e6a7f1708513de7f68dc7760a09ed9163b03b0fc5570078fc2e8024d",
+          "path": "app/src/main/java/cloud/samlo/couch/data/ConfigJson.kt",
+          "fingerprint": "6f983aad4373105fdbe044096522d0962f140a724bdd6d90022bbc547c0fd342"
+        },
+        {
+          "item_id": "b7e1ede3b74f68b54bb9452610fb303facb630222825968a7cf2a88f3e9ad41c",
+          "path": "app/src/main/java/cloud/samlo/couch/settings/Dialogs.kt",
+          "fingerprint": "0c9423721eec60506b04ccb8f2b9103bef2554acf4c5a40523dbfe31dc994b7d"
+        },
+        {
+          "item_id": "bea478d10ab2054fa6a3ac5a5512a0762e5a471040a1e1201e9ac37c539eb8e9",
+          "path": "app/src/main/java/cloud/samlo/couch/ui/Card.kt",
+          "fingerprint": "b2fe8718136bd2f2919346bf9161ab890646b70fad2ac4482d0a0d3b3f0fe2c6"
+        },
+        {
+          "item_id": "c189ed1761cb017eba1615fe422931276bf9f7d1f8106b8463d6dc2737ab6352",
+          "path": "app/src/main/res/drawable/ic_group_clock.xml",
+          "fingerprint": "8140e90115ad9a78a0451df6d23470bc68e33657a08c88cf16d6b0eb0f38f377"
+        },
+        {
+          "item_id": "c266190f33bb4abcf8bf9e86b29a62d2e20b529dc275ef5389fdd7aae8f02c7e",
+          "path": "app/src/main/java/cloud/samlo/couch/index/IndexScreen.kt",
+          "fingerprint": "9f342c1abbcc30f3482d47346de90e56fe9098ccb99dd7f842feeb14d1dcbdf5"
+        },
+        {
+          "item_id": "c478da319f8f96b029845289b632dc731413fc9a4c380ad230439dae95212b75",
+          "path": "app/src/main/java/cloud/samlo/couch/home/HomeLayout.kt",
+          "fingerprint": "f77ce004dc389d9039e0cdb1efa246318a7013b00c324f1001b8bc77bcb98725"
+        },
+        {
+          "item_id": "c64ecc5e054aee3c4651c60ce81cf94192409a6b0dc53019a8e1a21e1d0b7937",
+          "path": "app/src/main/res/drawable/ic_group_couch.xml",
+          "fingerprint": "306fc9ebce9409f9a2635656573b5b8a0fb9e8274b901da104a8bf99cf83d9c7"
+        },
+        {
+          "item_id": "c9b4aea50107f310ff655fc89855214afd7032cfdb5716845c84dfd3c499d373",
+          "path": "app/src/main/res/drawable/ic_group_warning.xml",
+          "fingerprint": "b06f8d127cdf3ec7bc6022e9dd24039d6a2f2275de579ed84d6727908263360e"
+        },
+        {
+          "item_id": "e2b4a48b9dd0aeee8d77abf978fcc31f02a4a392637729e32c7c820db39c88b1",
+          "path": "LICENSE",
+          "fingerprint": "4bd20acecb1001bbc87cb4916330595f6f1e528874f83b74b7cb458b08fa81b3"
+        },
+        {
+          "item_id": "e3c7cbe310881d0348390239b00c219aa81fd9d09b83da3f90f33ba209ea7b6a",
+          "path": "package.json",
+          "fingerprint": "124453146b3e35394cfaf609436291fe051d53e7a439c9cb0420b0ed291a9450"
+        },
+        {
+          "item_id": "e4b0b3d78ca5d88ee07364a4d85df023a3237d66af6e9763a7571341a3073360",
+          "path": "app/src/main/java/cloud/samlo/couch/ui/Views.kt",
+          "fingerprint": "b354873ecb799d67054a8f0fd4b3b2a17181af4a79b0b218b0cae9a01c9e69d2"
+        },
+        {
+          "item_id": "f59e4fe3f866ffbc50c72fe81b20a9f7b04483c6a2744f0a7fdf2bd846c6bf3d",
+          "path": "app/src/main/res/values-fr/strings.xml",
+          "fingerprint": "1c14ba160ac62a44091bf10f0e474d6da23dd6ae711aecd81486a62f39d5770c"
+        },
+        {
+          "item_id": "fc19f7bf241366ac087c48c1cecc179331a1bc8962eb936848d5299a691a9a5b",
+          "path": "app/src/main/java/cloud/samlo/couch/settings/Groups.kt",
+          "fingerprint": "f2771d9d6360c8c4db25ef13b53571dc9e8d44b4a42d3d7a6d1f4f5eadfed247"
+        },
+        {
+          "item_id": "fc6c49133b039abd2771162bd6f9231f0201e6096d5af9bd5bfd12ddeeb21892",
+          "path": "app/src/main/java/cloud/samlo/couch/settings/AccessPage.kt",
+          "fingerprint": "cc8f38be3b18ee723af784167df4d7ecce7bf8e080e7f555844930ca235e5500"
+        },
+        {
+          "item_id": "ff9a154f9de9623b55fb1b92afc88e5f71a76b01d1dc8e3a4904975449335843",
+          "path": "app/src/main/java/cloud/samlo/couch/settings/OptionRow.kt",
+          "fingerprint": "13b9aaba83d3bd3fe458af815cfc0635e12ec8d3a04e0cf0ac1891e9311dc972"
+        }
+      ],
+      "reused": [],
+      "failed": [],
+      "waived": []
+    },
+    "elapsed_ms": 229880
+  }
+}
