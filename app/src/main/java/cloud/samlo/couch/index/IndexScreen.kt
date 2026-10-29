@@ -22,7 +22,8 @@ import cloud.samlo.couch.ui.dp
 import cloud.samlo.couch.ui.fill
 
 /**
- * The Index layout: apps listed on the left; on the right, what the selected app offers (the
+ * The Index layout: the clock and weather top left, apps listed on the left under them, the top
+ * buttons top right; on the right, what the selected app offers (the
  * focused program's text over its first channel's cards), its last week of use, and the TV's
  * readings along the bottom.
  *
@@ -94,8 +95,10 @@ class IndexScreen(
             leftMargin = activity.dp(IndexTokens.LIST_X)
             bottomMargin = activity.dp(IndexTokens.FOOTER_BOTTOM) - systemLine.inset
         })
-        addView(topBar, LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT, Gravity.TOP or Gravity.END).apply {
+        // Full width: the clock starts at the column's x, the buttons end as far from the right edge.
+        addView(topBar, LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT, Gravity.TOP).apply {
             topMargin = activity.dp(TOP_BAR_Y)
+            leftMargin = activity.dp(IndexTokens.LIST_X)
             rightMargin = activity.dp(IndexTokens.LIST_X)
         })
     }

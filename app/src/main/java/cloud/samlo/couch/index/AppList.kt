@@ -14,8 +14,9 @@ import cloud.samlo.couch.ui.dp
 import cloud.samlo.couch.ui.dpf
 
 /**
- * The app list on the left. Like Couch's rows, it never scrolls: the track glides by
- * translation so the selected row keeps [IndexTokens.ROWS_ABOVE] rows above it, and the last
+ * The app list on the left. When every row, the divider and More apps fit, the track sits still
+ * with them centred on the screen. Otherwise, like Couch's rows, it never scrolls: the track glides
+ * by translation so the selected row keeps [IndexTokens.ROWS_ABOVE] rows above it, and the last
  * rows stop above the fade at the bottom. The selected row's background and accent marker are
  * one view behind the rows that glides from row to row, also by translation.
  *
@@ -43,6 +44,8 @@ class AppList(context: Context, private val makeRow: (IndexEntry) -> AppRow) : F
         )
     }
     private var selectionY = 0f
+    /** Whether the last [reveal] centred the column rather than gliding it. */
+    private var centred = false
     /** In-row state and accent as last painted; repainting only on a change keeps a key press from redrawing it. */
     private var painted: Pair<Boolean, Int>? = null
 
@@ -90,10 +93,13 @@ class AppList(context: Context, private val makeRow: (IndexEntry) -> AppRow) : F
             if (column.hasFocus()) moreApps.requestFocus()
             column.removeAllViews()
             if (!moreApps.chosen) selection.visibility = INVISIBLE
-            return
+        } else {
+            // The focused app went away (hidden, uninstalled): focus the one now in its place.
+            column.arrange(wanted) { _, index -> moveFocus(wanted[index.coerceAtMost(wanted.lastIndex)]) }
         }
-        // The focused app went away (hidden, uninstalled): focus the one now in its place.
-        column.arrange(wanted) { _, index -> moveFocus(wanted[index.coerceAtMost(wanted.lastIndex)]) }
+        // A new count moves the centred block, or starts or ends centring. Follow it even when
+        // focus is in the cards or the top bar and nothing else calls reveal.
+        if (centred || centredY() != null) reveal(chosenIndex())
     }
 
     /** Makes [row] the selected one; [inRow] while focus is in its channel row, which quietens it. */
@@ -130,12 +136,15 @@ class AppList(context: Context, private val makeRow: (IndexEntry) -> AppRow) : F
 
     /**
      * Glides so row [index] sits where the list wants it; More apps counts as row `rows().size`.
-     * Without [animate], the selection lands at once too.
+     * When the whole column fits, it rests centred whatever [index] is. Without [animate], the
+     * selection lands at once too.
      */
     fun reveal(index: Int, animate: Boolean = true) {
         val pitch = context.dp(IndexTokens.ROW_PITCH)
         val end = (rowY(column.childCount) + pitch - IndexTokens.ROWS_SHOWN * pitch).coerceAtLeast(0)
-        val target = -(rowY(index) - IndexTokens.ROWS_ABOVE * pitch).coerceIn(0, end).toFloat()
+        val middle = centredY()
+        centred = middle != null
+        val target = middle?.toFloat() ?: -(rowY(index) - IndexTokens.ROWS_ABOVE * pitch).coerceIn(0, end).toFloat()
         track.animate().cancel()
         if (!animate) {
             track.translationY = target
@@ -147,22 +156,46 @@ class AppList(context: Context, private val makeRow: (IndexEntry) -> AppRow) : F
         track.animate().translationY(target).setDuration(Tokens.GLIDE_MS).setInterpolator(Tokens.ease).start()
     }
 
-    /** Top of row [index] in the track, in pixels; past the last app, More apps' place under the divider. */
-    private fun rowY(index: Int): Int {
-        val count = column.childCount
+    /**
+     * Top of row [index] in the track, in pixels, with [count] app rows; past the last app, More
+     * apps' place under the divider.
+     */
+    private fun rowY(index: Int, count: Int = column.childCount): Int {
         if (index < count) return index * context.dp(IndexTokens.ROW_PITCH)
         if (count == 0) return 0
         return count * context.dp(IndexTokens.ROW_PITCH) + context.dp(DIVIDER_GAP) * 2 + context.dp(DIVIDER_H)
     }
 
     /**
+     * The track's offset, in pixels, that centres [count] app rows, the divider and More apps on
+     * the screen; null when they do not fit inside this view that way, and the list glides instead.
+     */
+    private fun centredY(count: Int = column.childCount): Int? {
+        val block = rowY(count, count) + context.dp(IndexTokens.ROW_H)
+        val y = context.dp(IndexTokens.SCREEN_H) / 2 - context.dp(IndexTokens.LIST_Y) - block / 2
+        return y.takeIf { it >= 0 && it + block <= context.dp(IndexTokens.LIST_H) }
+    }
+
+    /** The chosen row's index, More apps' when it is chosen, else the first row's. */
+    private fun chosenIndex(): Int {
+        val chosen = rows().indexOfFirst { it.chosen }
+        return when {
+            chosen >= 0 -> chosen
+            moreApps.chosen -> column.childCount
+            else -> 0
+        }
+    }
+
+    /**
      * With no apps the divider goes and More apps moves to the top. The fade paints the flat
-     * background, a dark band over the backdrop, so it only shows while the rows reach it.
+     * background, a dark band over the backdrop, so it only shows while the rows reach it, and
+     * never over a centred column, which ends above this view's bottom.
      */
     private fun placeFooter(count: Int) {
         divider.visibility = if (count == 0) GONE else VISIBLE
         val bottom = if (count == 0) 0 else count * IndexTokens.ROW_PITCH + DIVIDER_GAP * 2 + DIVIDER_H
-        fade.visibility = if (bottom + IndexTokens.ROW_H > IndexTokens.LIST_FADE_Y) VISIBLE else INVISIBLE
+        val reaches = bottom + IndexTokens.ROW_H > IndexTokens.LIST_FADE_Y
+        fade.visibility = if (reaches && centredY(count) == null) VISIBLE else INVISIBLE
     }
 
     private companion object {

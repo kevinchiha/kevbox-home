@@ -8,18 +8,22 @@ import android.graphics.Color
  * never trigger a layout pass.
  */
 object IndexTokens {
-    // The app list, left.
+    /** The canvas height: a column that fits sits centred on it. */
+    const val SCREEN_H = 540
+
+    // The app list, left. It starts under the top bar, which is 40dp tall at most (now playing's
+    // art) and holds the clock top left, level with the right column's header.
     const val LIST_X = 24
-    const val LIST_Y = 27
+    const val LIST_Y = 64
     const val LIST_W = 330
-    const val LIST_H = 460
+    const val LIST_H = 423
     /** Where the list starts fading out, from its top. */
-    const val LIST_FADE_Y = 377
+    const val LIST_FADE_Y = 340
     const val ROW_H = 46
     const val ROW_PITCH = 49
     /** Rows kept above the selected one before the list glides; the last rows never pass the fade. */
     const val ROWS_ABOVE = 3
-    const val ROWS_SHOWN = 8
+    const val ROWS_SHOWN = 7
     const val ICON = 29
 
     // The right column: the program's text, its channel's cards, then the week.
