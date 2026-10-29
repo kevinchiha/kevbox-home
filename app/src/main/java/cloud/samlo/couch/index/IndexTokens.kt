@@ -11,8 +11,13 @@ object IndexTokens {
     /** The canvas height: a column that fits sits centred on it. */
     const val SCREEN_H = 540
 
-    // The app list, left. It starts under the top bar, which is 40dp tall at most (now playing's
-    // art) and holds the clock top left, level with the right column's header.
+    /** The widest the top bar's weather place text gets, so a long place name never crowds the buttons. */
+    const val PLACE_MAX_W = 120
+
+    // The app list, left, level with the right column's header. The top bar above it starts at
+    // IndexScreen.TOP_BAR_Y (23dp) and is 52dp tall while now playing shows (40dp art plus 6dp
+    // padding above and below), so its bottom then sits at 75dp, 11dp below the list frame's top.
+    // A short centred column starts lower than that; a full or gliding one starts at the top.
     const val LIST_X = 24
     const val LIST_Y = 64
     const val LIST_W = 330

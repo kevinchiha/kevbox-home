@@ -3,6 +3,7 @@ package cloud.samlo.couch.index
 import android.annotation.SuppressLint
 import android.content.Context
 import android.graphics.drawable.Animatable
+import android.text.TextUtils
 import android.view.Gravity
 import android.view.View
 import android.widget.ImageView
@@ -46,7 +47,12 @@ class IndexTopBar(context: Context, onSettings: () -> Unit, onUpdate: () -> Unit
     }
     private val weatherIcon = ImageView(context)
     private val temperature = text(20f, 600, Tokens.textPrimary).apply { letterSpacing = -0.02f }
-    private val place = text(9.5f, 500, Tokens.textMuted, 1.25f).apply { maxLines = 2 }
+    /** Two lines, the place then the day's range; [showWeather] keeps the place to one line. */
+    private val place = text(9.5f, 500, Tokens.textMuted, 1.25f).apply {
+        maxLines = 2
+        maxWidth = context.dp(IndexTokens.PLACE_MAX_W)
+        ellipsize = TextUtils.TruncateAt.END
+    }
 
     init {
         orientation = HORIZONTAL
@@ -77,7 +83,9 @@ class IndexTopBar(context: Context, onSettings: () -> Unit, onUpdate: () -> Unit
         weatherIcon.setImageResource(now.icon)
         if (animating) (weatherIcon.drawable as? Animatable)?.start()
         temperature.text = context.getString(R.string.weather_temperature, now.temperature)
-        place.text = context.getString(R.string.index_place_range, now.place, now.high, now.low)
+        // A long place name ends in an ellipsis on its own line, so the range still shows below it.
+        val name = TextUtils.ellipsize(now.place, place.paint, place.maxWidth.toFloat(), TextUtils.TruncateAt.END)
+        place.text = context.getString(R.string.index_place_range, name, now.high, now.low)
         weather.visibility = VISIBLE
     }
 
