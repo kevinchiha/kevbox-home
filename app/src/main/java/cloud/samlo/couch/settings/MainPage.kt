@@ -52,6 +52,8 @@ class MainPage(private val ctx: SettingsContext) : SettingsPage {
 
     /** Back from another screen: show what changed, and redo the warning once a grant changed it. */
     override fun onResume() {
+        // The page just closed saved its own copy; saving this one as it was would undo that.
+        ctx.config = Config.load(ctx.files.dir)
         if (off == offCount()) {
             o.rows().forEach { it.refresh() }
             rail.refresh()
@@ -251,12 +253,11 @@ class MainPage(private val ctx: SettingsContext) : SettingsPage {
     }
 
     private fun home(rowsOnly: RowsOnly) {
+        // Index only uses the channels among the rows, so the same page is about those there.
+        if (rows) o.page(ctx.str(R.string.settings_rows), ctx.str(R.string.settings_rows_help)) { open(SettingsActivity.PAGE_ROWS) }
+        else o.page(ctx.str(R.string.settings_channels), ctx.str(R.string.settings_channels_help)) { open(SettingsActivity.PAGE_ROWS) }
+        o.page(ctx.str(R.string.settings_visibility), ctx.str(R.string.settings_visibility_help)) { open(SettingsActivity.PAGE_APPS) }
         o.page(ctx.str(R.string.settings_inputs), ctx.str(R.string.settings_inputs_help)) { open(SettingsActivity.PAGE_INPUTS) }
-        o.page(ctx.str(R.string.settings_channels), ctx.str(R.string.settings_channels_help)) { open(SettingsActivity.PAGE_CHANNELS) }
-        o.page(ctx.str(R.string.settings_visibility), ctx.str(R.string.settings_visibility_help)) {
-            Dialogs.visibility(ctx.activity, config, ctx.files.dir) { rail.refresh(Group.HOME) }
-        }
-        rowsOnly { o.page(ctx.str(R.string.settings_rows), ctx.str(R.string.settings_rows_help)) { open(SettingsActivity.PAGE_ROWS) } }
         rowsOnly {
             o.leaves(ctx.str(R.string.settings_organize), ctx.str(R.string.settings_organize_help)) {
                 ctx.activity.setResult(SettingsActivity.RESULT_ORGANIZE)
