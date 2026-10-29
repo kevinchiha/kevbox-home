@@ -8,16 +8,31 @@ import android.os.Looper
 import android.os.SystemClock
 import android.util.Log
 import android.view.accessibility.AccessibilityNodeInfo
+import android.view.accessibility.AccessibilityWindowInfo
 import android.widget.Toast
 import cloud.samlo.couch.R
 import cloud.samlo.couch.kevbox.KevBox
 import cloud.samlo.couch.kevbox.keys.KeyActions
 
+/** One on-screen window as ForceStop sees it: its package, whether it is an app window, and its root node. */
+internal data class WindowRoot(val pkg: String?, val isApplication: Boolean, val root: Any)
+
+/**
+ * The root to search for Force stop: the first application window of a [settings] package, else
+ * the first window of any type from one, else [active] when it is one (this covers an empty
+ * [windows] too), else null. The active-window root alone came back unusable on Google TV, with
+ * Force stop on screen, which is why the window list comes first.
+ */
+internal fun pickSettingsRoot(windows: List<WindowRoot>, active: WindowRoot?, settings: Set<String>): Any? =
+    (windows.firstOrNull { it.isApplication && it.pkg in settings }
+        ?: windows.firstOrNull { it.pkg in settings }
+        ?: active?.takeIf { it.pkg in settings })?.root
+
 /**
  * One Restart app run, inside the accessibility service: on the details page AppRestart opened,
  * press the settings app's own Force stop and its OK, then relaunch [pkg].
  *
- * It polls the active window instead of listening for content changes, so the stock launcher's
+ * It polls the screen's windows instead of listening for content changes, so the stock launcher's
  * redraws never wake the service. Text is matched exactly, in the settings app's own strings, so
  * it follows the TV's language and never mistakes the confirmation's title ("Force stop") or its
  * sentence for the button. A step that runs past [STEP_MS] leaves the screen as it is and tells
@@ -31,6 +46,8 @@ class ForceStop(private val service: AccessibilityService, private val pkg: Stri
     private var deadline = 0L
     private var strings: Strings? = null
     private var cancelled = false
+    /** The package of the root the last poll used, or null: a timeout names it. */
+    private var seen: String? = null
     private val tick = Runnable { poll() }
 
     /** The settings app's own Force stop and OK texts; null where its resource name did not resolve. */
@@ -65,17 +82,18 @@ class ForceStop(private val service: AccessibilityService, private val pkg: Stri
 
     /** True when the run is over; false to poll again. */
     private fun find(): Boolean {
-        val root = service.rootInActiveWindow ?: return false
-        val settings = root.packageName?.toString()?.takeIf { it in SETTINGS } ?: return false
+        val root = root() ?: return false
+        val settings = root.packageName?.toString() ?: return false
         val texts = strings ?: load(settings).also { strings = it }
         val forceStop = texts.forceStop ?: return false
         val node = exact(root, forceStop)
         if (node == null) {
             // TV settings hides Force stop for a stopped app: a loaded page without it means stopped.
-            return if (label()?.let { exact(root, it) } != null) launch() else false
+            return if (label()?.let { exact(root, it) } != null) launch(stopped = true) else false
         }
         val target = clickable(node)
-        if (!node.isEnabled || target?.isEnabled == false) return launch()
+        if (!node.isEnabled || target?.isEnabled == false) return launch(stopped = true)
+        Log.i(KevBox.TAG, "restart $pkg: found Force stop")
         (target ?: node).performAction(AccessibilityNodeInfo.ACTION_CLICK)
         next(Step.CONFIRM)
         return false
@@ -83,32 +101,48 @@ class ForceStop(private val service: AccessibilityService, private val pkg: Stri
 
     private fun confirm(): Boolean {
         val ok = strings?.ok ?: return false
-        val node = service.rootInActiveWindow?.let { exact(it, ok) } ?: return false
+        val node = root()?.let { exact(it, ok) } ?: return false
         (clickable(node) ?: node).performAction(AccessibilityNodeInfo.ACTION_CLICK)
+        Log.i(KevBox.TAG, "restart $pkg: pressed OK")
         next(Step.RELAUNCH)
         return false
     }
 
     /** Waits for the confirmation to close, so the relaunch is not started under it. */
     private fun relaunch(): Boolean {
-        val root = service.rootInActiveWindow ?: return false
+        val root = root() ?: return false
         val ok = strings?.ok ?: return false
-        return if (exact(root, ok) == null) launch() else false
+        return if (exact(root, ok) == null) launch(stopped = false) else false
     }
 
-    private fun launch(): Boolean {
+    /**
+     * The settings app's root node, read from every window on screen ([pickSettingsRoot]); null
+     * while no settings window is there. Records its package for the timeout line.
+     */
+    private fun root(): AccessibilityNodeInfo? {
+        val windows = service.windows.mapNotNull { window ->
+            window.root?.let { WindowRoot(it.packageName?.toString(), window.type == AccessibilityWindowInfo.TYPE_APPLICATION, it) }
+        }
+        val active = service.rootInActiveWindow?.let { WindowRoot(it.packageName?.toString(), true, it) }
+        val root = pickSettingsRoot(windows, active, SETTINGS) as AccessibilityNodeInfo?
+        seen = root?.packageName?.toString()
+        return root
+    }
+
+    /** [stopped]: the app was already stopped, so nothing was pressed before this relaunch. */
+    private fun launch(stopped: Boolean): Boolean {
         val intent = KeyActions.launchIntent(service, pkg)
         if (intent == null) {
             Log.w(KevBox.TAG, "restart $pkg: no launch intent, not relaunched")
         } else {
-            Log.i(KevBox.TAG, "restart $pkg: relaunched")
+            Log.i(KevBox.TAG, if (stopped) "restart $pkg: already stopped, relaunched" else "restart $pkg: relaunched")
             service.startActivity(intent)
         }
         return true
     }
 
     private fun fail() {
-        Log.w(KevBox.TAG, "restart $pkg: step $step timed out")
+        Log.w(KevBox.TAG, "restart $pkg: step $step timed out, saw ${seen ?: "none"}")
         Toast.makeText(service, R.string.kevbox_restart_by_hand, Toast.LENGTH_LONG).show()
     }
 

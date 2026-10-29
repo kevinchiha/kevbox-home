@@ -55,7 +55,7 @@ object AppMenu {
         try {
             activity.startActivity(
                 Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.fromParts("package", pkg, null))
-                    .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK),
+                    .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK),
             )
         } catch (e: ActivityNotFoundException) {
             Log.w(KevBox.TAG, "No app details page for $pkg: ${e.message}")

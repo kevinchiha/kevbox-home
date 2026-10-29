@@ -135,11 +135,14 @@ class ButtonRow(context: Context, onCustomize: () -> Unit) : LinearLayout(contex
         }
     }
 
-    /** Opens [action], or the main Settings page when this box lacks it; logs if both fail. */
+    /**
+     * Opens [action], or the main Settings page when this box lacks it; logs if both fail.
+     * CLEAR_TASK starts the page fresh, so Settings' task never brings back a page left open there.
+     */
     private fun openSettings(action: String) {
         for (each in listOf(action, Settings.ACTION_SETTINGS).distinct()) {
             try {
-                context.startActivity(Intent(each).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+                context.startActivity(Intent(each).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK))
                 return
             } catch (e: ActivityNotFoundException) {
                 // Try the next page.

@@ -21,7 +21,7 @@ object AppRestart {
         try {
             context.startActivity(
                 Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.fromParts("package", pkg, null))
-                    .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK),
+                    .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK),
             )
         } catch (e: ActivityNotFoundException) {
             // Some TVs ship without the details page: say what to do by hand instead of crashing Home.
