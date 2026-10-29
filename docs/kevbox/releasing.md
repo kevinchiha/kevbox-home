@@ -41,7 +41,8 @@ Each check runs before anything changes. A failed one prints why and exits with 
    The tag is never pushed: Couch's `.github/workflows/release.yml` would publish any pushed `v*`
    tag on GitHub. If anything fails before the upload, the script deletes the tag again. If
    something fails after it, the APK may already be on the host, so the script keeps the tag and
-   says what to check: when `version.json` already names the version, the release is out; when it
+   says what to check: when `version.json` already names the version, the release is out and only
+   `kevbox-home-latest.apk` needs repointing by hand (the script prints the command); when it
    does not, delete the tag (`git tag -d vA.B.C.K`) and rerun with the same version.
 2. Runs the Gradle gate (`testReleaseUnitTest lintRelease assembleRelease`) with the KevBox TV key,
    passed to Gradle as `COUCH_KEYSTORE`, `COUCH_KEYSTORE_PASSWORD`, `COUCH_KEY_ALIAS` and

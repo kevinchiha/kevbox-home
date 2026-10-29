@@ -40,7 +40,7 @@ class Fetcher(private val context: Context) {
                     0L
                 }
                 val ageSeconds = try {
-                    connection.getHeaderFieldInt("Age", 0).coerceAtLeast(0)
+                    connection.getHeaderFieldInt("Age", 0).coerceIn(0, MAX_AGE_S)
                 } catch (e: Exception) {
                     0
                 }
@@ -62,8 +62,11 @@ class Fetcher(private val context: Context) {
 
     private companion object {
         const val TIMEOUT_MS = 8000
+
+        /** A cache answering a no-cache request sends a small Age; anything above a day is ignored past that. */
+        const val MAX_AGE_S = 86_400
     }
 }
 
-/** A fetched body and the server's `Date` header in epoch ms, null when it had none. */
+/** A fetched body and the server's time in epoch ms (its `Date` header plus any `Age`), null when it had no `Date`. */
 class Fetched(val text: String, val dateMs: Long?)

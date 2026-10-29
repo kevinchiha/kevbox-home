@@ -40,6 +40,8 @@ class SilentJob : JobService() {
             } finally {
                 running.set(false)
                 jobFinished(params, false)
+                // Home left the screen during this run: queue the 15-minute run now that it can't stop this one.
+                if (leftDuringRun.getAndSet(false)) afterLeaving(app)
             }
         }, "kevbox-silent-update").start()
         return true
@@ -57,6 +59,9 @@ class SilentJob : JobService() {
         private const val TRIGGER_LEFT = "left"
 
         private val running = AtomicBoolean(false)
+
+        /** Home left the screen while a run was in progress; the run queues the 15-minute one when it ends. */
+        private val leftDuringRun = AtomicBoolean(false)
 
         /** Schedules the 6-hourly run, unless it is already scheduled. Call on every app start. */
         fun schedule(context: Context) {
@@ -79,11 +84,15 @@ class SilentJob : JobService() {
 
         /**
          * Queues the run 15 min after Home left the screen. Same job id each time, so a newer stop
-         * replaces the pending run and the 15 minutes count from it. Does nothing while a run is in
-         * progress, since scheduling the same id would stop it mid-install.
+         * replaces the pending run and the 15 minutes count from it. While a run is in progress it
+         * only notes the stop, since scheduling the same id would stop that run mid-install; the run
+         * queues this one when it ends.
          */
         fun afterLeaving(context: Context) {
-            if (!SilentRules.queuesAfterLeaving(Build.VERSION.SDK_INT, running.get())) return
+            if (!SilentRules.queuesAfterLeaving(Build.VERSION.SDK_INT, running.get())) {
+                if (Build.VERSION.SDK_INT >= SilentRules.MIN_SDK && running.get()) leftDuringRun.set(true)
+                return
+            }
             try {
                 val scheduler = context.getSystemService(JobScheduler::class.java) ?: return
                 val job = JobInfo.Builder(AFTER_LEAVING_ID, component(context))
