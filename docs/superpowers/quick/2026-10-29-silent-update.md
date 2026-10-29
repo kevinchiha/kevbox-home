@@ -198,3 +198,4 @@ new `docs/kevbox/releasing.md`, AGENTS.md (one line pointing at it)
 
 ## Build log
 baseline: gradle, size (385083 B) and provision-test green; the python step fails (kevbox/release does not exist until Task 4)
+Task 1: started at d084f1f
