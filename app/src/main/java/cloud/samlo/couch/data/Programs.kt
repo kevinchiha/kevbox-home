@@ -21,7 +21,9 @@ object Programs {
 
     /** A preview channel as listed in settings, whether or not it is shown. */
     class ChannelInfo(val id: Long, val packageName: String, val name: String, val browsable: Boolean) {
-        fun shown(config: Config) = config.channels[id.toString()] ?: browsable
+        // KevBox: every channel is on until switched off in settings. Google TV leaves every app's
+        // channel at browsable = 0, so following that flag hid them all.
+        fun shown(config: Config) = config.channels[id.toString()] ?: true
     }
 
     fun canRead(context: Context) =
