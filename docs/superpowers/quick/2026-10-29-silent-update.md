@@ -197,3 +197,4 @@ new `docs/kevbox/releasing.md`, AGENTS.md (one line pointing at it)
 **Verify:** `python3 -m unittest discover -s kevbox/release -p 'test_*.py' && bash -n release.sh`
 
 ## Build log
+baseline: gradle, size (385083 B) and provision-test green; the python step fails (kevbox/release does not exist until Task 4)
