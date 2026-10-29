@@ -137,7 +137,10 @@ adb -s $E shell am start -n tv.kevbox.home.dev/cloud.samlo.couch.MainActivity
 2. Leave Home's screen. Pressing Home works if another launcher is the default. If KevBox Home dev
    is the default launcher (check with
    `adb -s $E shell cmd package resolve-activity --brief -a android.intent.action.MAIN -c android.intent.category.HOME`),
-   open another app instead: `adb -s $E shell am start -a android.settings.SETTINGS`.
+   open another full-screen app instead (for example `adb -s $E shell monkey -p tv.kevbox.live 1`).
+   TV Settings does not count: it opens as a side panel, Home stays visible behind it and never
+   stops. Check with `adb -s $E shell dumpsys jobscheduler | grep 'tv.kevbox.home.dev'`: a second
+   job, `/1263011330`, appears once Home has really left the screen.
 3. Wait at least 16 minutes. Play nothing and press nothing.
 4. Check:
 
