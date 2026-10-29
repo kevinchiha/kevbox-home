@@ -213,3 +213,6 @@ Task 4: landed (outside Files: kevbox/release/test_updater_test_server.py, kevbo
 ocr: 6 comments (0 critical/high, 2 medium, 4 low dropped)
 ocr medium release.sh:215 (latest link repointed before the host SHA-256 check): fix, move the link after the check and the version.json write.
 ocr medium data/Fetcher.kt:33 (a cached response's Date is old): fix, send Cache-Control: no-cache on the version.json request (as KevBox TV does).
+review: gate green (also with --rerun-tasks, APK 400719 B); AC-1..AC-14 met in code, AC-15 emulator-only; no critical or important
+review minor release.sh:84-86,213-216 (after upload, a failed version.json write still deletes the tag and says nothing was published; latest link moved too early): fix, merged with the ocr medium on release.sh.
+review minor SilentJob.kt:84-93 (afterLeaving re-schedules the same id and stops a running job, so the process can freeze mid-install): fix, return early while a run is in progress.
