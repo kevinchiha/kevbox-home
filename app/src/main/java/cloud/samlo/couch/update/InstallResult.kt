@@ -8,10 +8,18 @@ import android.os.Build
 import android.widget.Toast
 import cloud.samlo.couch.HomeAccessibilityService
 import cloud.samlo.couch.R
+import cloud.samlo.couch.kevbox.update.SilentInstall
 
-/** Receives the package installer's answer for an update [Installer] committed. */
+/**
+ * Receives the package installer's answer for an update [Installer] committed. A silent install's
+ * answer goes to [SilentInstall.onResult], which never shows a screen.
+ */
 class InstallResult : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
+        if (SilentInstall.isSilent(intent)) {
+            SilentInstall.onResult(context, intent)
+            return
+        }
         val status = intent.getIntExtra(PackageInstaller.EXTRA_STATUS, PackageInstaller.STATUS_FAILURE)
         if (status != PackageInstaller.STATUS_PENDING_USER_ACTION && status != PackageInstaller.STATUS_SUCCESS) {
             HomeAccessibilityService.reopenAfterUpdate(context, false)

@@ -22,8 +22,11 @@
         android:name="android.permission.QUERY_ALL_PACKAGES"
         tools:ignore="QueryAllPackagesPermission" />
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
-    <!-- Self-update: Android still asks the user before installing. -->
+    <!-- Self-update. The first time, Android asks the user to let KevBox Home install apps. -->
     <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
+    <!-- Self-update on Android 12 and later with no confirm screen, silent or member-started, once
+         KevBox Home is the app that installed itself. -->
+    <uses-permission android:name="android.permission.UPDATE_PACKAGES_WITHOUT_USER_ACTION" />
     <!-- The Bluetooth button: whether Bluetooth is on and how many devices are connected. -->
     <uses-permission
         android:name="android.permission.BLUETOOTH"

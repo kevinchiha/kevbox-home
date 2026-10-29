@@ -10,6 +10,10 @@ enum class SilentReason {
     OLD_ANDROID, NO_BLOCK, NOT_YET, NO_PERMISSION, REFUSED, OUT_OF_ATTEMPTS,
     // quiet().
     PLAYING, IN_USE,
+    // SilentInstall.run: no stored release newer than this build, another install holds the slot,
+    // the download broke off (not counted), the APK failed a check, the session or commit failed,
+    // and Android has the update.
+    NO_UPDATE, BUSY, DOWNLOAD_FAILED, BAD_APK, FAILED, COMMITTED,
 }
 
 /**
