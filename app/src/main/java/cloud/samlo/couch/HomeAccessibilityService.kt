@@ -4,28 +4,39 @@ import android.accessibilityservice.AccessibilityService
 import android.content.ComponentName
 import android.content.Context
 import android.content.pm.PackageManager
+import android.media.AudioManager
+import android.os.Handler
+import android.os.Looper
 import android.provider.Settings
 import android.view.KeyEvent
+import android.view.ViewConfiguration
 import android.view.accessibility.AccessibilityEvent
 import cloud.samlo.couch.data.Prefs
 import cloud.samlo.couch.kevbox.KevBox
 import cloud.samlo.couch.kevbox.keys.KeyActions
 import cloud.samlo.couch.kevbox.keys.KeyFilter
+import cloud.samlo.couch.kevbox.keys.VolumeRepeat
 import cloud.samlo.couch.kevbox.restart.ForceStop
 
 /**
  * Three jobs that need an accessibility service. It filters the remote's keys through the
  * provisioned map, so app buttons open KevBox's apps from anywhere; a key with no mapping passes
- * through untouched, so holding volume keeps ramping. It presses Force stop for Restart app
+ * through untouched. Filtering keys stops Android repeating a held key, so [VolumeRepeat] makes the
+ * held-volume ramp itself while the volume events still pass on. It presses Force stop for Restart app
  * ([ForceStop]). And on TVs that hardwire HOME to the stock launcher, it replaces that launcher's
  * window with KevBox Home when one appears (see `res/xml/home_accessibility.xml`).
  */
 class HomeAccessibilityService : AccessibilityService() {
     private var filter: KeyFilter? = null
     private var restartRun: ForceStop? = null
+    private var volume: VolumeRepeat? = null
+    private val volumeHandler = Handler(Looper.getMainLooper())
 
-    override fun onKeyEvent(event: KeyEvent): Boolean =
-        filter?.onKey(event.action, event.keyCode, event.scanCode, event.repeatCount) ?: false
+    override fun onKeyEvent(event: KeyEvent): Boolean {
+        // Watches volume keys only and never consumes them, so the system still takes each press.
+        volume?.onKey(event.action, event.keyCode, event.repeatCount)
+        return filter?.onKey(event.action, event.keyCode, event.scanCode, event.repeatCount) ?: false
+    }
 
     override fun onAccessibilityEvent(event: AccessibilityEvent) {
         if (event.eventType != AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED) return
@@ -33,13 +44,29 @@ class HomeAccessibilityService : AccessibilityService() {
         openCouch()
     }
 
-    override fun onInterrupt() = Unit
+    override fun onInterrupt() {
+        volume?.stop()
+    }
 
     override fun onServiceConnected() {
         super.onServiceConnected()
         running = this
         val actions = KeyActions(this)
         filter = KeyFilter(actions::entries, actions::installed, actions::act)
+        val audio = getSystemService(AudioManager::class.java)
+        volume = VolumeRepeat(
+            schedule = { delay, run -> volumeHandler.postDelayed({ run() }, delay) },
+            cancel = { volumeHandler.removeCallbacksAndMessages(null) },
+            adjust = { raise ->
+                audio?.adjustSuggestedStreamVolume(
+                    if (raise) AudioManager.ADJUST_RAISE else AudioManager.ADJUST_LOWER,
+                    AudioManager.USE_DEFAULT_STREAM_TYPE,
+                    AudioManager.FLAG_SHOW_UI,
+                )
+            },
+            timeoutMs = ViewConfiguration.getKeyRepeatTimeout().toLong(),
+            delayMs = ViewConfiguration.getKeyRepeatDelay().toLong(),
+        )
         // Remember that HOME capture is wanted, so it can be restored after Android drops it.
         wanted(this, true)
         // A self-update restarts the app and leaves the stock launcher showing; come back to KevBox Home.
@@ -53,6 +80,8 @@ class HomeAccessibilityService : AccessibilityService() {
         if (running === this) running = null
         restartRun?.cancel()
         restartRun = null
+        volume?.stop()
+        volume = null
         super.onDestroy()
     }
 
