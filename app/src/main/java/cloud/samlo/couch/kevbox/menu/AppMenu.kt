@@ -50,11 +50,16 @@ object AppMenu {
             .show()
     }
 
+    /** A TV without the details page logs and stays put rather than crashing Home or the drawer. */
     private fun appInfo(activity: Activity, pkg: String) {
-        activity.startActivity(
-            Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.fromParts("package", pkg, null))
-                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK),
-        )
+        try {
+            activity.startActivity(
+                Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.fromParts("package", pkg, null))
+                    .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK),
+            )
+        } catch (e: ActivityNotFoundException) {
+            Log.w(KevBox.TAG, "No app details page for $pkg: ${e.message}")
+        }
     }
 
     /** Hands off to Android's confirmation screen; nothing is removed unless the member confirms there. */

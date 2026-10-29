@@ -18,7 +18,7 @@ class ConfigTest {
     fun defaultsAreGeneric() {
         val config = Config()
         assertTrue(config.pinnedApps.isEmpty())
-        assertTrue("com.sony.dtv.promos" in config.hiddenApps)
+        assertTrue(config.hiddenApps.isEmpty())
         assertEquals("medium", config.cardSize)
         assertEquals("index", config.layout)
         assertEquals(3, config.wallpaperHours)
@@ -90,7 +90,7 @@ class ConfigTest {
         val config = Config.fromJson("""{"cardSize":"small","pinnedApps":["a.b"]}""")
         assertEquals("small", config.cardSize)
         assertEquals(listOf("a.b"), config.pinnedApps)
-        assertEquals(Config.DEFAULT_HIDDEN, config.hiddenApps)
+        assertTrue(config.hiddenApps.isEmpty())
         assertTrue(config.clock24h)
     }
 
@@ -146,6 +146,24 @@ class ConfigTest {
         assertEquals("large", loaded.cardSize)
         assertEquals(setOf("hdmi1"), loaded.hiddenInputs)
         assertFalse(dir.resolve("config.json.tmp").exists())
+    }
+
+    @Test
+    fun savesFromTwoThreadsNeverLeaveABrokenFile() {
+        val dir = folder.newFolder()
+        val writers = listOf("small", "large").map { size ->
+            Thread {
+                val config = Config().apply { cardSize = size; names = (1..200).associate { "app.$it" to size } }
+                repeat(100) { config.save(dir) }
+            }
+        }
+        writers.forEach { it.start() }
+        writers.forEach { it.join() }
+        // A mixed or half-written file would load as the defaults: "medium" and no names.
+        val loaded = Config.load(dir)
+        assertTrue(loaded.cardSize, loaded.cardSize in setOf("small", "large"))
+        assertEquals(200, loaded.names.size)
+        assertTrue(loaded.names.values.all { it == loaded.cardSize })
     }
 
     @Test
