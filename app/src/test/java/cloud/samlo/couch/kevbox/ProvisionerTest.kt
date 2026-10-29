@@ -58,6 +58,22 @@ class ProvisionerTest {
     }
 
     @Test
+    fun aRefusedRenameKeepsTheFileAndFails() {
+        val dir = folder.newFolder()
+        val pushed = """{"apps":["tv.kevbox"]}"""
+        File(dir, Provisioner.FILE).writeText(pushed)
+        // A folder with something in it can be neither deleted, renamed over nor written as a file.
+        File(dir, Provisioner.APPLIED).mkdir()
+        File(dir, "${Provisioner.APPLIED}/keep").writeText("x")
+        val lines = mutableListOf<String>()
+
+        assertEquals(Provisioner.Outcome.FAILED, Provisioner.apply(dir) { lines += it })
+        assertEquals(pushed, File(dir, Provisioner.FILE).readText())
+        assertEquals(1, lines.size)
+        assertTrue(lines[0], lines[0].startsWith("rename failed kevbox-home.json"))
+    }
+
+    @Test
     fun aPushStillInFlightIsIgnored() {
         val dir = folder.newFolder()
         File(dir, "${Provisioner.FILE}.tmp").writeText("""{"apps":["tv.kevbox"]}""")

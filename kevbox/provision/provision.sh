@@ -91,7 +91,10 @@ case $reply in
     *) fail "set Home failed" ;;
 esac
 
-reply=$(shout am start -n "$ACTIVITY") || fail "start failed"
+# Started as Home, not with -n: an explicit component builds a standard launch, which puts a
+# second MainActivity next to the Home one (KevBox.kt says why).
+reply=$(shout am start -a android.intent.action.MAIN -c android.intent.category.HOME -p "$PKG") ||
+    fail "start failed"
 case $reply in
     *Error*) fail "start failed" ;;
 esac

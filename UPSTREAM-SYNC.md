@@ -6,7 +6,7 @@ what this fork changed in it and why (AC ids are from
 `docs/superpowers/specs/2026-10-28-0.1-kevbox-home-design.md`). Files only this fork has get no
 row: the `kevbox/` source, test and script folders, the `ic_kb_*` drawables in
 `app/src/main/res/drawable/`, `docs/kevbox/`, `docs/superpowers/`, `AGENTS.md`, this file, and the
-build's `lane-*-progress.md` notes at the root.
+build's `fix-*-progress.md` notes at the root.
 
 ## Changed
 

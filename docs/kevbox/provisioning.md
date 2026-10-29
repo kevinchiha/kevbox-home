@@ -29,7 +29,8 @@ Home checks for `kevbox-home.json` on every load. It ignores `kevbox-home.json.t
   on the next load.
 
 After a rename the file is gone, so later loads leave `config.json` alone. A change a family member
-makes from Customize, such as moving an app, lasts until you push a new file.
+makes on the box, such as moving an app from the hold-OK menu or changing a setting in Customize,
+lasts until you push a new file.
 
 Each outcome writes one log line under the tag `KevBoxHome`:
 
@@ -142,7 +143,9 @@ The script runs these steps in order and stops at the first one that fails:
 5. Adds KevBox Home's accessibility service to `enabled_accessibility_services`, keeping every
    service already there, and sets `accessibility_enabled` to 1.
 6. Makes KevBox Home the Home app (`cmd package set-home-activity`).
-7. Starts it, then sends the Home key.
+7. Starts it as Home (`am start -a android.intent.action.MAIN -c android.intent.category.HOME -p
+   <package>`), then sends the Home key. It never starts `MainActivity` by name with `-n`: that
+   makes an ordinary launch, which puts a second KevBox Home next to the real one.
 8. Checks up to five times, a second apart, that `dumpsys activity activities` shows KevBox Home
    as the resumed activity.
 
