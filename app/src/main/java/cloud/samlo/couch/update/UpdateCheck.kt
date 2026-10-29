@@ -4,6 +4,7 @@ import android.content.Context
 import cloud.samlo.couch.data.Config
 import cloud.samlo.couch.data.Fetcher
 import cloud.samlo.couch.data.Prefs
+import cloud.samlo.couch.kevbox.update.SilentRules
 import cloud.samlo.couch.kevbox.update.VersionJson
 
 /**
@@ -16,24 +17,27 @@ class UpdateCheck(context: Context, private val fetcher: Fetcher) {
     private val installedCode = Versions.installedCode(context)
 
     /**
-     * Asks tv.kevbox.dev when the last check is a day old. Blocking: run it off the loader thread so
-     * a slow network never holds up the home screen. True when it found a release newer than this build.
+     * Asks tv.kevbox.dev when the last check is a day old, or at once when [force] is true (the
+     * silent-update job and About). Blocking: run it off the loader thread so a slow network never
+     * holds up the home screen. True when it found a release newer than this build.
      */
-    fun refresh(config: Config): Boolean {
+    fun refresh(config: Config, force: Boolean = false): Boolean {
         if (!config.checkUpdates) return false
         val now = System.currentTimeMillis()
         // A clock that jumped backwards (no real-time clock until the network time arrives) counts as due.
-        if (now - prefs.getLong(CHECKED_AT, 0L) in 0 until DAY_MS) return false
+        if (!force && now - prefs.getLong(CHECKED_AT, 0L) in 0 until DAY_MS) return false
         // Recorded before the request, so an unreachable server is asked once a day, not on every resume.
         prefs.edit().putLong(CHECKED_AT, now).apply()
-        val text = fetcher.text(VersionJson.URL) ?: return false
-        val release = VersionJson.parse(text, installedCode)
+        val fetched = fetcher.fetch(VersionJson.URL) ?: return false
+        val release = VersionJson.parse(fetched.text, installedCode)
         if (release == null) {
             // Not newer, or broken: a build pulled from the server stops being offered.
             prefs.edit().remove(LATEST_RELEASE).apply()
             return false
         }
-        prefs.edit().putString(LATEST_RELEASE, release.serialize()).apply()
+        // The silent block's `after` is stored on the box clock, by the server's Date header.
+        val stored = SilentRules.onBoxClock(release, fetched.dateMs, System.currentTimeMillis())
+        prefs.edit().putString(LATEST_RELEASE, stored.serialize()).apply()
         return pending(config) != null
     }
 

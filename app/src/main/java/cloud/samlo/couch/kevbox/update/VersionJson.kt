@@ -1,6 +1,7 @@
 package cloud.samlo.couch.kevbox.update
 
 import cloud.samlo.couch.update.Release
+import org.json.JSONArray
 import org.json.JSONObject
 import java.net.URI
 
@@ -24,7 +25,7 @@ object VersionJson {
     /**
      * The shape rules alone, with no installed-version filter; [Release.deserialize] uses them too,
      * so a stored release passes the same checks it passed when fetched. Extra keys (KevBox TV's
-     * `profiles`) are ignored.
+     * `profiles`) are ignored. A broken `silent` block drops only the block, never the release.
      */
     internal fun read(text: String): Release? = try {
         val json = JSONObject(text)
@@ -38,7 +39,7 @@ object VersionJson {
         val url = json.getString("url")
         val sha256 = json.getString("sha256")
         if (code > 0 && !name.isNullOrBlank() && trusted(url) && HEX64.matches(sha256)) {
-            Release(name, code, url, sha256, json.optString("notes", ""))
+            Release(name, code, url, sha256, json.optString("notes", ""), SilentBlock.parse(json.opt("silent")))
         } else {
             null
         }
@@ -55,5 +56,35 @@ object VersionJson {
         return uri.scheme.equals("https", ignoreCase = true) &&
             uri.host.equals(HOST, ignoreCase = true) &&
             uri.rawUserInfo == null
+    }
+}
+
+/**
+ * version.json's `silent` block: from [afterMs] (epoch ms, server clock) the release may install with
+ * no screen. [earlyUsers] is read so the shape matches KevBox TV and KevBox Live, but Home has no
+ * sign-in, so nothing uses it.
+ */
+data class SilentBlock(val afterMs: Long, val earlyUsers: List<String>) {
+    companion object {
+        /**
+         * The block, or null for anything else: `after` must be a positive bare JSON integer (not
+         * `"5"`, `1.5` or null), `earlyUsers` missing, null or an array of strings. Never throws.
+         */
+        fun parse(raw: Any?): SilentBlock? = try {
+            val json = raw as? JSONObject
+            val afterMs = when (val after = json?.opt("after")) {
+                is Int -> after.toLong()
+                is Long -> after
+                else -> 0L
+            }
+            val earlyUsers = when (val users = json?.opt("earlyUsers")) {
+                null, JSONObject.NULL -> emptyList()
+                is JSONArray -> (0 until users.length()).map { users.opt(it) as? String }
+                else -> listOf(null)
+            }
+            if (afterMs > 0 && null !in earlyUsers) SilentBlock(afterMs, earlyUsers.filterNotNull()) else null
+        } catch (e: Exception) {
+            null
+        }
     }
 }
