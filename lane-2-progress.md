@@ -1,3 +1,0 @@
-- task-5: done; no Interfaces deviations
-- task-6: done; no Interfaces deviations
-- task-6 fix round 1: done. Backdrop fades the art out on a null URL whichever layer holds it. No Interfaces deviation.

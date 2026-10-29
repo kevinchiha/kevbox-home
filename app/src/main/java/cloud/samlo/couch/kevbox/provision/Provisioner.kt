@@ -46,8 +46,13 @@ object Provisioner {
             log("save failed $FILE: ${reason(e)}")
             return Outcome.FAILED
         }
-        // Saved first: a crash before this rename only applies the same file again next load.
-        moveTo(source, File(dir, APPLIED), text.orEmpty())
+        // Saved first: a crash or a refused rename only applies the same file again next load.
+        try {
+            moveTo(source, File(dir, APPLIED), text.orEmpty())
+        } catch (e: Exception) {
+            log("rename failed $FILE: ${reason(e)}")
+            return Outcome.FAILED
+        }
         log("applied $FILE: ${applied.sorted().joinToString(",")}")
         return Outcome.APPLIED
     }

@@ -37,7 +37,7 @@ file the merge touched.
 
 After merging Couch X.Y.Z, the next release tag is `vX.Y.Z.1` (spec AC-39). The build takes the
 highest `v*` tag reachable from HEAD, counting Couch's three-part tags as `.0`, and sets
-`versionCode` = X·1,000,000 + Y·10,000 + Z·100 + N. Today that is `0.8.1.0`, code 80100.
+`versionCode` = X·1,000,000 + Y·10,000 + Z·100 + N. As of 2026-10-29 that is `0.8.1.0`, code 80100.
 
 - The `versionCode` in tv.kevbox.dev's `home/version.json` must be the APK's own AC-39 code, or
   boxes never see the update as newer. KevBox Home ignores that file's `profiles`.
@@ -45,11 +45,12 @@ highest `v*` tag reachable from HEAD, counting Couch's three-part tags as `.0`, 
   and `ci.yml` still gates the APK at Couch's 614400 bytes (AC-35's limit is 1048576). Both run only
   on a push, so no tag is pushed while the licence rule stands. Leave the workflows unedited.
 
-The fork point is upstream commit `76be0dc` (Couch v0.8.1). Upstream has moved on since, to
-`6d5638c` ("Let the remote's Input and Settings buttons open Couch's panels"), which is not merged.
-That commit touches `HomeAccessibilityService.kt`, `AndroidManifest.xml`, `build.gradle.kts`,
+The fork point is upstream commit `76be0dc` (Couch v0.8.1). As of 2026-10-29, upstream has moved
+on to `6d5638c` ("Let the remote's Input and Settings buttons open Couch's panels"), which is not
+merged. It changes about 52 files. Of the files it changes, these are also changed here, so expect
+conflicts there: `HomeAccessibilityService.kt`, `AndroidManifest.xml`, `build.gradle.kts`,
 `Config.kt`, `ConfigJson.kt`, `MainPage.kt`, `SettingsActivity.kt`, `strings.xml` and
-`adb/AdbShell.kt` (deleted here), so expect conflicts there. Merge it only when Kevin asks.
+`adb/AdbShell.kt` (deleted here). Merge it only when Kevin asks.
 
 ## Commands
 

@@ -152,7 +152,8 @@ Holding OK on the Settings button opens it; a plain OK opens Android's settings.
   (`KeyMap.DEFAULT` until a provision file sets one), consumes a matched key's down, repeats and
   up, and acts once on the up: open a package, show Home, or open the drawer. A key with no match
   passes through untouched, so holding volume still ramps. Home goes through the HOME intent
-  (`KevBox.goHome`), never an explicit start, so there is only ever one Home.
+  (`KevBox.goHome`), never an explicit start. The stock-launcher catch below and `provision.sh`
+  start it the same way, so none of KevBox's own starts builds a second Home.
 - It receives window-state events from the stock launchers' packages and opens KevBox Home when one
   appears (`isStockHome`).
 - It runs Force stop for Restart app. `kevbox/restart/AppRestart` opens the app's details page;

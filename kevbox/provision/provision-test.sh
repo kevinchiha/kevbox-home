@@ -36,7 +36,7 @@ case $1 in
             'getprop ro.build.version.sdk') printf '%s\r\n' "$FAKE_SDK" ;;
             'settings get secure enabled_accessibility_services') printf '%s\r\n' "$FAKE_A11Y" ;;
             'cmd package set-home-activity'*) printf 'Success\r\n' ;;
-            'am start'*) printf 'Starting: Intent { cmp=%s }\r\n' "$3" ;;
+            'am start'*) printf 'Starting: Intent { act=android.intent.action.MAIN cat=[android.intent.category.HOME] }\r\n' ;;
             'dumpsys activity activities') printf '%b' "$FAKE_DUMPSYS" ;;
         esac
         ;;
@@ -126,10 +126,12 @@ shell settings get secure enabled_accessibility_services
 shell settings put secure enabled_accessibility_services 'com.a/.A11y:tv.kevbox.home/cloud.samlo.couch.HomeAccessibilityService'
 shell settings put secure accessibility_enabled 1
 shell cmd package set-home-activity tv.kevbox.home/cloud.samlo.couch.MainActivity
-shell am start -n tv.kevbox.home/cloud.samlo.couch.MainActivity
+shell am start -a android.intent.action.MAIN -c android.intent.category.HOME -p tv.kevbox.home
 shell input keyevent KEYCODE_HOME
 shell dumpsys activity activities"
 check "SDK 31: exit 0, every call in AC-8 order" "$([ $code -eq 0 ] && [ "$log" = "$expected" ] && [ "$out" = 'provision: done on box1' ] && [ -z "$err" ]; echo $?)"
+
+check "starts Home by HOME intent and package, never -n" "$(printf '%s\n' "$log" | grep -qx 'shell am start -a android.intent.action.MAIN -c android.intent.category.HOME -p tv.kevbox.home' && ! printf '%s\n' "$log" | grep -q '^shell am start.* -n '; echo $?)"
 
 FAKE_SDK=30
 run yes "$JSON"
@@ -154,7 +156,7 @@ reset
 export KEVBOX_HOME_PACKAGE=tv.kevbox.home.dev
 FAKE_DUMPSYS=$(printf '%s' "$RESUMED" | sed 's#tv.kevbox.home/#tv.kevbox.home.dev/#')
 run yes "$JSON"
-check "KEVBOX_HOME_PACKAGE points every step at the debug build" "$([ $code -eq 0 ] && printf '%s\n' "$log" | grep -q "^shell am start -n tv.kevbox.home.dev/cloud.samlo.couch.MainActivity$"; echo $?)"
+check "KEVBOX_HOME_PACKAGE points every step at the debug build" "$([ $code -eq 0 ] && printf '%s\n' "$log" | grep -qx "shell am start -a android.intent.action.MAIN -c android.intent.category.HOME -p tv.kevbox.home.dev"; echo $?)"
 
 if [ $failures -ne 0 ]; then
     printf '%s case(s) failed\n' "$failures"

@@ -136,7 +136,9 @@ the text `not json`.
   season shows "E4" alone.
 - [ ] SmartTube's row reads `Opened today at <time>` (its channel has no watch position). After a
   day it reads `Opened yesterday at <time>`, then the weekday ("Opened Wednesday at 22:37").
-- [ ] Customize > 24-hour clock off: the time in the line switches to the 12-hour clock.
+- [ ] From Home, press Up to the buttons, Right to Settings, and hold OK: Customize opens. Press
+  Down to "24-hour clock" and press OK to switch it off, then Back: the time in the line switches
+  to the 12-hour clock.
 - [ ] KevBox Live's row reads "Opened …" too (the Recent channels row is the next phase).
 - [ ] An app in the column not opened in the last seven days has its name alone, centred, with no
   status line. A long line ends in "…" on one line. No row shows a screen-time figure.
@@ -154,7 +156,9 @@ the text `not json`.
 - [ ] The whole screen behind shows the first card's art. Press Right into the channel row and move
   along it: the art follows the focused card.
 - [ ] Focus "More apps": the backdrop shows the wallpaper.
-- [ ] Customize > Dim set to Light, Medium, then Strong: the backdrop gets darker each step.
+- [ ] From Home, press Up to the buttons, Right to Settings, and hold OK. Press Down to "Dim", OK,
+  and pick Light, then Back to Home. Repeat with Medium, then Strong: the backdrop gets darker each
+  step.
 
 ## AC-14: the top right
 
@@ -170,7 +174,8 @@ the text `not json`.
 - [ ] On Wi-Fi: the icon shows the signal level, with a green dot while the internet works.
 - [ ] On Ethernet (the TCL TV when plugged in): the icon is the Ethernet one, with the dot.
 - [ ] Unplug the network, or switch Wi-Fi off in Android's settings: the no-network icon, no dot.
-- [ ] OK on the button opens Android's network settings.
+- [ ] From the first app in the column, press Up: focus is on Wi-Fi. OK opens Android's network
+  settings.
 
 ## AC-16: the VPN indicator
 
@@ -184,11 +189,13 @@ the text `not json`.
 
 - [ ] With Bluetooth off: the off icon. On with nothing connected: the on icon. With devices
   connected (the Xiaomi box's own remote counts): the icon with their number.
-- [ ] OK on the button opens Android's Bluetooth settings.
+- [ ] From the first app in the column, press Up, then Right once: focus is on Bluetooth (the VPN
+  indicator never takes focus). OK opens Android's Bluetooth settings.
 
 ## AC-18: the Speed test button
 
-- [ ] OK on Speed test opens Speedtest (`com.rma.netpulsetv`).
+- [ ] From the first app in the column, press Up, then Right twice: focus is on Speed test. OK
+  opens Speedtest (`com.rma.netpulsetv`).
 - [ ] Push `{"speedtestApp": "com.example.missing"}` and press Home: the Speed test button is gone.
   Push `{"speedtestApp": "com.rma.netpulsetv"}` to bring it back.
 
@@ -239,7 +246,8 @@ before any app sees it.
 
 ## AC-24: App info
 
-- [ ] "App info" opens Android's app details page for that app.
+- [ ] In the drawer, hold OK on VLC. "App info" is the menu's first item and has focus; press OK:
+  Android's app details page for VLC opens. Back, then do the same on KevBox TV in the column.
 
 ## AC-25: Move
 
@@ -254,8 +262,9 @@ before any app sees it.
 
 ## AC-26: Restart app
 
-Run this section twice: with the TV's language set to English, then to French (Settings > Device
-Preferences > Language > Français).
+Run this section twice: with the TV's language set to English, then to French. On Google TV the
+language is in Settings > System > Language > Français; on older Android TV it is in Settings >
+Device Preferences > Language > Français.
 
 - [ ] Open KevBox TV, return with Home, hold OK on KevBox TV, pick "Restart app". The app details
   page shows for about a second, Force stop and its confirmation are pressed for you, then KevBox
@@ -282,7 +291,8 @@ Preferences > Language > Français).
 ## AC-27: the key filter
 
 - [ ] Press Netflix: KevBox TV opens, and `adb logcat -d -s KevBoxHome` has a line like
-  `key keycode=193 scancode=416 -> tv.kevbox`.
+  `key keycode=193 scancode=416 -> tv.kevbox`. That line repeats the numbers of the key map entry
+  that matched, not the numbers the remote sent.
 - [ ] Hold Volume up inside an app: the volume keeps ramping while held.
 - [ ] Hold Netflix for two seconds: KevBox TV opens once, on release.
 
@@ -293,8 +303,9 @@ Preferences > Language > Français).
 - [ ] YouTube opens SmartTube.
 - [ ] Home, from inside an app, shows KevBox Home.
 - [ ] All apps opens the drawer (AC-22).
-- [ ] Note which buttons this remote has, and the keycode and scancode the log line printed for
-  each, per device.
+- [ ] Note which buttons this remote has, per device. The log line only repeats the key map's
+  numbers, so to see what the remote itself sends, run `adb shell getevent -l`, press each button
+  and note the code it prints (Ctrl+C to stop).
 
 ## AC-29: speed and missing targets
 
@@ -342,11 +353,12 @@ Preferences > Language > Français).
 
 ## AC-38: English whatever the language
 
-Set the TV's language to French (Settings > Device Preferences > Language > Français), then:
+Set the TV's language to French (Google TV: Settings > System > Language > Français; older
+Android TV: Settings > Device Preferences > Language > Français), then:
 
 - [ ] Home reads "More apps", the buttons "Wi-Fi · strong" (or their state) and "Settings", the
   status lines "Opened …" with English weekdays ("Opened Wednesday at 22:37", never "mercredi").
-- [ ] The screen-time chart's day letters are English (M, T, W and so on), and the bottom line's numbers
-  use a decimal point with English units ("storage, 12 GB free", never "Go").
+- [ ] The screen-time chart's day letters are English, in lower case (m, t, w and so on), and the
+  bottom line's numbers use a decimal point with English units ("storage, 12 GB free", never "Go").
 - [ ] Customize, the hold-OK menu and the drawer are all in English.
 - [ ] Set the language back to English when done.
