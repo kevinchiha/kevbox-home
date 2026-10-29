@@ -206,3 +206,4 @@ Task 1: started at d084f1f
 Task 1: landed (extra public helpers SilentRules.afterOnBox / onBoxClock, Release.withSilentAfterBox; SilentBlock is a data class in VersionJson.kt; eligible() does not compare versionCodes, callers use UpdateCheck.pending(); Task 3 Interfaces updated for null times)
 Task 2: started at a269f03
 Task 2: landed (SilentReason gained NO_UPDATE, BUSY, DOWNLOAD_FAILED, BAD_APK, FAILED, COMMITTED; extra helpers SilentResult, markSilent/isSilent/resultFor/onResult; HomeAccessibilityService untouched, reopenAfterUpdate already fits; installer-of-record finding moved into Task 3)
+Task 3: started at ddca11f
