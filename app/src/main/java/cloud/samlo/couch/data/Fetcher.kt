@@ -23,19 +23,28 @@ class Fetcher(private val context: Context) {
 
     /**
      * The body with the response's HTTP `Date` header in epoch ms (null when missing, unreadable or
-     * not over http), or null on any failure. The silent update counts time by the server's clock.
+     * not over http), or null on any failure. The silent update counts time by the server's clock,
+     * so the request asks caches to check with the server first, and a cache's `Age` (seconds since
+     * the server sent that `Date`) is added on top.
      */
     fun fetch(url: String): Fetched? = try {
         when (Uri.parse(url).scheme) {
             "http", "https" -> {
                 val connection = connect(url)
+                connection.setRequestProperty("Cache-Control", "no-cache")
+                connection.setRequestProperty("Pragma", "no-cache")
                 val text = connection.inputStream.use { it.readBytes().toString(Charsets.UTF_8) }
                 val date = try {
                     connection.getHeaderFieldDate("Date", 0L)
                 } catch (e: Exception) {
                     0L
                 }
-                Fetched(text, date.takeIf { it > 0 })
+                val ageSeconds = try {
+                    connection.getHeaderFieldInt("Age", 0).coerceAtLeast(0)
+                } catch (e: Exception) {
+                    0
+                }
+                Fetched(text, date.takeIf { it > 0 }?.let { it + ageSeconds * 1000L })
             }
             else -> text(url)?.let { Fetched(it, null) }
         }
