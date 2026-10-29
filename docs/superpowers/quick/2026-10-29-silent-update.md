@@ -200,3 +200,4 @@ new `docs/kevbox/releasing.md`, AGENTS.md (one line pointing at it)
 baseline: gradle, size (385083 B) and provision-test green; the python step fails (kevbox/release does not exist until Task 4)
 Task 1: started at d084f1f
 Task 1: landed (extra public helpers SilentRules.afterOnBox / onBoxClock, Release.withSilentAfterBox; SilentBlock is a data class in VersionJson.kt; eligible() does not compare versionCodes, callers use UpdateCheck.pending(); Task 3 Interfaces updated for null times)
+Task 2: started at a269f03
