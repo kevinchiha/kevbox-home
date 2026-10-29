@@ -207,3 +207,4 @@ Task 1: landed (extra public helpers SilentRules.afterOnBox / onBoxClock, Releas
 Task 2: started at a269f03
 Task 2: landed (SilentReason gained NO_UPDATE, BUSY, DOWNLOAD_FAILED, BAD_APK, FAILED, COMMITTED; extra helpers SilentResult, markSilent/isSilent/resultFor/onResult; HomeAccessibilityService untouched, reopenAfterUpdate already fits; installer-of-record finding moved into Task 3)
 Task 3: started at ddca11f
+Task 3: landed (no installer-of-record step: pm set-installer throws SecurityException from adb, and AOSP 12-14 skip the screen for a self-update; VersionJson.URL is now a val with RELEASE_URL; buildConfig on, debug-only KEVBOX_UPDATE_FEED; extra SilentJob.holdsPrompt; outside Files: strings.xml (kevbox_about_checking), docs/kevbox/provisioning.md; Installer.kt comments still claim installer-of-record, fixed in Task 4)
