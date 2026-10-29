@@ -175,7 +175,11 @@ reboot happened and counts as hidden since boot). `SilentRules.quiet` treats a n
 - HomeScreen hides the chip while `SilentRules.holdsPrompt` is true (AC-10); About fetches now and
   installs (AC-11).
 - provision.sh runs `appops set tv.kevbox.home REQUEST_INSTALL_PACKAGES allow` (package from its
-  existing variable).
+  existing variable), and makes KevBox Home its own installer of record (`pm set-installer <pkg> <pkg>`,
+  or the nearest command that works from adb shell), because Android only skips the confirm screen
+  for the installer of record; a box installed with plain `adb install` would refuse the first silent update.
+- `SilentInstall.run` returns COMMITTED when Android has the session; every other reason means nothing
+  was installed (Task 2 added NO_UPDATE, BUSY, DOWNLOAD_FAILED, BAD_APK, FAILED, COMMITTED).
 **Tests:** `VisibilityTest` (unknown, on screen, hidden for 15 min, key time); provision-test case
 for the appops line.
 **Verify:** `./gradlew --no-daemon :app:testDebugUnitTest :app:compileDebugKotlin && bash kevbox/provision/provision-test.sh`
@@ -201,3 +205,4 @@ baseline: gradle, size (385083 B) and provision-test green; the python step fail
 Task 1: started at d084f1f
 Task 1: landed (extra public helpers SilentRules.afterOnBox / onBoxClock, Release.withSilentAfterBox; SilentBlock is a data class in VersionJson.kt; eligible() does not compare versionCodes, callers use UpdateCheck.pending(); Task 3 Interfaces updated for null times)
 Task 2: started at a269f03
+Task 2: landed (SilentReason gained NO_UPDATE, BUSY, DOWNLOAD_FAILED, BAD_APK, FAILED, COMMITTED; extra helpers SilentResult, markSilent/isSilent/resultFor/onResult; HomeAccessibilityService untouched, reopenAfterUpdate already fits; installer-of-record finding moved into Task 3)
