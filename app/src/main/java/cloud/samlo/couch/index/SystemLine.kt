@@ -69,14 +69,14 @@ class SystemLine(context: Context) : LinearLayout(context) {
             set(1, c.getString(R.string.index_rate, rate(rx / scale), rate(tx / scale)),
                 c.getString(if (mega) R.string.index_rate_unit_mb else R.string.index_rate_unit))
         }
-        set(2, c.getString(R.string.index_percent, r.memoryUsedPercent), c.getString(R.string.index_memory))
-        set(3, c.getString(R.string.index_percent, r.storageUsedPercent),
+        set(2, english(R.string.index_percent, r.memoryUsedPercent), c.getString(R.string.index_memory))
+        set(3, english(R.string.index_percent, r.storageUsedPercent),
             c.getString(R.string.index_storage, size(r.storageFreeBytes)))
         val minutes = r.uptimeMs / 60_000
         val uptime = if (minutes >= 24 * 60) {
-            c.getString(R.string.index_days_hours, (minutes / (24 * 60)).toInt(), ((minutes / 60) % 24).toInt())
+            english(R.string.index_days_hours, (minutes / (24 * 60)).toInt(), ((minutes / 60) % 24).toInt())
         } else {
-            c.getString(R.string.index_hours_minutes, (minutes / 60).toInt(), (minutes % 60).toInt())
+            english(R.string.index_hours_minutes, (minutes / 60).toInt(), (minutes % 60).toInt())
         }
         set(4, uptime, c.getString(R.string.index_uptime))
         set(5, if (r.adb) c.getString(R.string.index_adb) else "", c.getString(R.string.index_adb_on), Tokens.accent)
@@ -95,6 +95,9 @@ class SystemLine(context: Context) : LinearLayout(context) {
         text.append(label)
         if (items[i].text.toString() != text.toString()) items[i].text = text
     }
+
+    /** A string resource filled in with English figures, so an Arabic box still shows 0-9. */
+    private fun english(res: Int, vararg args: Any) = String.format(Locale.ENGLISH, context.getString(res), *args)
 
     /** English figures whatever the TV's language, so the traffic keeps a decimal point. */
     private fun rate(value: Double) = String.format(Locale.ENGLISH, if (value >= 100) "%.0f" else "%.1f", value)

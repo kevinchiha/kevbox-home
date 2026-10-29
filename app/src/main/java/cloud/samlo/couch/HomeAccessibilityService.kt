@@ -42,7 +42,7 @@ class HomeAccessibilityService : AccessibilityService() {
         filter = KeyFilter(actions::entries, actions::installed, actions::act)
         // Remember that HOME capture is wanted, so it can be restored after Android drops it.
         wanted(this, true)
-        // A self-update restarts the app and leaves the stock launcher showing; come back to Couch.
+        // A self-update restarts the app and leaves the stock launcher showing; come back to KevBox Home.
         val prefs = Prefs.of(this)
         val since = System.currentTimeMillis() - prefs.getLong(REOPEN, 0L)
         prefs.edit().remove(REOPEN).apply()
@@ -84,7 +84,7 @@ class HomeAccessibilityService : AccessibilityService() {
          */
         private val SETTINGS_APPS = setOf("com.android.tv.settings", "com.android.settings")
 
-        /** True when a window from [pkg] with [cls] is the stock home screen Couch should replace. */
+        /** True when a window from [pkg] with [cls] is the stock home screen KevBox Home should replace. */
         fun isStockHome(pkg: String?, cls: String?): Boolean {
             if (pkg in SETTINGS_APPS) return false
             val home = SHARED_LAUNCHERS[pkg] ?: return true
@@ -110,7 +110,7 @@ class HomeAccessibilityService : AccessibilityService() {
         fun wanted(context: Context, value: Boolean) =
             Prefs.of(context).edit().putBoolean(WANTED, value).apply()
 
-        /** Set just before an update is committed and cleared if it fails; the reconnecting service then reopens Couch. */
+        /** Set just before an update is committed and cleared if it fails; the reconnecting service then reopens KevBox Home. */
         fun reopenAfterUpdate(context: Context, pending: Boolean) {
             val edit = Prefs.of(context).edit()
             if (pending) edit.putLong(REOPEN, System.currentTimeMillis()) else edit.remove(REOPEN)

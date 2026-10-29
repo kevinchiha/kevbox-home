@@ -5,6 +5,7 @@ import cloud.samlo.couch.kevbox.home.Watch
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Test
+import java.util.Locale
 
 class StatusLineTest {
     // The English strings, as plain lambdas.
@@ -50,5 +51,19 @@ class StatusLineTest {
     @Test
     fun `no watch and no last-opened gives null`() {
         assertNull(StatusLine.text(null, null, words))
+    }
+
+    @Test
+    fun `minutes left keep ASCII digits on an Arabic TV`() {
+        // The real strings.xml templates, filled in by StatusLine itself.
+        val real = StatusLine.words("S%1\$s E%2\$s", "E%1\$s", "%1\$d min left", "%1\$d h %2\$s left", "Opened %1\$s")
+        val before = Locale.getDefault()
+        try {
+            Locale.setDefault(Locale.forLanguageTag("ar"))
+            assertEquals("Severance · S2 E4 · 31 min left", StatusLine.text(left(31 * 60_000L), null, real))
+            assertEquals("Severance · S2 E4 · 1 h 05 left", StatusLine.text(left(65 * 60_000L), null, real))
+        } finally {
+            Locale.setDefault(before)
+        }
     }
 }

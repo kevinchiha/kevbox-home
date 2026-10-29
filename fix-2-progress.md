@@ -1,0 +1,1 @@
+fix-2: done. No Interfaces deviations. Added StatusLine.words(...) and ButtonText.bluetoothText(...) beside the declared APIs; ButtonRow.settings is now private (its only reader, IndexTopBar.settings, was removed). SystemLine's English formatting has no JVM test: it is a private method on an Android view in the index/ package.

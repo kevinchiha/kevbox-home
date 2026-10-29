@@ -4,6 +4,7 @@ import android.content.Context
 import cloud.samlo.couch.R
 import cloud.samlo.couch.index.Formats
 import cloud.samlo.couch.index.IndexEntry
+import java.util.Locale
 
 /** Where a program stands, from its TV provider row; null fields are unknown. */
 data class Watch(val title: String, val season: String?, val episode: String?, val positionMs: Long, val durationMs: Long)
@@ -42,17 +43,29 @@ object StatusLine {
     /** Whole minutes left, at least one, as ProgramTile's card meta counts them. */
     private fun left(watch: Watch, words: Words): String {
         val minutes = ((watch.durationMs - watch.positionMs) / 60_000).coerceAtLeast(1)
-        return if (minutes < 60) words.minutesLeft(minutes) else words.hoursLeft(minutes / 60, "%02d".format(minutes % 60))
+        return if (minutes < 60) words.minutesLeft(minutes) else words.hoursLeft(minutes / 60, String.format(Locale.ENGLISH, "%02d", minutes % 60))
     }
+
+    /**
+     * [Words] from the strings' raw templates, filled in with English figures: getString with
+     * arguments uses the TV's language, and an Arabic box would show Arabic-Indic digits (AC-38).
+     */
+    fun words(seasonEpisode: String, episode: String, minutesLeft: String, hoursLeft: String, opened: String) = Words(
+        seasonEpisode = { s, e -> String.format(Locale.ENGLISH, seasonEpisode, s, e) },
+        episode = { e -> String.format(Locale.ENGLISH, episode, e) },
+        minutesLeft = { m -> String.format(Locale.ENGLISH, minutesLeft, m) },
+        hoursLeft = { h, m -> String.format(Locale.ENGLISH, hoursLeft, h, m) },
+        opened = { at -> String.format(Locale.ENGLISH, opened, at) },
+    )
 
     /** [text] for an entry, resolving words and the last-opened text from [context]. Main thread. */
     fun of(context: Context, entry: IndexEntry, now: Long, clock24h: Boolean): String? {
-        val words = Words(
-            seasonEpisode = { s, e -> context.getString(R.string.program_season_episode, s, e) },
-            episode = { e -> context.getString(R.string.program_episode, e) },
-            minutesLeft = { m -> context.getString(R.string.program_remaining_minutes, m) },
-            hoursLeft = { h, m -> context.getString(R.string.program_remaining_hours, h, m) },
-            opened = { at -> context.getString(R.string.kevbox_opened, at) },
+        val words = words(
+            context.getString(R.string.program_season_episode),
+            context.getString(R.string.program_episode),
+            context.getString(R.string.program_remaining_minutes),
+            context.getString(R.string.program_remaining_hours),
+            context.getString(R.string.kevbox_opened),
         )
         val lastOpened = Formats.lastOpened(context, entry.usage?.lastUsed ?: 0L, now, clock24h)
         return text(entry.programs.firstOrNull()?.watch, lastOpened, words)
