@@ -205,4 +205,5 @@
     <string name="kevbox_menu_uninstall">Uninstall</string>
     <string name="kevbox_move_hint">Use the arrows to move it, then press OK</string>
     <string name="kevbox_restart_by_hand">Press Force stop, then reopen the app</string>
+    <string name="kevbox_about_checking">Checking tv.kevbox.dev for a new version…</string>
 </resources>

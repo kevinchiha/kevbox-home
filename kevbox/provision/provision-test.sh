@@ -39,6 +39,8 @@ case $1 in
             'am start'*) printf 'Starting: Intent { act=android.intent.action.MAIN cat=[android.intent.category.HOME] }\r\n' ;;
             'dumpsys activity activities') printf '%b' "$FAKE_DUMPSYS" ;;
         esac
+        # FAKE_FAIL names one shell command that exits 1, for the failure-line cases.
+        [ -n "${FAKE_FAIL:-}" ] && [ "$*" = "$FAKE_FAIL" ] && exit 1
         ;;
 esac
 exit 0
@@ -78,7 +80,7 @@ run() {
 }
 
 reset() {
-    unset ANDROID_SERIAL KEVBOX_HOME_PACKAGE
+    unset ANDROID_SERIAL KEVBOX_HOME_PACKAGE FAKE_FAIL
     export FAKE_DEVICES='box1\tdevice\r\n\r\n' FAKE_SDK=31 FAKE_A11Y='com.a/.A11y'
     export FAKE_DUMPSYS="$RESUMED"
 }
@@ -122,6 +124,7 @@ shell pm grant tv.kevbox.home android.permission.READ_TV_LISTINGS
 shell pm grant tv.kevbox.home android.permission.WRITE_SECURE_SETTINGS
 shell pm grant tv.kevbox.home android.permission.BLUETOOTH_CONNECT
 shell appops set tv.kevbox.home GET_USAGE_STATS allow
+shell appops set tv.kevbox.home REQUEST_INSTALL_PACKAGES allow
 shell settings get secure enabled_accessibility_services
 shell settings put secure enabled_accessibility_services 'com.a/.A11y:tv.kevbox.home/cloud.samlo.couch.HomeAccessibilityService'
 shell settings put secure accessibility_enabled 1
@@ -136,6 +139,16 @@ check "starts Home by HOME intent and package, never -n" "$(printf '%s\n' "$log"
 FAKE_SDK=30
 run yes "$JSON"
 check "SDK 30: no BLUETOOTH_CONNECT grant" "$([ $code -eq 0 ] && ! printf '%s\n' "$log" | grep -q BLUETOOTH_CONNECT; echo $?)"
+
+reset
+export FAKE_FAIL='appops set tv.kevbox.home REQUEST_INSTALL_PACKAGES allow'
+run yes "$JSON"
+check "install permission refused: exit 1, stops before accessibility" "$([ $code -eq 1 ] && red 'install permission failed' && ! printf '%s\n' "$log" | grep -q '^shell settings'; echo $?)"
+
+FAKE_SDK=28
+unset FAKE_FAIL
+run yes "$JSON"
+check "SDK 28: the install permission is granted too" "$([ $code -eq 0 ] && printf '%s\n' "$log" | grep -qx 'shell appops set tv.kevbox.home REQUEST_INSTALL_PACKAGES allow'; echo $?)"
 
 reset
 FAKE_A11Y='null'

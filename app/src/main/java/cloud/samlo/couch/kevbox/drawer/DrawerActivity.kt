@@ -14,6 +14,7 @@ import cloud.samlo.couch.data.Fetcher
 import cloud.samlo.couch.data.Images
 import cloud.samlo.couch.data.UserFiles
 import cloud.samlo.couch.kevbox.menu.AppMenu
+import cloud.samlo.couch.kevbox.update.Visibility
 import cloud.samlo.couch.ui.Card
 import cloud.samlo.couch.ui.Tokens
 
@@ -77,9 +78,15 @@ class DrawerActivity : Activity() {
         if (!hasFocus) putDown()
     }
 
+    override fun onStart() {
+        super.onStart()
+        Visibility.started(this)
+    }
+
     /** Also on stop, for a drawer left without a focus change reaching it first. */
     override fun onStop() {
         putDown()
+        Visibility.stopped(this)
         super.onStop()
     }
 
@@ -100,7 +107,10 @@ class DrawerActivity : Activity() {
     }
 
     /** Keys reach Move before focus search, the way MainActivity routes them to Home. */
-    override fun dispatchKeyEvent(event: KeyEvent): Boolean = consumesKey(event) || super.dispatchKeyEvent(event)
+    override fun dispatchKeyEvent(event: KeyEvent): Boolean {
+        if (event.action == KeyEvent.ACTION_DOWN) Visibility.keyPressed()
+        return consumesKey(event) || super.dispatchKeyEvent(event)
+    }
 
     // The manifest opts the drawer out of predictive back, so reading Back here is the only hook.
     @SuppressLint("GestureBackNavigation")

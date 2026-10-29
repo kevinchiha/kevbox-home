@@ -72,4 +72,37 @@ class VersionJsonTest {
         assertEquals("Faster drawer", back.notes)
         assertNull(Release.deserialize("""{"version":"0.3.0","apk":"https://x/a.apk","sha256":"https://x/a.sha256"}"""))
     }
+
+    @Test
+    fun withNoTestFeedOnlyTvKevboxDevIsRead() {
+        // The unit-test build is given no kevbox.updateFeed, as a release build never is.
+        assertEquals(VersionJson.RELEASE_URL, VersionJson.URL)
+        assertEquals("https://tv.kevbox.dev/home/version.json", VersionJson.RELEASE_URL)
+        assertTrue(VersionJson.trusted(apk, null))
+        assertFalse(VersionJson.trusted("http://10.0.2.2:8080/kevbox-home.apk", null))
+    }
+
+    @Test
+    fun theTestFeedIsDebugOnlyAndMustBeAWebUrl() {
+        val feed = "http://10.0.2.2:8080/version.json"
+        assertEquals(feed, VersionJson.feedOf(true, " $feed "))
+        assertNull(VersionJson.feedOf(false, feed))
+        assertNull(VersionJson.feedOf(true, ""))
+        assertNull(VersionJson.feedOf(true, "file:///sdcard/version.json"))
+        assertNull(VersionJson.feedOf(true, "http://user@10.0.2.2/version.json"))
+        assertNull(VersionJson.feedOf(true, "not a url"))
+    }
+
+    @Test
+    fun aTestFeedTrustsOnlyItsOwnHost() {
+        val feed = "http://10.0.2.2:8080/version.json"
+        val local = "http://10.0.2.2:8080/kevbox-home.apk"
+        assertTrue(VersionJson.trusted(local, feed))
+        assertTrue(VersionJson.trusted("https://10.0.2.2/kevbox-home.apk", feed))
+        assertFalse(VersionJson.trusted(apk, feed))
+        assertFalse(VersionJson.trusted("http://user@10.0.2.2:8080/a.apk", feed))
+        assertFalse(VersionJson.trusted("ftp://10.0.2.2/a.apk", feed))
+        assertNotNull(VersionJson.read(json(url = local), feed))
+        assertNull(VersionJson.read(json(url = local), null))
+    }
 }

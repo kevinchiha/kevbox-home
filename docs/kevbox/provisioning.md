@@ -139,7 +139,9 @@ The script runs these steps in order and stops at the first one that fails:
 2. Reads the Android SDK level.
 3. Grants `READ_TV_LISTINGS` and `WRITE_SECURE_SETTINGS`, plus `BLUETOOTH_CONNECT` on SDK 31
    (Android 12) and later.
-4. Allows usage access (`appops set <package> GET_USAGE_STATS allow`).
+4. Allows usage access (`appops set <package> GET_USAGE_STATS allow`), then "Install unknown apps"
+   (`appops set <package> REQUEST_INSTALL_PACKAGES allow`), so KevBox Home can update itself with
+   no confirm screen on Android 12 and later.
 5. Adds KevBox Home's accessibility service to `enabled_accessibility_services`, keeping every
    service already there, and sets `accessibility_enabled` to 1.
 6. Makes KevBox Home the Home app (`cmd package set-home-activity`).
@@ -180,6 +182,7 @@ The first five come before the script changes anything on the box.
 | `provision: grant WRITE_SECURE_SETTINGS failed` | Same, for `WRITE_SECURE_SETTINGS`. |
 | `provision: grant BLUETOOTH_CONNECT failed` | Same, for `BLUETOOTH_CONNECT` (SDK 31 and later only). |
 | `provision: usage access failed` | `appops set` refused. |
+| `provision: install permission failed` | `appops set` refused `REQUEST_INSTALL_PACKAGES`. |
 | `provision: accessibility service failed` | Reading or writing the secure accessibility settings failed. |
 | `provision: set Home failed` | `cmd package set-home-activity` failed or did not print `Success`. |
 | `provision: start failed` | `am start` failed or printed `Error`. |

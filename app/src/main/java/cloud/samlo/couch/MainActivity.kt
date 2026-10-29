@@ -8,6 +8,8 @@ import android.view.KeyEvent
 import cloud.samlo.couch.home.HomeScreen
 import cloud.samlo.couch.kevbox.KevBox
 import cloud.samlo.couch.kevbox.drawer.DrawerActivity
+import cloud.samlo.couch.kevbox.update.SilentJob
+import cloud.samlo.couch.kevbox.update.Visibility
 
 /**
  * The launcher entry point. Named in the TV's settings, so it keeps its name and package; the
@@ -23,6 +25,17 @@ class MainActivity : Activity() {
         // A drawer key with no Home running yet still lands on the drawer. Only on a fresh start:
         // a rebuild after process death replays the same launch intent, and no key was pressed.
         if (savedInstanceState == null) openDrawerIfAsked(intent)
+        SilentJob.schedule(this)
+    }
+
+    override fun onStart() {
+        super.onStart()
+        Visibility.started(this)
+    }
+
+    override fun onStop() {
+        Visibility.stopped(this)
+        super.onStop()
     }
 
     override fun onResume() {
@@ -65,5 +78,8 @@ class MainActivity : Activity() {
     @Deprecated("Home has nowhere to go back to.")
     override fun onBackPressed() = Unit
 
-    override fun dispatchKeyEvent(event: KeyEvent): Boolean = home.consumesKey(event) || super.dispatchKeyEvent(event)
+    override fun dispatchKeyEvent(event: KeyEvent): Boolean {
+        if (event.action == KeyEvent.ACTION_DOWN) Visibility.keyPressed()
+        return home.consumesKey(event) || super.dispatchKeyEvent(event)
+    }
 }

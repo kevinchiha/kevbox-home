@@ -116,17 +116,50 @@ class MainPage(private val ctx: SettingsContext) : SettingsPage {
         about()
     }
 
-    /** The installed version; OK installs a newer one when the last daily check found it. */
+    /**
+     * The installed version. Opening the page asks tv.kevbox.dev at once rather than trusting the
+     * daily check (silent update AC-11), and OK installs a newer version even while Home's Update
+     * chip waits for the silent update.
+     */
     private fun about() {
         val fetcher = Fetcher(ctx.activity)
-        val update = UpdateCheck(ctx.activity, fetcher).pending(config)
-        val help = update?.let { ctx.activity.getString(R.string.about_update, it.version) } ?: ctx.str(R.string.about_help)
-        o.link(ctx.str(R.string.about), help, { Versions.installed(ctx.activity) }) {
-            if (update == null || Installer.running) return@link
+        val check = UpdateCheck(ctx.activity, fetcher)
+        var update = check.pending(config)
+        var checking = config.checkUpdates
+        val help = {
+            update?.let { ctx.activity.getString(R.string.about_update, it.version) }
+                ?: ctx.str(if (checking) R.string.kevbox_about_checking else R.string.about_help)
+        }
+        val row = o.link(ctx.str(R.string.about), help(), { Versions.installed(ctx.activity) }) {
+            val release = update ?: return@link
+            if (Installer.running) return@link
             Toast.makeText(ctx.activity, R.string.update_downloading, Toast.LENGTH_SHORT).show()
-            Installer(ctx.activity, fetcher).install(update) { message ->
+            Installer(ctx.activity, fetcher).install(release) { message ->
                 message?.let { Toast.makeText(ctx.activity, it, Toast.LENGTH_LONG).show() }
             }
         }
+        // The row keeps the help it was built with, so the panel follows the check from here.
+        val couch = row.onFocusChangeListener
+        row.setOnFocusChangeListener { view, focused ->
+            couch?.onFocusChange(view, focused)
+            if (focused) ctx.layout.help.text = help()
+        }
+        if (!checking) return
+        val loaded = config
+        Thread({
+            // A failed request leaves the stored answer, so pending() still reads the last one.
+            val found = try {
+                check.refresh(loaded, force = true)
+                Result.success(check.pending(loaded))
+            } catch (e: Exception) {
+                Result.failure(e)
+            }
+            ctx.activity.runOnUiThread {
+                if (ctx.activity.isDestroyed) return@runOnUiThread
+                found.onSuccess { update = it }
+                checking = false
+                if (row.isFocused) ctx.layout.help.text = help()
+            }
+        }, "kevbox-about-check").start()
     }
 }

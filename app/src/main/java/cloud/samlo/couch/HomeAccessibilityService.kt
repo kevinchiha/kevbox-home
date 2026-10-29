@@ -12,6 +12,7 @@ import cloud.samlo.couch.kevbox.KevBox
 import cloud.samlo.couch.kevbox.keys.KeyActions
 import cloud.samlo.couch.kevbox.keys.KeyFilter
 import cloud.samlo.couch.kevbox.restart.ForceStop
+import cloud.samlo.couch.kevbox.update.Visibility
 
 /**
  * Three jobs that need an accessibility service. It filters the remote's keys through the
@@ -26,8 +27,11 @@ class HomeAccessibilityService : AccessibilityService() {
     private var filter: KeyFilter? = null
     private var restartRun: ForceStop? = null
 
-    override fun onKeyEvent(event: KeyEvent): Boolean =
-        filter?.onKey(event.action, event.keyCode, event.scanCode, event.repeatCount) ?: false
+    override fun onKeyEvent(event: KeyEvent): Boolean {
+        // Every remote key, in any app, for the silent update's idle-on-screen rule.
+        if (event.action == KeyEvent.ACTION_DOWN) Visibility.keyPressed()
+        return filter?.onKey(event.action, event.keyCode, event.scanCode, event.repeatCount) ?: false
+    }
 
     override fun onAccessibilityEvent(event: AccessibilityEvent) {
         if (event.eventType != AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED) return

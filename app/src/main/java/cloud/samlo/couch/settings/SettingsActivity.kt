@@ -7,6 +7,7 @@ import android.os.Bundle
 import android.view.KeyEvent
 import cloud.samlo.couch.data.Config
 import cloud.samlo.couch.data.UserFiles
+import cloud.samlo.couch.kevbox.update.Visibility
 import cloud.samlo.couch.ui.Tokens
 
 /**
@@ -38,6 +39,16 @@ class SettingsActivity : Activity() {
         super.onDestroy()
     }
 
+    override fun onStart() {
+        super.onStart()
+        Visibility.started(this)
+    }
+
+    override fun onStop() {
+        Visibility.stopped(this)
+        super.onStop()
+    }
+
     override fun onResume() {
         super.onResume()
         if (::page.isInitialized) page.onResume()
@@ -48,7 +59,10 @@ class SettingsActivity : Activity() {
         if (::page.isInitialized) page.onResume()
     }
 
-    override fun dispatchKeyEvent(event: KeyEvent): Boolean = page.consumesKey(event) || super.dispatchKeyEvent(event)
+    override fun dispatchKeyEvent(event: KeyEvent): Boolean {
+        if (event.action == KeyEvent.ACTION_DOWN) Visibility.keyPressed()
+        return page.consumesKey(event) || super.dispatchKeyEvent(event)
+    }
 
     companion object {
         private const val EXTRA_PAGE = "page"

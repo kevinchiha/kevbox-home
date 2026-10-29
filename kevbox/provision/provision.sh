@@ -68,6 +68,10 @@ grant WRITE_SECURE_SETTINGS
 [ "$sdk" -ge 31 ] && grant BLUETOOTH_CONNECT
 
 adb shell appops set "$PKG" GET_USAGE_STATS allow >/dev/null || fail "usage access failed"
+# "Install unknown apps", so the self-update needs no member to allow it. With it, Android 12 and
+# later apply an update KevBox Home installs on itself with no confirm screen: an app updating
+# itself needs no installer of record (AOSP PackageInstallerSession, isSelfUpdate).
+adb shell appops set "$PKG" REQUEST_INSTALL_PACKAGES allow >/dev/null || fail "install permission failed"
 
 services=$(shout settings get secure enabled_accessibility_services) ||
     fail "accessibility service failed"

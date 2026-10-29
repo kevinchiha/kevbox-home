@@ -18,6 +18,7 @@ import cloud.samlo.couch.data.Wallpapers
 import cloud.samlo.couch.data.Weather
 import cloud.samlo.couch.data.WeatherNow
 import cloud.samlo.couch.kevbox.menu.AppMenu
+import cloud.samlo.couch.kevbox.update.SilentJob
 import cloud.samlo.couch.settings.SettingsActivity
 import cloud.samlo.couch.ui.Tokens
 import cloud.samlo.couch.update.Installer
@@ -108,7 +109,8 @@ class HomeScreen(private val activity: Activity) {
         views.index.showBackdrop(data.wallpaper, config.dim)
         views.hero.wallpaperUrl = data.wallpaper
         showWeather(data.weather)
-        update = data.update
+        // On Android 12+ the chip waits while the silent update can still install this version (AC-10).
+        update = data.update?.takeUnless { SilentJob.holdsPrompt(activity, it) }
         // A reload mid-download keeps the "Downloading" label.
         if (!Installer.running) {
             views.topBar.update.show(update?.version)

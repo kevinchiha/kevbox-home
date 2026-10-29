@@ -56,6 +56,21 @@ val signing: Map<String, String> = run {
     } ?: emptyMap()
 }
 
+/**
+ * KevBox Home's silent-update test feed, for the debug build only. `-Pkevbox.updateFeed=<url>`
+ * makes the update check read that version.json and trust its host (http allowed, for a test
+ * server at 10.0.2.2); `-Pkevbox.versionCode=<n>` gives the debug build that versionCode, so a
+ * test release can be newer. A release build ignores both and reads only tv.kevbox.dev.
+ */
+val updateFeed: String = providers.gradleProperty("kevbox.updateFeed").orNull?.trim().orEmpty().also {
+    require(it.isEmpty() || Regex("https?://[^\"\\\\\\s]+").matches(it)) {
+        "kevbox.updateFeed must be an http or https URL"
+    }
+}
+val debugVersionCode: Int? = providers.gradleProperty("kevbox.versionCode").orNull?.trim()?.let {
+    requireNotNull(it.toIntOrNull()?.takeIf { code -> code > 0 }) { "kevbox.versionCode must be a positive whole number" }
+}
+
 android {
     namespace = "cloud.samlo.couch"
     compileSdk = 36
@@ -68,6 +83,9 @@ android {
         versionCode = (version4[0] * 1_000_000 + version4[1] * 10_000 + version4[2] * 100 +
             version4[3]).coerceAtLeast(1)
         versionName = version4.joinToString(".")
+        // Empty outside the debug build: see updateFeed above.
+        buildConfigField("String", "KEVBOX_UPDATE_FEED", "\"\"")
+        manifestPlaceholders["kevboxCleartext"] = "false"
     }
 
     // English only: values-fr stays in the source untouched (AC-38) but never ships.
@@ -90,6 +108,8 @@ android {
         // Installs beside the release build, so a dev build never replaces the KevBox Home in use.
         debug {
             applicationIdSuffix = ".dev"
+            buildConfigField("String", "KEVBOX_UPDATE_FEED", "\"$updateFeed\"")
+            manifestPlaceholders["kevboxCleartext"] = updateFeed.startsWith("http://").toString()
         }
         release {
             isMinifyEnabled = true
@@ -104,8 +124,9 @@ android {
         targetCompatibility = JavaVersion.VERSION_17
     }
 
+    // On for KEVBOX_UPDATE_FEED. R8 inlines the constants, so the release APK keeps no BuildConfig class.
     buildFeatures {
-        buildConfig = false
+        buildConfig = true
     }
 
     // Kotlin's builtins metadata only serves kotlin-reflect, which Couch doesn't use.
@@ -134,5 +155,9 @@ dependencies {
 androidComponents {
     beforeVariants { variant ->
         variant.hostTests[com.android.build.api.variant.HostTestBuilder.UNIT_TEST_TYPE]?.enable = true
+    }
+    // The test feed's versionCode, debug only (see updateFeed).
+    onVariants(selector().withBuildType("debug")) { variant ->
+        debugVersionCode?.let { code -> variant.outputs.forEach { it.versionCode.set(code) } }
     }
 }
