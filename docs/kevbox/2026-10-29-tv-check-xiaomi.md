@@ -1,4 +1,4 @@
-# KevBox Home on-TV checklist — Xiaomi TV Box S 3rd gen (MiTV-AFMU0), 192.168.68.69
+# KevBox Home on-TV checklist — Xiaomi TV Box S 3rd gen (MiTV-AFMU0), <xiaomi box ip>
 Date: 2026-10-29. Build: main e0012d3 (code = a5add94), release APK 382,795 B, debug-key signed.
 Box: Android 14, UKG3.250107.001.V816.0.25.7.22.UZFAABX, fresh test box. Stock launcherx installed.
 Note: setupwraith owns the saved Wi-Fi (cname=com.google.android.tungsten.setupwraith); nothing here disables it.
@@ -7,7 +7,7 @@ Note: setupwraith owns the saved Wi-Fi (cname=com.google.android.tungsten.setupw
 - PASS Projectivy / tvQuickActions services: none on this box (enabled list was `null`).
 - PASS Installed for the checklist: KevBox TV, KevBox Live, SmartTube, VLC, Speedtest, FX, Downloader, Surfshark.
 - PASS Release APK installed as tv.kevbox.home. Opened once: before provisioning the column shows only "More apps" (null case).
-- PASS provision.sh -> "provision: done on 192.168.68.69:33785", exit 0. HOME role holder = tv.kevbox.home.
+- PASS provision.sh -> "provision: done on <xiaomi box ip>:33785", exit 0. HOME role holder = tv.kevbox.home.
 - FINDING (minor): opening KevBox Home from the app list (LEANBACK_LAUNCHER) starts a type=standard MainActivity in its own task (t11) beside the home-type one (t12), so two home screens sit in memory. provision.sh itself started only the home-type one (the fix-3 HOME intent works). Fix idea: in MainActivity.onCreate, when this task is not the home task and the app is the HOME role holder, call KevBox.goHome(this) and finish().
 
 ## AC-1 identity
@@ -45,7 +45,7 @@ Note: setupwraith owns the saved Wi-Fi (cname=com.google.android.tungsten.setupw
 ## AC-25 Move
 - PASS column Move (KevBox Live down one) and drawer Move (VLC right one) saved to config.json.
 - PASS after `adb reboot`: box boots straight into KevBox Home (one instance, service still on), both orders kept.
-  (Wireless debugging changed port on reboot; reconnected on 192.168.68.69:5555, which this box also serves.)
+  (Wireless debugging changed port on reboot; reconnected on <xiaomi box ip>:5555, which this box also serves.)
 - PASS provision.sh with the example file restores the file's column and drawer order.
 ## AC-30 Home
 - PASS Home (injected) from KevBox TV, VLC and Play Store returns to KevBox Home; starting launcherx's HOME directly lands on KevBox Home; one MainActivity throughout. On this box KevBox Home is also the HOME role holder, so this is not a test of the takeover path. "Never even a flash": needs Kevin's eyes.
