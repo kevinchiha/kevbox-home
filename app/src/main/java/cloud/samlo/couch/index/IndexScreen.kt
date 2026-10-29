@@ -346,7 +346,9 @@ class IndexScreen(
                     FOCUS_RIGHT -> {
                         // Right before the row has filled: fill it now.
                         if (stripKey != focused.entry.key) fill(focused.entry)
-                        programs.cards().firstOrNull() ?: focused
+                        // KevBox: an app with no channel has no cards, so Right goes to the first
+                        // top button instead of nowhere; Down from there returns to this row.
+                        programs.cards().firstOrNull() ?: topFocus.up(focused, topBar.firstButton()) ?: focused
                     }
                     else -> focused
                 }
