@@ -21,13 +21,13 @@ class Tile(
     val imageUrl: String? = null,
     /** A TvContract poster aspect ratio constant, or -1 for 16:9. */
     val imageRatio: Int = -1,
+    /** KevBox: the program's landscape art, for the Index backdrop. */
+    val backdropUrl: String? = null,
     val icon: Drawable? = null,
     val iconRes: Int = 0,
     val dimmed: Boolean = false,
     val inputId: String? = null,
     val packageName: String? = null,
-    val backdropUrl: String? = null,
-    val meta: String? = null,
     val description: String? = null,
     val progress: Float = -1f,
     /** Solid card colour behind the icon, for brand marks. */

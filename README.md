@@ -7,6 +7,7 @@
 <p align="center">
   <a href="https://github.com/samuelloranger/couch/releases"><img src="https://img.shields.io/github/v/release/samuelloranger/couch" alt="Latest release" /></a>
   <a href="https://github.com/samuelloranger/couch/actions/workflows/ci.yml"><img src="https://github.com/samuelloranger/couch/actions/workflows/ci.yml/badge.svg" alt="CI" /></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/license-GPL--3.0-blue" alt="License: GPL-3.0" /></a>
   <img src="https://img.shields.io/badge/Android%20TV%20%C2%B7%20Google%20TV%20%C2%B7%20Fire%20TV-9%2B-34D399?logo=androidtv&logoColor=white" alt="Android TV, Google TV and Fire TV, Android 9+" />
   <img src="https://img.shields.io/badge/APK-a%20few%20hundred%20KB-111715" alt="APK of a few hundred KB" />
   <a href="https://buymeacoffee.com/samlo122"><img src="https://img.shields.io/badge/Buy%20me%20a%20coffee-FFDD00?logo=buymeacoffee&logoColor=black" alt="Buy me a coffee" /></a>
@@ -28,26 +29,24 @@ Couch instead of the stock home screen.
 
 - **Smooth on weak hardware.** On a 2020 MediaTek-based TV, Couch renders frames in
   10 / 13 / 14 ms (p50 / p90 / p99) where a popular third-party launcher needs 14 / 25 / 31 ms
-  for the same remote presses. Focus only animates render properties, rows glide by translation,
+  for the same remote presses. Focus only animates render properties, lists glide by translation,
   and every bitmap is decoded at the exact size it is drawn.
 - **Nothing you didn't ask for.** No ads, no sponsored rows, no analytics. The network is only
   used for the features you turn on (wallpaper, weather, app artwork).
-- **Yours to arrange.** Every row, app, input and colour can be changed from the remote.
+- **Yours to arrange.** Every app, channel, input and colour can be changed from the remote.
 
 ## Features
 
-- Two layouts: **Index** (the default), a list of your apps beside what the selected one offers
-  and your screen time with it, or rows of cards with a hero area for the focused show or film.
-- Apps row, recently used apps, HDMI inputs row with brand logos (PlayStation, Xbox, Nintendo
-  Switch, Apple TV…), and the preview channels apps publish (YouTube, Jellyfin and others).
+- **Index**: a list of your apps, ordered by screen time, beside what the selected one offers
+  (the preview channels apps publish: YouTube, Jellyfin and others) and your week with it.
+- An Inputs list with brand logos (PlayStation, Xbox, Nintendo Switch, Apple TV…).
 - When a console or player on an input turns on, a chip offers to switch to it.
 - Wallpaper: Bing photo of the day, the best images of a subreddit, a gradient, or your own.
-- Weather (Open-Meteo, located automatically or by city), clock, now playing.
+- Weather (Open-Meteo, located automatically or by city), now playing.
 - Ambient mode after a few idle minutes: full-screen wallpaper, large clock, weather.
-- Long-press any card to move, rename, hide or change its icon.
-- **Customize**: card size, accent colour, dimming, names under cards, row order and
-  visibility, app channels, inputs, clock format, weather, ambient delay, and which permissions
-  are still missing.
+- Long-press an app to rename or hide it.
+- **Customize**: accent colour, ambient mode and its wallpaper, app channels, which apps show,
+  inputs (name, icon, shown), clock format, weather, and which permissions are still missing.
 - HOME button takeover on TVs that hardwire HOME to the stock launcher (Google TV, Fire TV, Sony
   Bravia and others), repairing itself if Android drops it.
 - Updates itself: an Update button appears when a new release is out, one confirmation installs it.
@@ -94,9 +93,23 @@ The full documentation is at **[samlo.cloud/couch](https://samlo.cloud/couch)**.
 - [Development](https://samlo.cloud/couch/development): building, the TV emulator, tests, releases.
 - [Decisions](https://samlo.cloud/couch/decisions): the trade-offs behind the less obvious choices.
 
+## License
+
+Copyright (c) 2026 Samuel Loranger.
+
+Couch is free software: you can redistribute it and/or modify it under the terms of the
+[GNU General Public License, version 3](LICENSE) (`GPL-3.0-only`).
+
+Couch is distributed without any warranty, including the implied warranties of merchantability
+or fitness for a particular purpose. See the license for details.
+
+Bundled third-party fonts and icons remain under their respective licenses. Hanken Grotesk is
+licensed under the [SIL Open Font License 1.1](app/src/main/assets/fonts/hanken_grotesk_OFL.txt);
+icon credits are listed below.
+
 ## Credits
 
 Brand marks from [Simple Icons](https://simpleicons.org) (CC0) and Wikimedia Commons (public
-domain). All trademarks belong to their owners. Weather by [Open-Meteo](https://open-meteo.com),
+domain); quick settings icons from [Material Icons](https://fonts.google.com/icons) (Apache 2.0). All trademarks belong to their owners. Weather by [Open-Meteo](https://open-meteo.com),
 IP location by [ipwho.is](https://ipwho.is), subreddit images through the
 [Arctic Shift](https://github.com/ArthurHeitmann/arctic_shift) archive.

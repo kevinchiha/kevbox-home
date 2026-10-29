@@ -16,7 +16,6 @@ import cloud.samlo.couch.ui.Fonts
 import cloud.samlo.couch.ui.Tokens
 import cloud.samlo.couch.ui.arrange
 import cloud.samlo.couch.ui.dp
-import cloud.samlo.couch.ui.glideToNewPlaces
 import kotlin.math.ceil
 
 /**
@@ -36,8 +35,8 @@ class DrawerGrid(private val activity: Activity, private val images: Images, pri
     private val boxH = activity.dp(CARD_H + 2 * Tokens.RING_INSET + LABEL_DP)
     private val gap = activity.dp(Tokens.CARD_GAP)
 
-    /** Room above and below the cards for the held card at [Tokens.MOVE_SCALE], so the viewport never clips it. */
-    private val room = ceil(boxH * (Tokens.MOVE_SCALE - 1f) / 2f).toInt()
+    /** Room above and below the cards for the held card at [MoveLook.SCALE], so the viewport never clips it. */
+    private val room = ceil(boxH * (MoveLook.SCALE - 1f) / 2f).toInt()
     private val cells = Cells()
     private val viewport = FrameLayout(activity).apply { addView(cells) }
     private var targetY = 0f
@@ -75,7 +74,7 @@ class DrawerGrid(private val activity: Activity, private val images: Images, pri
         orderAtStart = cards().map { it.tile.key }
         moving = card
         card.requestFocus()
-        card.moving = true
+        MoveLook.hold(card, activity.dp(CARD_H) + 2 * activity.dp(Tokens.RING_INSET))
         heading.setText(R.string.kevbox_move_hint)
     }
 
@@ -88,7 +87,7 @@ class DrawerGrid(private val activity: Activity, private val images: Images, pri
         if (to == from) return
         val order = AppLists.move(now.map { it.tile.key }, from, to - from)
         val byKey = now.associateBy { it.tile.key }
-        glideToNewPlaces(card, *now.filter { it !== card }.toTypedArray())
+        MoveLook.glideToNewPlaces(card, *now.filter { it !== card }.toTypedArray())
         cells.arrange(order.map { byKey.getValue(it) }) { _, _ -> }
     }
 
@@ -96,7 +95,7 @@ class DrawerGrid(private val activity: Activity, private val images: Images, pri
     fun endMove(): List<String>? {
         val card = moving ?: return null
         moving = null
-        card.moving = false
+        MoveLook.release(card)
         heading.setText(R.string.kevbox_more_apps)
         return cards().map { it.tile.key }.takeIf { it != orderAtStart }
     }

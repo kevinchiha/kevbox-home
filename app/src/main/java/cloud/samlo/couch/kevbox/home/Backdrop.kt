@@ -12,12 +12,11 @@ import cloud.samlo.couch.ui.FlatView
 import cloud.samlo.couch.ui.Tokens
 import cloud.samlo.couch.ui.dp
 import cloud.samlo.couch.ui.fill
-import cloud.samlo.couch.ui.scrimDrawable
 
 /**
  * The full-screen picture behind Home: the focused program's art, else the wallpaper, darkened
  * by the user's Dim setting. Two stacked images crossfade once focus has rested, the way Couch's
- * Hero does it; the code is a copy so Hero stays as upstream has it.
+ * Rows hero did before Couch 0.9.0 removed it.
  */
 @SuppressLint("ViewConstructor")
 class Backdrop(context: Context, private val images: Images) : FrameLayout(context) {
@@ -46,7 +45,7 @@ class Backdrop(context: Context, private val images: Images) : FrameLayout(conte
     fun show(url: String?) {
         art = url
         main.removeCallbacks(settle)
-        main.postDelayed(settle, Tokens.HERO_SETTLE_MS)
+        main.postDelayed(settle, SETTLE_MS)
     }
 
     /** A new wallpaper. Takes over at once when the focus has no art of its own. */
@@ -86,10 +85,10 @@ class Backdrop(context: Context, private val images: Images) : FrameLayout(conte
         if (above.alpha > 0.5f) {
             // The top image is showing: put the new art underneath and fade the top away.
             below.setImageBitmap(bitmap)
-            above.animate().alpha(0f).setDuration(Tokens.HERO_FADE_MS).setInterpolator(Tokens.ease).start()
+            above.animate().alpha(0f).setDuration(FADE_MS).setInterpolator(Tokens.ease).start()
         } else {
             above.setImageBitmap(bitmap)
-            above.animate().alpha(1f).setDuration(Tokens.HERO_FADE_MS).setInterpolator(Tokens.ease).start()
+            above.animate().alpha(1f).setDuration(FADE_MS).setInterpolator(Tokens.ease).start()
         }
     }
 
@@ -107,7 +106,7 @@ class Backdrop(context: Context, private val images: Images) : FrameLayout(conte
             above.alpha = 1f
         }
         below.setImageDrawable(null)
-        above.animate().alpha(0f).setDuration(Tokens.HERO_FADE_MS).setInterpolator(Tokens.ease)
+        above.animate().alpha(0f).setDuration(FADE_MS).setInterpolator(Tokens.ease)
             .withEndAction { above.setImageDrawable(null) }.start()
     }
 
@@ -115,6 +114,9 @@ class Backdrop(context: Context, private val images: Images) : FrameLayout(conte
 
     private companion object {
         const val DEFAULT_DIM = "medium"
+        /** The crossfade, and the rest focus needs before new art loads (Couch's old hero timings). */
+        const val FADE_MS = 320L
+        const val SETTLE_MS = 380L
         const val ART_W = 640
         const val ART_H = 360
     }

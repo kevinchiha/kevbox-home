@@ -20,7 +20,6 @@ class HomeData(
     val config: Config,
     val wallpaper: String?,
     val weather: WeatherNow?,
-    /** The Index layout's apps: Index is the only layout KevBox shows. */
     val index: IndexData,
     /** A newer release, when the daily check found one. */
     val update: Release?,
@@ -39,7 +38,7 @@ class HomeLoader(
     private val onLoaded: (HomeData) -> Unit,
 ) {
     private val executor = Executors.newSingleThreadExecutor()
-    /** The daily update check, apart so a slow tv.kevbox.dev never delays the rows. */
+    /** The daily update check, apart so a slow tv.kevbox.dev never delays the apps. */
     private val checker = Executors.newSingleThreadExecutor()
     private val main = Handler(Looper.getMainLooper())
     private var loading = false
@@ -74,7 +73,6 @@ class HomeLoader(
         // A pushed provision file lands in config.json first, so this same load already shows it.
         Provisioner.applyIfPresent(files.dir)
         val config = Config.load(files.dir)
-        // The Rows layout's SectionBuilder stays in the source for upstream merges, never called.
         val index = IndexBuilder.build(context, config, files.icons)
         val wallpaper = wallpapers.current(config, files.dir)
         return HomeData(config, wallpaper, weather.now(config), index, updates.pending(config))

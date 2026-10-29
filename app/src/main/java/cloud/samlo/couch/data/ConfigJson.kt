@@ -14,18 +14,11 @@ internal object ConfigJson {
         .put("hiddenInputs", JSONArray(c.hiddenInputs.sorted()))
         .put("names", JSONObject(c.names))
         .put("inputIcons", JSONObject(c.inputIcons))
-        .put("sectionOrder", JSONArray(c.sectionOrder))
-        .put("hiddenSections", JSONArray(c.hiddenSections.sorted()))
         .put("channels", JSONObject(c.channels))
-        .put("layout", c.layout)
-        .put("cardSize", c.cardSize)
         .put("accent", c.accent)
         .put("wallpaper", c.wallpaper)
         .put("dim", c.dim)
-        .put("showLabels", c.showLabels)
-        .put("showDescriptions", c.showDescriptions)
         .put("clock24h", c.clock24h)
-        .put("showDate", c.showDate)
         .put("subreddit", c.subreddit)
         .put("wallpaperHours", c.wallpaperHours)
         .put("weather", c.weather)
@@ -35,7 +28,8 @@ internal object ConfigJson {
 
     /**
      * Every field is optional; a missing one keeps what [into] already holds. Keys of removed
-     * features (godmode, hud, sync, pre-releases, ambient) are ignored and dropped on the next save.
+     * features (godmode, hud, sync, pre-releases, ambient, the remote relay, the Rows layout) are
+     * ignored and dropped on the next save.
      * The KevBox keys, `wallpaper` among them, go through [KevBoxConfig.decode] at the end.
      */
     fun decode(json: JSONObject, into: Config) {
@@ -49,19 +43,11 @@ internal object ConfigJson {
         json.strings("hiddenInputs")?.let { hiddenInputs = it.toSet() }
         names = json.stringMap("names")
         inputIcons = json.stringMap("inputIcons")
-        json.strings("sectionOrder")?.let { sectionOrder = it }
-        json.strings("hiddenSections")?.let { hiddenSections = it.toSet() }
         channels = json.optJSONObject("channels")?.let { o -> o.keys().asSequence().associateWith { o.optBoolean(it) } }
             ?: emptyMap()
-        // Index is the only layout KevBox ships; an old "rows" file loads as index and saves that way.
-        layout = Config.LAYOUT_INDEX
-        cardSize = json.optString("cardSize", cardSize)
         accent = Accents.migrate(json.optString("accent", accent))
         dim = json.optString("dim", dim)
-        showLabels = json.optBoolean("showLabels", showLabels)
-        showDescriptions = json.optBoolean("showDescriptions", showDescriptions)
         clock24h = json.optBoolean("clock24h", clock24h)
-        showDate = json.optBoolean("showDate", showDate)
         subreddit = json.optString("subreddit", subreddit)
         wallpaperHours = json.optInt("wallpaperHours", wallpaperHours)
         weather = json.optBoolean("weather", weather)

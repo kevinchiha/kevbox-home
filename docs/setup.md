@@ -47,18 +47,18 @@ The compile step makes the very first launch as smooth as later ones.
 
 | Permission | What it unlocks | Command |
 |---|---|---|
-| TV listings | App channel rows (YouTube, Jellyfin…) | `adb shell pm grant cloud.samlo.couch android.permission.READ_TV_LISTINGS` |
+| TV listings | App channels (YouTube, Jellyfin…) | `adb shell pm grant cloud.samlo.couch android.permission.READ_TV_LISTINGS` |
 | Notification access | The now-playing pill, and Fire TV apps' recommendations | `adb shell cmd notification allow_listener cloud.samlo.couch/cloud.samlo.couch.MediaListener` |
 | Secure settings | Repairing the HOME takeover by itself | `adb shell pm grant cloud.samlo.couch android.permission.WRITE_SECURE_SETTINGS` |
-| Usage access | Screen time in the Index layout, and the Recent row | `adb shell appops set cloud.samlo.couch GET_USAGE_STATS allow` |
+| Usage access | Screen time, and apps ordered by it | `adb shell appops set cloud.samlo.couch GET_USAGE_STATS allow` |
 
 Couch asks for TV listings itself on first launch; the others are only possible over ADB.
 Everything works without them, minus the feature in that row.
 
-**Customize → Permissions** shows which of them are on. OK on one that is off opens the TV's
+**Customize → Couch → Permissions** shows which of them are on. OK on one that is off opens the TV's
 own settings screen for it, when the TV has one (many leave these screens out, Fire TV among
-them; the command above still works). The group sits at the top of Customize while something is
-missing, and near the bottom once everything is granted.
+them; the command above still works). While one is off, a line at the top of Customize says how
+many and opens that page.
 
 ### 4. Make HOME open Couch
 
@@ -94,7 +94,7 @@ to the same app, stays open.
 Couch looks for a new release once a day. When there is one, an **Update** button appears in the top
 bar, left of the weather: press it, and confirm in the dialog Android shows. The first time, Android also asks you
 to allow Couch to install apps. When the HOME button service is on, Couch reopens on its own once
-the update is installed. Turn the check off in Customize → System.
+the update is installed. Turn the check off in Customize → Couch.
 
 You can also install the new APK over the old one yourself: enter the same link in Downloader, or
 run `adb install -r couch.apk`. Either way, settings are kept: they live in the app's

@@ -14,6 +14,7 @@ import java.util.Locale
  */
 class Wallpapers(private val fetcher: Fetcher, private val prefs: SharedPreferences) {
 
+    /** The one picture for the source, for the sources that have no list. KevBox: Home's backdrop reads it. */
     fun current(config: Config, userDir: File?): String? = when (config.wallpaper) {
         "gradient" -> null
         "custom" -> userDir?.let { File(it, "wallpaper.jpg") }?.takeIf { it.isFile }?.path ?: daily()

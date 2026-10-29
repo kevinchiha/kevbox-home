@@ -19,8 +19,7 @@ class ConfigTest {
         val config = Config()
         assertTrue(config.pinnedApps.isEmpty())
         assertTrue(config.hiddenApps.isEmpty())
-        assertEquals("medium", config.cardSize)
-        assertEquals("index", config.layout)
+        assertEquals("medium", config.dim)
         assertEquals(3, config.wallpaperHours)
         assertEquals(Config.DEFAULT_SUBREDDIT, config.subreddit)
     }
@@ -33,17 +32,11 @@ class ConfigTest {
             hiddenInputs = setOf("hdmi3")
             names = mapOf("hdmi4" to "Console")
             inputIcons = mapOf("hdmi4" to "ps5")
-            sectionOrder = listOf("inputs", "apps", "ch:7")
-            hiddenSections = setOf("ch:7")
             channels = mapOf("7" to true, "8" to false)
-            cardSize = "large"
             accent = "#34D399"
             wallpaper = "reddit"
             dim = "strong"
-            showLabels = true
-            showDescriptions = false
             clock24h = false
-            showDate = false
             subreddit = "EarthPorn"
             wallpaperHours = 6
             weather = false
@@ -56,39 +49,45 @@ class ConfigTest {
         assertEquals(mapOf("7" to true, "8" to false), copy.channels)
         assertEquals("ps5", copy.inputIcons["hdmi4"])
         assertEquals("Montréal", copy.weatherCity)
-        assertFalse(copy.showDescriptions)
+        assertFalse(copy.clock24h)
+        assertEquals("strong", copy.dim)
     }
 
     @Test
-    fun rowsLayoutLoadsAsIndex() {
-        val config = Config.fromJson("""{"layout":"rows"}""")
-        assertEquals("index", config.layout)
-        assertEquals("index", JSONObject(config.toJson()).getString("layout"))
-        assertEquals("index", Config.fromJson(config.toJson()).layout)
-    }
-
-    @Test
-    fun missingLayoutIsIndex() {
-        assertEquals("index", Config.fromJson("{}").layout)
+    fun aFileFromTheRowsLayoutStillLoadsAndForgetsIt() {
+        val old = """{"layout":"rows","cardSize":"large","sectionOrder":["inputs","apps"],"hiddenSections":["ch:7"],""" +
+            """"dim":"strong","showLabels":true,"showDescriptions":false,"showDate":false,"weatherCity":"Montréal"}"""
+        val config = Config.fromJson(old)
+        assertEquals("Montréal", config.weatherCity)
+        // KevBox keeps dim: it darkens the Index backdrop.
+        assertEquals("strong", config.dim)
+        listOf("layout", "cardSize", "sectionOrder", "hiddenSections", "showLabels", "showDescriptions", "showDate").forEach {
+            assertFalse(it, config.toJson().contains("\"$it\""))
+        }
     }
 
     @Test
     fun configWithRemovedKeysLoadsAndSavesWithoutThem() {
         val config = Config.fromJson(
-            """{"godmode":true,"hud":"fps","ambientMinutes":5,"syncEnabled":true,"syncAllTvs":false,"preReleases":true,"cardSize":"large"}""",
+            """{"godmode":true,"hud":"fps","ambientMinutes":5,"syncEnabled":true,"syncAllTvs":false,"preReleases":true,""" +
+                """"remoteButtons":true,"remoteInputKey":178,"remoteSettingsKey":179,"dim":"light"}""",
         )
-        assertEquals("large", config.cardSize)
-        assertEquals(Config().apply { cardSize = "large" }.toJson(), config.toJson())
+        assertEquals("light", config.dim)
+        assertEquals(Config().apply { dim = "light" }.toJson(), config.toJson())
         val saved = JSONObject(config.toJson())
-        for (key in listOf("godmode", "hud", "ambientMinutes", "syncEnabled", "syncAllTvs", "preReleases")) {
+        val removed = listOf(
+            "godmode", "hud", "ambientMinutes", "syncEnabled", "syncAllTvs", "preReleases",
+            "remoteButtons", "remoteInputKey", "remoteSettingsKey",
+        )
+        for (key in removed) {
             assertFalse(key, saved.has(key))
         }
     }
 
     @Test
     fun missingKeysKeepDefaults() {
-        val config = Config.fromJson("""{"cardSize":"small","pinnedApps":["a.b"]}""")
-        assertEquals("small", config.cardSize)
+        val config = Config.fromJson("""{"wallpaper":"gradient","pinnedApps":["a.b"]}""")
+        assertEquals("gradient", config.wallpaper)
         assertEquals(listOf("a.b"), config.pinnedApps)
         assertTrue(config.hiddenApps.isEmpty())
         assertTrue(config.clock24h)
@@ -140,10 +139,10 @@ class ConfigTest {
     @Test
     fun saveThenLoadThroughAFile() {
         val dir = folder.newFolder()
-        val config = Config().apply { cardSize = "large"; hiddenInputs = setOf("hdmi1") }
+        val config = Config().apply { wallpaper = "custom"; hiddenInputs = setOf("hdmi1") }
         config.save(dir)
         val loaded = Config.load(dir)
-        assertEquals("large", loaded.cardSize)
+        assertEquals("custom", loaded.wallpaper)
         assertEquals(setOf("hdmi1"), loaded.hiddenInputs)
         assertFalse(dir.resolve("config.json.tmp").exists())
     }
@@ -151,9 +150,9 @@ class ConfigTest {
     @Test
     fun savesFromTwoThreadsNeverLeaveABrokenFile() {
         val dir = folder.newFolder()
-        val writers = listOf("small", "large").map { size ->
+        val writers = listOf("light", "strong").map { level ->
             Thread {
-                val config = Config().apply { cardSize = size; names = (1..200).associate { "app.$it" to size } }
+                val config = Config().apply { dim = level; names = (1..200).associate { "app.$it" to level } }
                 repeat(100) { config.save(dir) }
             }
         }
@@ -161,21 +160,14 @@ class ConfigTest {
         writers.forEach { it.join() }
         // A mixed or half-written file would load as the defaults: "medium" and no names.
         val loaded = Config.load(dir)
-        assertTrue(loaded.cardSize, loaded.cardSize in setOf("small", "large"))
+        assertTrue(loaded.dim, loaded.dim in setOf("light", "strong"))
         assertEquals(200, loaded.names.size)
-        assertTrue(loaded.names.values.all { it == loaded.cardSize })
+        assertTrue(loaded.names.values.all { it == loaded.dim })
     }
 
     @Test
     fun loadWithoutAFileGivesDefaults() {
         assertEquals(Config().toJson(), Config.load(folder.newFolder()).toJson())
         assertEquals(Config().toJson(), Config.load(null).toJson())
-    }
-
-    @Test
-    fun cardScaleFollowsSize() {
-        assertEquals(0.85f, Config().apply { cardSize = "small" }.cardScale, 0f)
-        assertEquals(1f, Config().cardScale, 0f)
-        assertEquals(1.18f, Config().apply { cardSize = "large" }.cardScale, 0f)
     }
 }

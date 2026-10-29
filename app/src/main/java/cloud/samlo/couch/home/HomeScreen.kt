@@ -26,8 +26,8 @@ import cloud.samlo.couch.update.Release
 import cloud.samlo.couch.update.UpdateCheck
 
 /**
- * The home screen's wiring and lifecycle: it owns the pieces (loader, organizer, menus)
- * and forwards the activity's callbacks to them. Create it in `onCreate`.
+ * The home screen's wiring and lifecycle: it owns the pieces (loader, menus) and forwards the
+ * activity's callbacks to them. Create it in `onCreate`.
  */
 class HomeScreen(private val activity: Activity) {
     private val files = UserFiles(activity)
@@ -49,8 +49,7 @@ class HomeScreen(private val activity: Activity) {
     private var config = Config.load(null)
     private var resumed = false
 
-    private val organizer: Organizer = Organizer(activity, views.rows, views.hero, { config }, files) { load() }
-    private val menus: CardMenus = CardMenus(activity, { config }, files, { load() }) { organizer.start(it) }
+    private val menus: CardMenus = CardMenus(activity, { config }, files) { load() }
     private val loader = HomeLoader(
         activity, files, Wallpapers(fetcher, prefs), Weather(fetcher, prefs), UpdateCheck(activity, fetcher), ::onLoaded,
     )
@@ -80,7 +79,6 @@ class HomeScreen(private val activity: Activity) {
         resumed = false
         MediaListener.onRecommendationsChanged = null
         main.removeCallbacks(reloadForRecommendations)
-        if (organizer.active) organizer.stop()
         stopLive()
     }
 
@@ -96,81 +94,47 @@ class HomeScreen(private val activity: Activity) {
 
     fun load() = loader.load()
 
-    /** True when the key was consumed (reorder mode, or the Index layout's own keys). */
-    fun consumesKey(event: KeyEvent): Boolean =
-        organizer.consumesKey(event) || (views.indexShown && views.index.consumesKey(event))
+    /** True when the key was consumed (the Index screen's own keys). */
+    fun consumesKey(event: KeyEvent): Boolean = views.index.consumesKey(event)
 
     private fun onLoaded(data: HomeData) {
-        val lookChanged = config.look != data.config.look
+        val accentChanged = config.accent != data.config.accent
         config = data.config
-        if (lookChanged) Tokens.applyAccent(config.accent)
-        applyLook(config)
+        if (accentChanged) Tokens.applyAccent(config.accent)
         views.index.topBar.applyLook(config)
         views.index.showBackdrop(data.wallpaper, config.dim)
-        views.hero.wallpaperUrl = data.wallpaper
         showWeather(data.weather)
         // On Android 12+ the chip waits while the silent update can still install this version (AC-10).
         update = data.update?.takeUnless { SilentJob.holdsPrompt(activity, it) }
         // A reload mid-download keeps the "Downloading" label.
         if (!Installer.running) {
-            views.topBar.update.show(update?.version)
             views.index.topBar.update.show(update?.version)
         }
-        // Index is the only layout; the Rows views stay built but hidden, for upstream merges.
-        switchLayout(true)
         views.index.bind(data.index, config)
     }
 
-    /** Swaps layouts after a settings change; the live parts (now playing, readings) follow. */
-    private fun switchLayout(index: Boolean) {
-        if (index == views.indexShown) return
-        if (resumed) stopLive()
-        views.showIndex(index)
-        // The hidden rows would keep every card and its art in memory; they rebuild on the way back.
-        if (index) views.rows.column.removeAllViews()
-        if (resumed) startLive()
-    }
-
     private fun startLive() {
-        if (views.indexShown) {
-            views.index.topBar.nowPlaying.start()
-            views.index.systemLine.start()
-            views.index.topBar.animateWeather(true)
-        } else {
-            views.topBar.nowPlaying.start()
-            views.topBar.animateWeather(true)
-        }
+        views.index.topBar.nowPlaying.start()
+        views.index.systemLine.start()
+        views.index.topBar.animateWeather(true)
     }
 
     private fun stopLive() {
-        views.topBar.nowPlaying.stop()
-        views.topBar.animateWeather(false)
         views.index.topBar.nowPlaying.stop()
         views.index.systemLine.stop()
         views.index.topBar.animateWeather(false)
     }
 
-    /** Settings that change existing views rather than cards. */
-    private fun applyLook(config: Config) {
-        views.hero.setDim(config.dim)
-        views.hero.setShowDescription(config.showDescriptions)
-        val time = if (config.clock24h) "HH:mm" else "h:mm"
-        views.topBar.applyLook(config, time)
-    }
-
     private fun showWeather(now: WeatherNow?) {
-        views.topBar.showWeather(now)
         views.index.topBar.showWeather(now)
     }
 
     private fun installUpdate() {
         val release = update ?: return
         if (Installer.running) return
-        views.topBar.update.downloading()
         views.index.topBar.update.downloading()
         installer.install(release) { message ->
             if (message != null) Toast.makeText(activity, message, Toast.LENGTH_LONG).show()
-            views.topBar.update.show(release.version)
             views.index.topBar.update.show(release.version)
         }
     }

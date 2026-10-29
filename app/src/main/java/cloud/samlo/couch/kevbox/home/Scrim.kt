@@ -1,13 +1,15 @@
-package cloud.samlo.couch.ui
+package cloud.samlo.couch.kevbox.home
 
 import android.graphics.drawable.GradientDrawable
 import android.graphics.drawable.LayerDrawable
+import cloud.samlo.couch.ui.Tokens
 
 /**
- * The darkening laid over the hero's art so text stays readable. [level] is "light", "medium"
- * or "strong": how much the left edge and the middle are darkened.
+ * The darkening laid over the backdrop so text stays readable. [level] is "light", "medium" or
+ * "strong": how much the left edge and the middle are darkened. Couch's own copy went with its
+ * Rows hero in Couch 0.9.0; this one keeps its colours.
  */
-fun scrimDrawable(level: String): LayerDrawable {
+internal fun scrimDrawable(level: String): LayerDrawable {
     val bg = Tokens.background and 0x00FFFFFF
     val (edge, mid) = when (level) {
         "light" -> 0xCC000000.toInt() to 0x55000000

@@ -11,7 +11,7 @@ import cloud.samlo.couch.kevbox.update.Visibility
 import cloud.samlo.couch.ui.Tokens
 
 /**
- * Hosts one settings page (main or channels, chosen by an extra) in the shared
+ * Hosts one settings page (main, channels or permissions, chosen by an extra) in the shared
  * layout. Each change is saved at once; the home screen picks it up when it comes back.
  */
 class SettingsActivity : Activity() {
@@ -23,15 +23,20 @@ class SettingsActivity : Activity() {
         val files = UserFiles(this)
         val config = Config.load(files.dir)
         Tokens.applyAccent(config.accent)
-        layout = SettingsLayout(this)
+        val name = intent.getStringExtra(EXTRA_PAGE)
+        // The main page and the pages inside its groups show the groups down the left.
+        val group = Group.of(name)
+        layout = SettingsLayout(this, withRail = name == null || group != null)
         val ctx = SettingsContext(this, files, layout, config)
-        page = when (intent.getStringExtra(EXTRA_PAGE)) {
+        page = when (name) {
             PAGE_CHANNELS -> ChannelsPage(ctx)
+            PAGE_ACCESS -> AccessPage(ctx)
             else -> MainPage(ctx)
         }
         setContentView(layout.root)
         page.build()
-        layout.list.post { layout.items().firstOrNull { it.isFocusable }?.requestFocus() }
+        group?.let { Rail(ctx, focusable = false).build(it) }
+        layout.list.post { if (!page.focusStart()) layout.items().firstOrNull { it.isFocusable }?.requestFocus() }
     }
 
     override fun onDestroy() {
@@ -67,6 +72,7 @@ class SettingsActivity : Activity() {
     companion object {
         private const val EXTRA_PAGE = "page"
         const val PAGE_CHANNELS = "channels"
+        const val PAGE_ACCESS = "access"
 
         fun intent(context: Context, page: String) =
             Intent(context, SettingsActivity::class.java).putExtra(EXTRA_PAGE, page)

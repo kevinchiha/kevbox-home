@@ -9,7 +9,6 @@
     <!-- Home -->
     <string name="section_inputs">Inputs</string>
     <string name="section_apps">Apps</string>
-    <string name="section_recent">Recent</string>
     <string name="input_offer">Switch to %1$s</string>
     <string name="input_disconnected">Disconnected</string>
     <string name="launch_failed">Couldn’t open %1$s</string>
@@ -51,16 +50,10 @@
     <string name="index_adb_on">on</string>
 
     <!-- Card menus and reordering -->
-    <string name="menu_move">Move</string>
     <string name="menu_hide">Hide</string>
     <string name="menu_rename">Rename</string>
     <string name="menu_app_info">App info</string>
     <string name="menu_open_app">Open %1$s</string>
-    <string name="visibility_title">Check what stays visible</string>
-    <string name="organize_title">Rearrange apps</string>
-    <string name="organize_idle">OK to pick up an app  ·  Back when done</string>
-    <string name="organize_moving">Left or right to move it  ·  OK to drop it</string>
-    <string name="input_prefix">Input %1$s</string>
     <string name="ok">OK</string>
     <string name="cancel">Cancel</string>
 
@@ -104,7 +97,6 @@
     <string name="weather_snow">Snow</string>
     <string name="weather_storm">Thunderstorm</string>
     <string name="weather_temperature">%1$d°</string>
-    <string name="weather_place_range">"%1$s  ·  %2$d° / %3$d°"</string>
 
     <!-- Settings: shared -->
     <string name="settings_title">Customize</string>
@@ -123,8 +115,7 @@
     <string name="accent_white">White</string>
 
     <!-- Settings: wallpaper -->
-    <string name="group_wallpaper">Wallpaper</string>
-    <string name="wallpaper_source">Source</string>
+    <string name="wallpaper_source">Wallpaper</string>
     <string name="wallpaper_source_help">Photo of the day: a new Bing photo every day.\nReddit: the best images of a subreddit, changing through the day.\nMy image: wallpaper.jpg, sent over ADB.</string>
     <string name="wallpaper_daily">Photo of the day</string>
     <string name="wallpaper_reddit">Reddit</string>
@@ -145,7 +136,7 @@
     <string name="dim_strong">Strong</string>
 
     <!-- Settings: home -->
-    <string name="group_home">Home</string>
+    <string name="group_home">Home screen</string>
     <string name="settings_channels">App channels</string>
     <string name="settings_channels_help">The rows your apps publish (Jellyfin, YouTube…). Turn on the ones you want to see.</string>
 
@@ -159,8 +150,8 @@
 
     <!-- Settings: system -->
     <string name="group_setup">Permissions</string>
-    <string name="setup_turn_on">Turn on  ›</string>
-    <string name="setup_no_screen">This TV has no settings screen for this. The help on the right gives another way.</string>
+    <string name="setup_turn_on">Turn on</string>
+    <string name="setup_no_screen">This TV has no settings screen for this. The help under this row gives another way.</string>
     <string name="setup_home">HOME button</string>
     <string name="setup_home_help">Opens KevBox Home when you press HOME and lets the remote’s app buttons open your apps. Turn on “KevBox Home” in the accessibility settings.</string>
     <string name="setup_notifications">Notification access</string>
@@ -174,7 +165,7 @@
     <string name="about_help">KevBox Home, the KevBox launcher.</string>
 
     <!-- Settings: sub-pages -->
-    <string name="channels_hint">Check the rows to show on the home screen.</string>
+    <string name="channels_hint">Turn on the channels to show on the home screen.</string>
     <string name="channels_empty">No channels yet. Apps publish them once you open them.</string>
     <!-- Updates -->
     <string name="check_updates">Check for updates</string>
@@ -206,4 +197,24 @@
     <string name="kevbox_move_hint">Use the arrows to move it, then press OK</string>
     <string name="kevbox_restart_by_hand">Press Force stop, then reopen the app</string>
     <string name="kevbox_about_checking">Checking tv.kevbox.dev for a new version…</string>
+    <!-- Customize: the rail of groups and the permissions page -->
+    <plurals name="setup_missing">
+        <item quantity="one">%d permission is off</item>
+        <item quantity="other">%d permissions are off</item>
+    </plurals>
+    <string name="setup_page_help">What KevBox Home may use on this TV: the HOME button, what’s playing, screen time and app channels.</string>
+    <string name="setup_hint">Each one turns on a feature. OK opens the place where it is granted.</string>
+    <string name="setup_all_on">All on</string>
+    <plurals name="setup_off">
+        <item quantity="one">%d off</item>
+        <item quantity="other">%d off</item>
+    </plurals>
+    <string name="units_help">Celsius or Fahrenheit.</string>
+    <string name="summary_clock_24">24-hour clock</string>
+    <string name="summary_clock_12">12-hour clock</string>
+    <string name="summary_weather_on">weather</string>
+    <string name="summary_weather_off">no weather</string>
+    <string name="summary_version">Version %s</string>
+    <string name="summary_update">Version %s is out</string>
+    <string name="channel_item_help">Shows this channel’s programs beside its app.</string>
 </resources>

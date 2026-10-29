@@ -13,7 +13,7 @@ slip in unnoticed. The cost is more hand-written view code, kept manageable by s
 ## Only render properties move
 
 Focus changes animate scale, alpha and translation, which the render thread applies without
-redrawing anything. Rows glide by translating a strip instead of scrolling, so holding the D-pad
+redrawing anything. Lists glide by translating a strip instead of scrolling, so holding the D-pad
 retargets one smooth animation instead of restarting a scroll (the stock smooth scroll snaps when a
 new scroll starts within 250 ms of the last). Text that changes on every focus move lives in
 fixed-size views, so it never triggers a layout pass.
@@ -83,4 +83,21 @@ different digits on each screen. The cost is that both TVs must be on the Add a 
 Totals travel straight between the TVs on the home network, so there is no account, no service to
 run, and nothing to trust outside the house. The cost is that a TV that is off can't answer: it
 keeps its last answer, and the row says how old that is.
+
+## Remote buttons through a relay
+
+The TV routes Input and Settings straight to its own menus, so an app never sees them. Two app-level
+ways around that were tried and rejected. Filtering keys in an accessibility service catches them,
+but on the tested TV it stopped held keys from repeating, so volume no longer ramped. Letting the
+TV's menu open and replacing it as soon as it appears works, but the TV's menu shows for a moment on
+every press.
+
+The relay works below Android's key handling instead. It runs as the debugging shell, which may
+grab an input device and create virtual ones, and replays the remote through a virtual twin with the
+same name, so Android loads the same key layout and treats every key as before. It is C rather than
+a Java process started with `app_process` because grabbing a device and creating a virtual one are
+ioctls a Java process can't make. It needs debugging on, which is why the feature is off by default.
+
+Picture and sound settings go through Sony's IP control API rather than the TV's own settings
+service, which only Sony's system apps may use.
 

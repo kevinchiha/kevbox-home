@@ -8,12 +8,12 @@ every one).
 ```
 cloud.samlo.couch
 ├── MainActivity, HomeAccessibilityService, MediaListener, BootReceiver
-├── home/      the home screen: wiring, loading, binding, top bar, menus, reorder
-├── ui/        reusable views: Card, FocusRow, Rows, Hero, NowPlaying, tokens
+├── home/      the home screen's wiring: loading, system watchers, long-press menus
+├── ui/        reusable views: Card, FocusRow, NowPlaying, chips, tokens
 ├── data/      config, apps, inputs, channels, weather, wallpapers, image pipeline
 ├── update/    daily release check, download, checksum, Android's package installer
-├── settings/  Customize: activity shell, option rows, the main and channels pages
-├── index/     the Index layout: app list, program text, channel row, the week, system line
+├── settings/  Customize: activity shell, the rail of groups, option rows, one file per page
+├── index/     the home screen itself: app list, program text, channel row, the week, system line
 └── kevbox/    KevBox Home's own code
     ├── KevBox     the log tag (KevBoxHome) and the way back to Home
     ├── config/    the KevBox keys of config.json and of the provision file, one parser
@@ -66,28 +66,23 @@ unchanged rows aren't touched, a reload is invisible.
   pre-rounded bitmap, remote art loaded at its exact size, or an icon with a label.
 - **`FocusRow`** never scrolls: it translates its strip so the focused card sits at a fixed
   anchor, retargeting one animation per move. It draws the focused card last and keeps left/right
-  inside the row. Coming back from another row returns to the card you left.
-- **`Rows`** does the same vertically: the focused row glides to the top of the rows area.
-- **`Hero`** updates its text on every move (fixed-size views, so no layout pass) and only loads
-  the backdrop once focus has rested, crossfading between two stacked image views.
+  inside the row.
 - **`Tokens`** holds every colour, size and timing. Everything shares one expo-out curve.
 
-`Rows`, `Hero` and the Rows layout's `SectionBuilder` and `SectionBinder` stay in the source,
-unused and hidden, so Couch's changes to them merge without conflicts.
+## Home screen
 
-## Index layout
+`IndexScreen` is the home screen, called Index in the docs. Everything sits at fixed positions
+from `IndexTokens` (dp on the 960x540 canvas), so focus moves never lay out.
 
-`IndexScreen` is the only layout. Everything sits at fixed positions from `IndexTokens` (dp on the
-960x540 canvas), so focus moves never lay out.
-
-- **`AppList`** glides its column by translation, like `Rows`; `AppRow` only swaps colours when
-  selected. Each row shows the app's icon, its name and one status line (`kevbox/home/StatusLine`):
-  where the show stands, else when the app was last opened. Under the last app, past a divider,
-  `MoreAppsRow` opens the drawer. `IndexScreen.focusSearch` routes the D-pad between the list, the
-  channel row (a `FocusRow` of `Card`s with a thin ring) and the top buttons; `TopFocus` remembers
-  where Up came from, so Down goes back there.
+- **`AppList`** glides its column by translation instead of scrolling; `AppRow` only swaps colours
+  when selected. Each row shows the app's icon, its name and one status line
+  (`kevbox/home/StatusLine`): where the show stands, else when the app was last opened. Under the
+  last app, past a divider, `MoreAppsRow` opens the drawer. `IndexScreen.focusSearch` routes the
+  D-pad between the list, the channel row (a `FocusRow` of `Card`s with a thin ring) and the top
+  buttons; `TopFocus` remembers where Up came from, so Down goes back there.
 - **`Backdrop`** (`kevbox/home`) is the one full-screen layer: the focused program's art, else the
-  wallpaper, darkened by Customize's Dim. It crossfades like `Hero`, of which it is a copy.
+  wallpaper, darkened by Customize's Dim. It crossfades between two stacked image views once focus
+  has rested, the way Couch's old Rows hero did.
 - **`Spotlight`** is text only: the focused program's source, title, synopsis and progress, or the
   app's name. The pictures are the channel's cards, so moving along them decodes no larger copy of
   their art; an app without a channel shows its banner, rendered at card size, in the row's place.
@@ -139,10 +134,17 @@ keep Couch's `CardMenus`.
 
 ## Settings
 
-`SettingsActivity` hosts one page at a time (main, channels), chosen by an intent extra. Pages
-build their list from `OptionList` helpers (choice, toggle, text, link), each producing an
-`OptionRow`. Every change is saved immediately; the home screen picks it up when it resumes.
-Holding OK on the Settings button opens it; a plain OK opens Android's settings.
+`SettingsActivity` hosts one page at a time, chosen by an intent extra. The main page is a
+`Rail` of the four `Group`s down the left, each with a one-line summary of how it is set, and the
+focused group's options on the right; Right or OK steps into them, Back or Left steps out. The
+pages that belong to a group (channels, permissions) show the same rail without focus, their group
+lit. Pages build their list from `OptionList` helpers, each producing an `OptionRow` whose right
+side shows what kind of row it is: `choice` (every option side by side when two or three short ones
+fit, else `‹ value ›`), `swatches` (the accent colours), `toggle` (a switch), `text` (an underlined
+value that opens the keyboard), `page` (`›`, opens another page), `leaves` (`↗`, opens one of
+Android's screens or goes back home) and `link` (an action done in place, no arrow). The focused
+row opens its help under its title. Every change is saved immediately; the home screen picks it up
+when it resumes. Holding OK on the Settings button opens it; a plain OK opens Android's settings.
 
 ## HOME takeover and the remote
 

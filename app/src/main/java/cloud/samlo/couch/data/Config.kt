@@ -5,7 +5,7 @@ import cloud.samlo.couch.kevbox.keys.KeyEntry
 import cloud.samlo.couch.kevbox.keys.KeyMap
 import java.io.File
 
-    /**
+/**
  * Everything the user can customise, stored in the app's external files folder
  * (`Android/data/tv.kevbox.home/files/config.json`, `tv.kevbox.home.dev` for debug builds) so
  * the provision file and ADB can edit or back it up. Custom images go next to it in
@@ -21,26 +21,16 @@ class Config {
     /** Input key to an [InputIcon] id. */
     var inputIcons: Map<String, String> = emptyMap()
 
-    // Rows
-    var sectionOrder: List<String> = emptyList()
-    var hiddenSections: Set<String> = emptySet()
+    // Channels
     /** Channel id to shown or not, overriding what the stock launcher had enabled. */
     var channels: Map<String, Boolean> = emptyMap()
 
     // Look
-    /**
-     * Always "index" (a list of apps beside what the focused one offers) after a load. The key
-     * stays in the file so old configs round-trip; "rows" is kept only for upstream's code.
-     */
-    var layout: String = LAYOUT_INDEX
-    var cardSize: String = "medium"
     var accent: String = Accents.default
     var wallpaper: String = "daily"
+    /** KevBox: how dark the Index backdrop gets (upstream dropped this with the Rows hero). */
     var dim: String = "medium"
-    var showLabels = false
-    var showDescriptions = true
     var clock24h = true
-    var showDate = true
 
     // Wallpaper: "daily" (Bing photo of the day), "reddit", "gradient" or "custom" (wallpaper.jpg)
     var subreddit = DEFAULT_SUBREDDIT
@@ -67,16 +57,6 @@ class Config {
     var speedtestApp: String = KevBoxConfig.DEFAULT_SPEEDTEST
     var keys: List<KeyEntry> = KeyMap.DEFAULT
 
-    val cardScale: Float
-        get() = when (cardSize) {
-            "small" -> 0.85f
-            "large" -> 1.18f
-            else -> 1f
-        }
-
-    /** Changes whenever a setting that affects how cards are drawn changes. */
-    val look: String get() = "$cardSize|$accent|$showLabels"
-
     /**
      * Written atomically so a half-written file never wipes the user's setup. Home, the drawer's
      * thread and the provision loader all save; the lock keeps two of them from writing the one
@@ -97,9 +77,6 @@ class Config {
     companion object {
         const val FILE = "config.json"
         const val DEFAULT_SUBREDDIT = "WidescreenWallpaper"
-
-        const val LAYOUT_ROWS = "rows"
-        const val LAYOUT_INDEX = "index"
 
         /** Defaults stay generic: the user pins their own apps. */
         val DEFAULT_PINNED = emptyList<String>()
