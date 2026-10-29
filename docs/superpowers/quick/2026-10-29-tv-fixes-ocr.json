@@ -1,0 +1,266 @@
+{
+  "status": "complete",
+  "llm": {
+    "provider": "anthropic",
+    "model": "claude-opus-5-5"
+  },
+  "message": "Review complete: 6 finding(s) across 11 selected item(s).",
+  "summary": {
+    "files_reviewed": 11,
+    "comments": 6,
+    "total_tokens": 511084,
+    "input_tokens": 490079,
+    "output_tokens": 21005,
+    "cache_read_tokens": 338069,
+    "cache_write_tokens": 151954,
+    "elapsed": "1m24s"
+  },
+  "tool_calls": {
+    "total": 23,
+    "by_tool": {
+      "code_comment": 3,
+      "code_search": 7,
+      "file_read": 10,
+      "file_read_diff": 3
+    },
+    "failure": 0,
+    "failure_by_tool": {},
+    "failure_details": []
+  },
+  "comments": [
+    {
+      "path": "app/src/main/java/cloud/samlo/couch/kevbox/restart/ForceStop.kt",
+      "content": "`WindowRoot.root: Any` and the `Any?` return value drop the type, so `root()` has to cast back with `as AccessibilityNodeInfo?`. If anyone builds a `WindowRoot` with a different root type, that cast fails at runtime. Making the class and the function generic keeps the helper testable on the JVM and removes the cast.",
+      "suggestion_code": "internal data class WindowRoot\u003cT : Any\u003e(val pkg: String?, val isApplication: Boolean, val root: T)\n\ninternal fun \u003cT : Any\u003e pickSettingsRoot(windows: List\u003cWindowRoot\u003cT\u003e\u003e, active: WindowRoot\u003cT\u003e?, settings: Set\u003cString\u003e): T? =",
+      "existing_code": "internal fun pickSettingsRoot(windows: List\u003cWindowRoot\u003e, active: WindowRoot?, settings: Set\u003cString\u003e): Any? =",
+      "start_line": 26,
+      "end_line": 26,
+      "category": "maintainability",
+      "severity": "low"
+    },
+    {
+      "path": "app/src/main/java/cloud/samlo/couch/kevbox/restart/ForceStop.kt",
+      "content": "Every 100 ms poll fetches `window.root` for every window on screen, including the launcher, the system UI and the IME. Each fetch is a separate binder call. It also always calls `rootInActiveWindow`, even when a Settings window has already been found. On a low-end TV box that is a lot of IPC per tick. Make the window list lazy (`asSequence()`), and only read the active window when no Settings window turned up.",
+      "existing_code": "        val windows = service.windows.mapNotNull { window -\u003e\n            window.root?.let { WindowRoot(it.packageName?.toString(), window.type == AccessibilityWindowInfo.TYPE_APPLICATION, it) }\n        }\n        val active = service.rootInActiveWindow?.let { WindowRoot(it.packageName?.toString(), true, it) }",
+      "start_line": 123,
+      "end_line": 126,
+      "category": "performance",
+      "severity": "low"
+    },
+    {
+      "path": "app/src/main/java/cloud/samlo/couch/HomeAccessibilityService.kt",
+      "content": "`VolumeRepeat` sees the key before `KeyFilter` decides whether to consume it. `KeyMap.parse` accepts any positive keycode, so a provisioned entry can bind 24 or 25. In that case the filter consumes the press to open an app, but holding the key still starts a ramp that changes the volume. Only feed the ramp when the filter did not consume the event.",
+      "suggestion_code": "        val consumed = filter?.onKey(event.action, event.keyCode, event.scanCode, event.repeatCount) ?: false\n        if (!consumed) volume?.onKey(event.action, event.keyCode, event.repeatCount)\n        return consumed",
+      "existing_code": "        volume?.onKey(event.action, event.keyCode, event.repeatCount)\n        return filter?.onKey(event.action, event.keyCode, event.scanCode, event.repeatCount) ?: false",
+      "start_line": 37,
+      "end_line": 38,
+      "category": "bug",
+      "severity": "medium"
+    },
+    {
+      "path": "app/src/main/java/cloud/samlo/couch/kevbox/keys/VolumeRepeat.kt",
+      "content": "This relies on the platform no longer repeating filtered keys. The comment above says repeats \"the system still sends\" are ignored, but those repeats still pass on to the system: `filter.onKey` returns false for unmapped keys. On any device or firmware where they arrive, the system steps the volume on each repeat and `tick` steps it as well, so the ramp runs at double speed. A cheap safeguard: when a DOWN with `repeatCount \u003e 0` arrives for the held key, call `stop()`, because the system is already ramping.",
+      "suggestion_code": "            DOWN -\u003e if (repeatCount == 0) {\n                cancel()\n                held = keyCode\n                schedule(timeoutMs, ::tick)\n            } else if (keyCode == held) {\n                // The platform is repeating on its own; don't double the ramp.\n                stop()\n            }",
+      "existing_code": "            DOWN -\u003e if (repeatCount == 0) {\n                cancel()\n                held = keyCode\n                schedule(timeoutMs, ::tick)\n            }",
+      "start_line": 28,
+      "end_line": 32,
+      "category": "bug",
+      "severity": "medium"
+    },
+    {
+      "path": "app/src/main/java/cloud/samlo/couch/HomeAccessibilityService.kt",
+      "content": "`onServiceConnected` replaces `volume` without stopping the old instance. If the service rebinds without `onDestroy` (unbind/rebind) while a ramp is running, the old instance keeps `held` set and `tick` keeps rescheduling itself. The volume would then run to max or min until some later volume DOWN calls `removeCallbacksAndMessages`. Call `volume?.stop()` before creating the new instance.",
+      "suggestion_code": "        val audio = getSystemService(AudioManager::class.java)\n        volume?.stop()\n        volume = VolumeRepeat(",
+      "existing_code": "        val audio = getSystemService(AudioManager::class.java)\n        volume = VolumeRepeat(",
+      "start_line": 56,
+      "end_line": 57,
+      "category": "bug",
+      "severity": "low"
+    },
+    {
+      "path": "app/src/main/res/xml/home_accessibility.xml",
+      "content": "The rest of this comment (\"a key with no mapping passes through untouched, so holding volume ramps\") is now wrong. This change exists because filtering keys stops Android repeating a held key, and the new class doc in `HomeAccessibilityService` says the ramp comes from `VolumeRepeat`. Please update the comment so nobody later deletes `VolumeRepeat` thinking the platform does the ramp.",
+      "suggestion_code": "     hence flagRetrieveInteractiveWindows). Key events are filtered so the remote's app buttons\n     open KevBox's apps; a key with no mapping passes through, and VolumeRepeat makes the held-volume\n     ramp because filtering stops the platform's own key repeat. --\u003e",
+      "existing_code": "     hence flagRetrieveInteractiveWindows). Key events are filtered so the remote's app buttons",
+      "start_line": 4,
+      "end_line": 4,
+      "category": "documentation",
+      "severity": "low"
+    }
+  ],
+  "groups": [
+    {
+      "label": "Accessibility service volume key repeat handling",
+      "files": [
+        "app/src/main/java/cloud/samlo/couch/HomeAccessibilityService.kt",
+        "app/src/main/java/cloud/samlo/couch/kevbox/keys/VolumeRepeat.kt",
+        "app/src/main/res/xml/home_accessibility.xml"
+      ]
+    },
+    {
+      "label": "Index screen app list and top bar UI updates",
+      "files": [
+        "app/src/main/java/cloud/samlo/couch/index/AppList.kt",
+        "app/src/main/java/cloud/samlo/couch/index/IndexScreen.kt",
+        "app/src/main/java/cloud/samlo/couch/index/IndexTokens.kt",
+        "app/src/main/java/cloud/samlo/couch/index/IndexTopBar.kt"
+      ]
+    },
+    {
+      "label": "Force stop and app restart flow",
+      "files": [
+        "app/src/main/java/cloud/samlo/couch/kevbox/restart/AppRestart.kt",
+        "app/src/main/java/cloud/samlo/couch/kevbox/restart/ForceStop.kt",
+        "app/src/main/java/cloud/samlo/couch/kevbox/menu/AppMenu.kt",
+        "app/src/main/java/cloud/samlo/couch/kevbox/buttons/ButtonRow.kt"
+      ]
+    }
+  ],
+  "session_id": "4c11d9fb-91ec-4f62-af1c-d7c0b470cfb3",
+  "manifest": {
+    "schema_version": "ocr.run-manifest/v1",
+    "run_id": "4c11d9fb-91ec-4f62-af1c-d7c0b470cfb3",
+    "operation": "review",
+    "terminal_state": "complete",
+    "repository": {
+      "identity_sha256": "0ffbddada3a18bb79301393e0fb4f5d70356a2ba979408b8ab1408c455adf725"
+    },
+    "input": {
+      "mode": "range",
+      "requested_from": "main",
+      "requested_head": "quick/tv-fixes",
+      "resolved_base": "7fa2d76a7b8dbcde212429c73236fc61de69d476",
+      "resolved_head": "34e2fe381018ad1ccc5112c527b76f99125a09b8",
+      "exact_range": "7fa2d76a7b8dbcde212429c73236fc61de69d476..34e2fe381018ad1ccc5112c527b76f99125a09b8",
+      "source_artifact_sha256": "04c4793420287972b7a495c36a8290e337a7465a6a3b78f09e54e25004bdf29e"
+    },
+    "execution": {
+      "ocr_version": "v1.13.3",
+      "provider": "anthropic",
+      "model": "claude-opus-5-5",
+      "configured_concurrency": 8,
+      "rule_config_sha256": "7bdde30da0c66ee5643876474d879e4d72b8803bf0501749f82291f5b9b2b87a",
+      "runtime_config_sha256": "93c1bae68fa824e3eb9a388b389d2b0cdbe98c00e45b7638e3c4d5afe2dbc39f"
+    },
+    "coverage": {
+      "selected": [
+        {
+          "item_id": "19bee805388df03a45378edeec6dd98b951dcb1187eabd181c1ba34311ee1363",
+          "path": "app/src/main/java/cloud/samlo/couch/HomeAccessibilityService.kt",
+          "fingerprint": "c135f7fa1952f69ded4f03a94f9165ab821b7aae2b4ea35bebf8d6b82a7d2504"
+        },
+        {
+          "item_id": "1d6f602a7959bf4c41cd98401cacf8bb9de7244e228dd41d0c44ddb4c46c32dd",
+          "path": "app/src/main/java/cloud/samlo/couch/index/IndexTopBar.kt",
+          "fingerprint": "867ef27f4317aaf6f9b75e1407dfa4beeda061d942b52a56a3989fcaac3bc305"
+        },
+        {
+          "item_id": "3b193318e7643f9cad9c6ebbcddf4a6ff091a5432bdf1c910ad9b7da4c4d0a54",
+          "path": "app/src/main/java/cloud/samlo/couch/kevbox/keys/VolumeRepeat.kt",
+          "fingerprint": "99fcb6232a821b446a44c545453e3f1597d5a0eeef7a3612bd76a438e16a60c4"
+        },
+        {
+          "item_id": "55e2999da633a971252af54c072ca0766e59ae9156fc7d339498efea3a1fc90a",
+          "path": "app/src/main/java/cloud/samlo/couch/kevbox/buttons/ButtonRow.kt",
+          "fingerprint": "5540c5342dd4ffa5d876bd9892f6f913140ef12cc32452a6396c9319e32296ef"
+        },
+        {
+          "item_id": "5a9d6103b8c01208b3cf3dd24f2af5388bf6d4e22b1856d397b0604a5c52724d",
+          "path": "app/src/main/java/cloud/samlo/couch/kevbox/restart/ForceStop.kt",
+          "fingerprint": "4c0a03b306dadeea5f56a7ffd23f5ea5bc6ac29caf4deeefd7186b6ba74a857d"
+        },
+        {
+          "item_id": "5ef7be3326e87d7a57b095982c38bad223bbf019907372a4e67e0413c4353252",
+          "path": "app/src/main/java/cloud/samlo/couch/index/AppList.kt",
+          "fingerprint": "c5ab4b669e127850c6ffadb0124376299f095d563405fc9b44c9a83d73a65f41"
+        },
+        {
+          "item_id": "6ad72844de7b977e0221e07ace9bcac8a0c379969358cc54794fcb576b7676b5",
+          "path": "app/src/main/java/cloud/samlo/couch/kevbox/restart/AppRestart.kt",
+          "fingerprint": "0f1b92067007efb0031a506ebe16e37ed4fd22771e05e3bdf8da6720df99c939"
+        },
+        {
+          "item_id": "8c8636466859d3ca5126079953b1491dd58f1c636160b3b34042489846f9f650",
+          "path": "app/src/main/java/cloud/samlo/couch/kevbox/menu/AppMenu.kt",
+          "fingerprint": "131e3b41bd139f5714cac44ce18f44b6ce3dc376e439e204e2ba99aedd16d5f0"
+        },
+        {
+          "item_id": "95be94cd553b402ec8c174dbabe40d21af73879c1ad0e88dd8b9ec1d00174edd",
+          "path": "app/src/main/java/cloud/samlo/couch/index/IndexTokens.kt",
+          "fingerprint": "3909ac7c9146731b5e9106ae62fa3a28ff3ccf6875eed25d2a2eb72f829f8147"
+        },
+        {
+          "item_id": "c266190f33bb4abcf8bf9e86b29a62d2e20b529dc275ef5389fdd7aae8f02c7e",
+          "path": "app/src/main/java/cloud/samlo/couch/index/IndexScreen.kt",
+          "fingerprint": "e49b4cac50fb01031dc021d3fe880be1de37e2fa97925e90c4afe1e75158ce9a"
+        },
+        {
+          "item_id": "de648454253fe5f3903c73415dab79812f9c85a5f29a8c36301fbecd400dc517",
+          "path": "app/src/main/res/xml/home_accessibility.xml",
+          "fingerprint": "69c0409569c3de07f6a999d136a521d7e3bd4c8a27239346cd97ad337bee03fa"
+        }
+      ],
+      "completed": [
+        {
+          "item_id": "19bee805388df03a45378edeec6dd98b951dcb1187eabd181c1ba34311ee1363",
+          "path": "app/src/main/java/cloud/samlo/couch/HomeAccessibilityService.kt",
+          "fingerprint": "c135f7fa1952f69ded4f03a94f9165ab821b7aae2b4ea35bebf8d6b82a7d2504"
+        },
+        {
+          "item_id": "1d6f602a7959bf4c41cd98401cacf8bb9de7244e228dd41d0c44ddb4c46c32dd",
+          "path": "app/src/main/java/cloud/samlo/couch/index/IndexTopBar.kt",
+          "fingerprint": "867ef27f4317aaf6f9b75e1407dfa4beeda061d942b52a56a3989fcaac3bc305"
+        },
+        {
+          "item_id": "3b193318e7643f9cad9c6ebbcddf4a6ff091a5432bdf1c910ad9b7da4c4d0a54",
+          "path": "app/src/main/java/cloud/samlo/couch/kevbox/keys/VolumeRepeat.kt",
+          "fingerprint": "99fcb6232a821b446a44c545453e3f1597d5a0eeef7a3612bd76a438e16a60c4"
+        },
+        {
+          "item_id": "55e2999da633a971252af54c072ca0766e59ae9156fc7d339498efea3a1fc90a",
+          "path": "app/src/main/java/cloud/samlo/couch/kevbox/buttons/ButtonRow.kt",
+          "fingerprint": "5540c5342dd4ffa5d876bd9892f6f913140ef12cc32452a6396c9319e32296ef"
+        },
+        {
+          "item_id": "5a9d6103b8c01208b3cf3dd24f2af5388bf6d4e22b1856d397b0604a5c52724d",
+          "path": "app/src/main/java/cloud/samlo/couch/kevbox/restart/ForceStop.kt",
+          "fingerprint": "4c0a03b306dadeea5f56a7ffd23f5ea5bc6ac29caf4deeefd7186b6ba74a857d"
+        },
+        {
+          "item_id": "5ef7be3326e87d7a57b095982c38bad223bbf019907372a4e67e0413c4353252",
+          "path": "app/src/main/java/cloud/samlo/couch/index/AppList.kt",
+          "fingerprint": "c5ab4b669e127850c6ffadb0124376299f095d563405fc9b44c9a83d73a65f41"
+        },
+        {
+          "item_id": "6ad72844de7b977e0221e07ace9bcac8a0c379969358cc54794fcb576b7676b5",
+          "path": "app/src/main/java/cloud/samlo/couch/kevbox/restart/AppRestart.kt",
+          "fingerprint": "0f1b92067007efb0031a506ebe16e37ed4fd22771e05e3bdf8da6720df99c939"
+        },
+        {
+          "item_id": "8c8636466859d3ca5126079953b1491dd58f1c636160b3b34042489846f9f650",
+          "path": "app/src/main/java/cloud/samlo/couch/kevbox/menu/AppMenu.kt",
+          "fingerprint": "131e3b41bd139f5714cac44ce18f44b6ce3dc376e439e204e2ba99aedd16d5f0"
+        },
+        {
+          "item_id": "95be94cd553b402ec8c174dbabe40d21af73879c1ad0e88dd8b9ec1d00174edd",
+          "path": "app/src/main/java/cloud/samlo/couch/index/IndexTokens.kt",
+          "fingerprint": "3909ac7c9146731b5e9106ae62fa3a28ff3ccf6875eed25d2a2eb72f829f8147"
+        },
+        {
+          "item_id": "c266190f33bb4abcf8bf9e86b29a62d2e20b529dc275ef5389fdd7aae8f02c7e",
+          "path": "app/src/main/java/cloud/samlo/couch/index/IndexScreen.kt",
+          "fingerprint": "e49b4cac50fb01031dc021d3fe880be1de37e2fa97925e90c4afe1e75158ce9a"
+        },
+        {
+          "item_id": "de648454253fe5f3903c73415dab79812f9c85a5f29a8c36301fbecd400dc517",
+          "path": "app/src/main/res/xml/home_accessibility.xml",
+          "fingerprint": "69c0409569c3de07f6a999d136a521d7e3bd4c8a27239346cd97ad337bee03fa"
+        }
+      ],
+      "reused": [],
+      "failed": [],
+      "waived": []
+    },
+    "elapsed_ms": 83529
+  }
+}
