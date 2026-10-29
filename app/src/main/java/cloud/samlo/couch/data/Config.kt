@@ -5,11 +5,11 @@ import cloud.samlo.couch.kevbox.keys.KeyEntry
 import cloud.samlo.couch.kevbox.keys.KeyMap
 import java.io.File
 
-/**
- * Everything the user can customise, stored in `Android/data/cloud.samlo.couch/files/config.json`
- * so it can also be edited or backed up over ADB. Custom images go next to it in
- * `icons/<key>.png` (an app's package name, or an input's slug such as `hdmi4`) and
- * `wallpaper.jpg`.
+    /**
+ * Everything the user can customise, stored in the app's external files folder
+ * (`Android/data/tv.kevbox.home/files/config.json`, `tv.kevbox.home.dev` for debug builds) so
+ * the provision file and ADB can edit or back it up. Custom images go next to it in
+ * `icons/<package>.png` and `wallpaper.jpg`.
  */
 class Config {
     // Apps and inputs
@@ -77,12 +77,19 @@ class Config {
     /** Changes whenever a setting that affects how cards are drawn changes. */
     val look: String get() = "$cardSize|$accent|$showLabels"
 
-    /** Written atomically so a half-written file never wipes the user's setup. */
+    /**
+     * Written atomically so a half-written file never wipes the user's setup. Home, the drawer's
+     * thread and the provision loader all save; the lock keeps two of them from writing the one
+     * temp file at once and mixing their bytes.
+     */
     fun save(dir: File?) {
         dir ?: return
-        val tmp = File(dir, "config.json.tmp")
-        tmp.writeText(toJson())
-        tmp.renameTo(File(dir, FILE))
+        val text = toJson()
+        synchronized(SAVE_LOCK) {
+            val tmp = File(dir, "$FILE.tmp")
+            tmp.writeText(text)
+            tmp.renameTo(File(dir, FILE))
+        }
     }
 
     fun toJson(): String = ConfigJson.encode(this).toString(2)
@@ -97,18 +104,13 @@ class Config {
         /** Defaults stay generic: the user pins their own apps. */
         val DEFAULT_PINNED = emptyList<String>()
 
-        // Vendor extras that are noise on a home screen. Reachable again by un-hiding them.
-        val DEFAULT_HIDDEN = setOf(
-            "com.sony.dtv.promos",
-            "com.sony.dtv.sonyselect",
-            "com.sony.dtv.seeds.iot",
-            "com.sony.dtv.notificationcenter",
-            "com.sony.dtv.smartmediaapp",
-            "com.sony.dtv.timers",
-            "com.sony.dtv.osat.music",
-            "com.sony.dtv.tvx",
-            "com.spocky.projengmenu",
-        )
+        /**
+         * Empty: KevBox Home has no screen to un-hide an app, so only the provision file's
+         * `hidden` hides one.
+         */
+        val DEFAULT_HIDDEN = emptySet<String>()
+
+        private val SAVE_LOCK = Any()
 
         fun load(dir: File?): Config {
             val text = try {

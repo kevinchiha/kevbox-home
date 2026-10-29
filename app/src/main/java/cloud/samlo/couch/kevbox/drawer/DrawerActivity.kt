@@ -62,6 +62,32 @@ class DrawerActivity : Activity() {
         }
     }
 
+    /**
+     * Back on screen after Home or an app covered it: the provision file or a Move in Home may
+     * have changed the column since, so reload rather than show the old grid and the old menu.
+     */
+    override fun onRestart() {
+        super.onRestart()
+        apps.load()
+    }
+
+    /** Home, an app or a dialog took the screen: put a held app down and keep its place, as Home's Move does. */
+    override fun onWindowFocusChanged(hasFocus: Boolean) {
+        super.onWindowFocusChanged(hasFocus)
+        if (!hasFocus) putDown()
+    }
+
+    /** Also on stop, for a drawer left without a focus change reaching it first. */
+    override fun onStop() {
+        putDown()
+        super.onStop()
+    }
+
+    private fun putDown() {
+        pressed = 0
+        grid.endMove()?.let(apps::save)
+    }
+
     override fun onDestroy() {
         unregisterReceiver(packages)
         apps.shutdown()
@@ -109,7 +135,7 @@ class DrawerActivity : Activity() {
     }
 
     companion object {
-        /** Main thread only: task 8 sets it, Home reads it, so no locking. */
+        /** Main thread only: the drawer's Back sets it, Home reads it, so no locking. */
         private var closedByBack = false
 
         fun intent(context: Context): Intent =
