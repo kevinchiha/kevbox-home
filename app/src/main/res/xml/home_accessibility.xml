@@ -2,7 +2,8 @@
 <!-- Window changes come only from the stock launchers (Home takeover) and the TV settings app
      (Restart app presses Force stop there, reading the settings window from the window list,
      hence flagRetrieveInteractiveWindows). Key events are filtered so the remote's app buttons
-     open KevBox's apps; a key with no mapping passes through untouched, so holding volume ramps. -->
+     open KevBox's apps. Filtering keys stops Android's own repeat for a held key, so
+     VolumeRepeat produces the volume ramp while the volume presses still pass on. -->
 <accessibility-service xmlns:android="http://schemas.android.com/apk/res/android"
     android:accessibilityEventTypes="typeWindowStateChanged"
     android:accessibilityFeedbackType="feedbackGeneric"

@@ -8,6 +8,7 @@ package cloud.samlo.couch.kevbox.keys
  *
  * A volume key-down with repeat count 0 calls [adjust] after [timeoutMs], then every [delayMs],
  * until that key's up. A down of the other volume key moves the repeat to it, as Android does.
+ * The ramp also ends [limitMs] after the down, so a lost key-up cannot leave it running.
  * Plain values in, so it runs in JVM tests.
  */
 class VolumeRepeat(
@@ -16,9 +17,13 @@ class VolumeRepeat(
     private val adjust: (raise: Boolean) -> Unit,
     private val timeoutMs: Long,
     private val delayMs: Long,
+    private val limitMs: Long = 15_000L,
 ) {
     /** The volume keycode being held, or null when no repeat is running. */
     private var held: Int? = null
+
+    /** When the next [tick] runs, counted from the down. */
+    private var elapsed = 0L
 
     /** [action] is KeyEvent.ACTION_DOWN or ACTION_UP. Never consumes anything: there is no return value. */
     fun onKey(action: Int, keyCode: Int, repeatCount: Int) {
@@ -28,6 +33,7 @@ class VolumeRepeat(
             DOWN -> if (repeatCount == 0) {
                 cancel()
                 held = keyCode
+                elapsed = timeoutMs
                 schedule(timeoutMs, ::tick)
             }
             UP -> if (keyCode == held) stop()
@@ -43,7 +49,8 @@ class VolumeRepeat(
     private fun tick() {
         val key = held ?: return
         adjust(key == VOLUME_UP)
-        schedule(delayMs, ::tick)
+        elapsed += delayMs
+        if (elapsed > limitMs) stop() else schedule(delayMs, ::tick)
     }
 
     private companion object {

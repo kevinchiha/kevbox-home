@@ -33,9 +33,11 @@ class HomeAccessibilityService : AccessibilityService() {
     private val volumeHandler = Handler(Looper.getMainLooper())
 
     override fun onKeyEvent(event: KeyEvent): Boolean {
-        // Watches volume keys only and never consumes them, so the system still takes each press.
-        volume?.onKey(event.action, event.keyCode, event.repeatCount)
-        return filter?.onKey(event.action, event.keyCode, event.scanCode, event.repeatCount) ?: false
+        val consumed = filter?.onKey(event.action, event.keyCode, event.scanCode, event.repeatCount) ?: false
+        // A volume key the provisioned map takes never starts a ramp. Every up still reaches the
+        // ramp, so one that started can always stop; it only acts on the held key's up.
+        if (!consumed || event.action == KeyEvent.ACTION_UP) volume?.onKey(event.action, event.keyCode, event.repeatCount)
+        return consumed
     }
 
     override fun onAccessibilityEvent(event: AccessibilityEvent) {

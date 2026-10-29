@@ -103,6 +103,19 @@ class VolumeRepeatTest {
     }
 
     @Test
+    fun rampStopsAtTheLimitWithoutAnUp() {
+        down(UP)
+        advance(LIMIT * 2)
+        // One adjust at the timeout, then one per delay up to the limit, then nothing.
+        assertEquals(((LIMIT - TIMEOUT) / DELAY + 1).toInt(), adjusts.size)
+        assertTrue(pending.isEmpty())
+        // A new press starts a fresh ramp.
+        down(UP)
+        advance(TIMEOUT)
+        assertEquals(((LIMIT - TIMEOUT) / DELAY + 2).toInt(), adjusts.size)
+    }
+
+    @Test
     fun nonVolumeKeysNeverSchedule() {
         for (key in listOf(KeyEvent.KEYCODE_DPAD_CENTER, KeyEvent.KEYCODE_HOME, KeyEvent.KEYCODE_VOLUME_MUTE, 193)) {
             down(key)
@@ -119,5 +132,7 @@ class VolumeRepeatTest {
         const val DOWN = KeyEvent.KEYCODE_VOLUME_DOWN
         const val TIMEOUT = 500L
         const val DELAY = 50L
+        /** VolumeRepeat's default limit: the test's repeat leaves it unset. */
+        const val LIMIT = 15_000L
     }
 }
