@@ -13,7 +13,28 @@ upstream merges stay small. What it changes, and why, is in
 
 `README.md`, `docs/godmode.md`, `docs/sync.md`, `docs/configuration.md` and `docs/.vitepress/` are
 Couch's own pages and describe Couch, including features this fork removed (Godmode, Other TVs, the
-Rows layout, HDMI inputs). Leave them as they are: editing them only adds merge conflicts.
+Rows layout, HDMI inputs). Leave them as they are: editing them only adds merge conflicts. The one
+exception is the short KevBox Home section at the top of `README.md`, which the licence asks for.
+
+## Licence
+
+Couch is licensed under the GNU GPL v3 since samuelloranger/couch#25; its `LICENSE` sits at the repo
+root, unedited. KevBox Home is a modified Couch, so it is GPL v3 too. That puts three duties on this
+repo:
+
+- Source for every released APK. Whoever gets a KevBox Home APK must be able to get the exact
+  source it was built from. That source is the commit on `main`, in the public repository
+  [kevinchiha/kevbox-home](https://github.com/kevinchiha/kevbox-home), that the release was built
+  from. Release tags stay on this computer (see below), so the commit is what identifies the
+  source. `release.sh` refuses a HEAD that is not already on `origin/main`, so every release's
+  commit is pushed before the APK exists. Never rewrite or force-push `main`: a released APK would
+  lose its source. Making the repository public is Kevin's step; agents never change its
+  visibility.
+- Keep the notices. Leave `LICENSE` and Couch's copyright and licence notices in place. Settings ›
+  About and the top of `README.md` say that KevBox Home is a modified Couch under GPL v3, with no
+  warranty, and where its source is.
+- Mark the changes. `UPSTREAM-SYNC.md` says what this fork changed in each Couch file and why.
+  Keep it current (see "Editing a Couch file").
 
 ## How Couch updates come in
 
@@ -30,7 +51,8 @@ file the merge touched.
 
 After merging Couch X.Y.Z, the next release tag is `vX.Y.Z.1` (spec AC-39). The build takes the
 highest `v*` tag reachable from HEAD, counting Couch's three-part tags as `.0`, and sets
-`versionCode` = X·1,000,000 + Y·10,000 + Z·100 + N. As of 2026-10-29 that is `0.8.1.0`, code 80100.
+`versionCode` = X·1,000,000 + Y·10,000 + Z·100 + N. With Couch 0.9.0 merged, an untagged build says
+`0.9.0.0` (code 90000), and the next release is `0.9.0.1`, code 90001.
 
 - The `versionCode` in tv.kevbox.dev's `home/version.json` must be the APK's own AC-39 code, or
   boxes never see the update as newer. KevBox Home ignores that file's `profiles`.
@@ -38,12 +60,13 @@ highest `v*` tag reachable from HEAD, counting Couch's three-part tags as `.0`, 
   and `ci.yml` still gates the APK at Couch's 614400 bytes (AC-35's limit is 1048576). Both run only
   on a push, so never push a tag: release.sh keeps its tags local. Leave the workflows unedited.
 
-The fork point is upstream commit `76be0dc` (Couch v0.8.1). As of 2026-10-29, upstream has moved
-on to `6d5638c` ("Let the remote's Input and Settings buttons open Couch's panels"), which is not
-merged. It changes about 52 files. Of the files it changes, these are also changed here, so expect
-conflicts there: `HomeAccessibilityService.kt`, `AndroidManifest.xml`, `build.gradle.kts`,
-`Config.kt`, `ConfigJson.kt`, `MainPage.kt`, `SettingsActivity.kt`, `strings.xml` and
-`adb/AdbShell.kt` (deleted here). Merge it only when Kevin asks.
+On 2026-10-29 upstream was merged up to `d3dd5ea` (Couch 0.9.0, "docs: license Couch under GPL v3
+(#25)"); the fork had started from `76be0dc` (Couch v0.8.1). That merge left out Couch's remote relay
+(#18: `remote/`, `bravia/`, `settings/RemotePage.kt`, `app/src/main/native/relay.c` and its build),
+because it needs Couch's ADB client, which this fork removed, and an ADB port left open on every
+member's box. Each of its files has a row in `UPSTREAM-SYNC.md`'s Deleted section. Whether to bring
+it in is queued for Kevin's review; until he decides, keep it out when a later merge touches it.
+Merge newer upstream commits only when Kevin asks.
 
 ## Commands
 

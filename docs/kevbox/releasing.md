@@ -1,23 +1,25 @@
 # Releasing KevBox Home
 
-Couch still has no licence (samuelloranger/couch#17); on 2026-10-29 Kevin chose to release KevBox
-Home anyway and accepted that risk. Tags never leave this computer: Couch's release workflow would
-publish any pushed `v*` tag on GitHub. This page describes the release and the emulator check (AC-15
+Couch and KevBox Home are licensed under the GNU GPL v3 (samuelloranger/couch#25), so whoever gets
+a KevBox Home APK must be able to get its exact source: the commit on `main` the release was built
+from (the Licence section of `AGENTS.md`). Tags never leave this computer: Couch's release workflow
+would publish any pushed `v*` tag on GitHub. This page describes the release and the emulator check (AC-15
 of `docs/superpowers/quick/2026-10-29-silent-update.md`) that proves the silent update works.
 
 ## What Kevin runs
 
 ```sh
-./release.sh 0.8.1.1 "What changed, in one line"
-./release.sh --no-silent 0.8.1.2 "A release every box asks about first"
+./release.sh 0.9.0.1 "What changed, in one line"
+./release.sh --no-silent 0.9.0.2 "A release every box asks about first"
 ```
 
 The version is `A.B.C.K`: `A.B.C` is the Couch release this build is on (the newest `vX.Y.Z` tag
 in `main`), `K` counts KevBox Home's releases on it from 1. The versionCode is
-A·1,000,000 + B·10,000 + C·100 + K, so `0.8.1.1` is 80101. Notes are optional and default to
+A·1,000,000 + B·10,000 + C·100 + K, so `0.9.0.1` is 90001. Notes are optional and default to
 "KevBox Home <version>".
 
-Run it from a clean `main` that is already pushed: the script never pushes anything.
+Run it from a clean `main` that is already pushed: the script never pushes anything, and the pushed
+commit is the release's published source.
 
 ## What the script checks first
 
@@ -58,9 +60,9 @@ Each check runs before anything changes. A failed one prints why and exits with 
 
    ```json
    {
-     "versionCode": 80101,
-     "versionName": "0.8.1.1",
-     "url": "https://tv.kevbox.dev/home/kevbox-home-0.8.1.1.apk",
+     "versionCode": 90001,
+     "versionName": "0.9.0.1",
+     "url": "https://tv.kevbox.dev/home/kevbox-home-0.9.0.1.apk",
      "sha256": "<64 hex characters, from the host>",
      "notes": "What changed, in one line",
      "silent": {"after": 1793000000000, "earlyUsers": []}

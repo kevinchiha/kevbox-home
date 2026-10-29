@@ -197,6 +197,7 @@
     <string name="kevbox_move_hint">Use the arrows to move it, then press OK</string>
     <string name="kevbox_restart_by_hand">Press Force stop, then reopen the app</string>
     <string name="kevbox_about_checking">Checking tv.kevbox.dev for a new version…</string>
+    <string name="kevbox_licence">KevBox Home is a modified version of Couch by Samuel Loranger, licensed under the GNU GPL v3, with no warranty. Source: https://github.com/kevinchiha/kevbox-home</string>
     <!-- Customize: the rail of groups and the permissions page -->
     <plurals name="setup_missing">
         <item quantity="one">%d permission is off</item>

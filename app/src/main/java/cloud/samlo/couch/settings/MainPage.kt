@@ -209,12 +209,14 @@ class MainPage(private val ctx: SettingsContext) : SettingsPage {
     /**
      * The installed version; OK installs a newer one. KevBox: the help says it is checking until
      * [checkNow] answers, and OK installs even while Home's Update chip waits for the silent update.
+     * The GPL v3 notice and the source address follow the update line.
      */
     private fun about() {
         val fetcher = Fetcher(ctx.activity)
         val update = UpdateCheck(ctx.activity, fetcher).pending(config)
-        val help = update?.let { ctx.activity.getString(R.string.about_update, it.version) }
+        val status = update?.let { ctx.activity.getString(R.string.about_update, it.version) }
             ?: ctx.str(if (checking) R.string.kevbox_about_checking else R.string.about_help)
+        val help = status + "\n\n" + ctx.str(R.string.kevbox_licence)
         o.link(ctx.str(R.string.about), help, { Versions.installed(ctx.activity) }) {
             if (update == null || Installer.running) return@link
             Toast.makeText(ctx.activity, R.string.update_downloading, Toast.LENGTH_SHORT).show()
