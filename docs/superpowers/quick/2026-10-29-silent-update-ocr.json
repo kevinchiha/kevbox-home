@@ -1,0 +1,442 @@
+{
+  "status": "complete",
+  "llm": {
+    "provider": "anthropic",
+    "model": "claude-opus-5-5"
+  },
+  "message": "Review complete: 6 finding(s) across 26 selected item(s).",
+  "summary": {
+    "files_reviewed": 26,
+    "comments": 6,
+    "total_tokens": 1262560,
+    "input_tokens": 1224904,
+    "output_tokens": 37656,
+    "cache_read_tokens": 875831,
+    "cache_write_tokens": 348969,
+    "elapsed": "2m35s"
+  },
+  "tool_calls": {
+    "total": 46,
+    "by_tool": {
+      "code_comment": 5,
+      "code_search": 14,
+      "file_find": 1,
+      "file_read": 21,
+      "file_read_diff": 5
+    },
+    "failure": 0,
+    "failure_by_tool": {},
+    "failure_details": []
+  },
+  "comments": [
+    {
+      "path": "app/src/main/java/cloud/samlo/couch/update/Release.kt",
+      "content": "`JSONObject(text)` parses the stored text a second time, right after `VersionJson.read(text)` has parsed it. It can't throw today because `read` already accepted the text. Still, `deserialize` now relies on `read` never becoming more lenient than `JSONObject` (any `JSONException` here would escape, even though the doc says broken text gives null). Also, the Int/Long `when` is a copy of the one in `VersionJson`/`SilentBlock`. Suggestion: parse once, then pass the `JSONObject` to a `read(json)` overload, or pull out a shared `wholeLong(raw: Any?): Long?` helper. Alternatively, wrap this in `runCatching` so the never-throws promise holds.",
+      "suggestion_code": "val afterBox = runCatching { JSONObject(text).opt(AFTER_BOX) }.getOrNull().let { raw -\u003e\n    when (raw) {\n        is Int -\u003e raw.toLong()\n        is Long -\u003e raw\n        else -\u003e null\n    }\n}",
+      "existing_code": "            val afterBox = when (val raw = JSONObject(text).opt(AFTER_BOX)) {",
+      "start_line": 48,
+      "end_line": 48,
+      "category": "maintainability",
+      "severity": "low"
+    },
+    {
+      "path": "release.sh",
+      "content": "`kevbox-home-latest.apk` is repointed before the host SHA-256 is compared with `local_sha`. If they don't match, the script dies with \"version.json was not written\", but the stable `latest` link already points at the bytes that failed the check. The link is moved too early in two more cases:\n- the `version.json` write fails afterwards;\n- `cleanup` deletes the tag.\n\nIn all three cases, anything that provisions from `latest` (see docs/kevbox/releasing.md) gets an APK that was never verified or published. Fix: run only install and `sha256sum` in this ssh call. Move the `ln -sfn` into a separate step after the SHA check, ideally in the same ssh call that moves `version.json` into place.",
+      "suggestion_code": "host_sha=\"$(ssh -p \"$ssh_port\" \"$ssh_alias\" \"set -e; sudo install -D -m 644 /tmp/$remote_apk $remote_root/$remote_apk; rm -f /tmp/$remote_apk; cd $remote_root \u0026\u0026 sha256sum $remote_apk\" \\\n  | awk -v f=\"$remote_apk\" '$2 == f { print $1 }')\" || die \"...\"\n# ... after the SHA check, and together with the version.json mv:\n#   sudo ln -sfn $remote_apk $remote_root/kevbox-home-latest.apk",
+      "existing_code": "host_sha=\"$(ssh -p \"$ssh_port\" \"$ssh_alias\" \"set -e; sudo install -D -m 644 /tmp/$remote_apk $remote_root/$remote_apk; rm -f /tmp/$remote_apk; sudo ln -sfn $remote_apk $remote_root/kevbox-home-latest.apk; cd $remote_root \u0026\u0026 sha256sum $remote_apk\" \\",
+      "start_line": 215,
+      "end_line": 215,
+      "category": "bug",
+      "severity": "medium"
+    },
+    {
+      "path": "app/src/main/java/cloud/samlo/couch/data/Fetcher.kt",
+      "content": "`Date` is treated as \"server now\", but that only holds for an uncached response. If tv.kevbox.dev sits behind a CDN or proxy cache, a cached `version.json` keeps the origin's `Date` and adds an `Age` header. The `Date` can then be minutes or hours in the past. `SilentRules.afterOnBox` turns that staleness into a positive gap, so `silentAfterBoxMs` lands later than intended. That delays the silent install and also shifts the 72 h safety-net window. Add the `Age` header (in seconds) to the `Date` value when it is present. Alternatively, send `Cache-Control: no-cache` on this request.",
+      "existing_code": "                val date = try {\n                    connection.getHeaderFieldDate(\"Date\", 0L)\n                } catch (e: Exception) {\n                    0L\n                }",
+      "start_line": 33,
+      "end_line": 37,
+      "category": "bug",
+      "severity": "medium"
+    },
+    {
+      "path": "app/src/main/java/cloud/samlo/couch/kevbox/update/SilentState.kt",
+      "content": "`Snapshot` only holds data, so making it a `data class` would give it value `equals` and a readable `toString`. That helps JVM tests that compare `SilentState.of(...)` results and makes log output clearer.",
+      "suggestion_code": "    data class Snapshot(val attempts: Int, val refused: Boolean)",
+      "existing_code": "    class Snapshot(val attempts: Int, val refused: Boolean)",
+      "start_line": 16,
+      "end_line": 16,
+      "category": "maintainability",
+      "severity": "low"
+    },
+    {
+      "path": "app/src/main/java/cloud/samlo/couch/kevbox/update/SilentInstall.kt",
+      "content": "Mixing `+` concatenation with a template here is hard to read. Using a single template would be clearer.",
+      "suggestion_code": "        Log.i(TAG, line(\"result\", code, result.name, \"status $status${message?.let { \" $it\" }.orEmpty()}\"))",
+      "existing_code": "        Log.i(TAG, line(\"result\", code, result.name, \"status $status\" + (message?.let { \" $it\" } ?: \"\")))",
+      "start_line": 232,
+      "end_line": 232,
+      "category": "style",
+      "severity": "low"
+    },
+    {
+      "path": "app/src/main/java/cloud/samlo/couch/kevbox/update/SilentState.kt",
+      "content": "`markRefused` always overwrites the stored code. If a late `STATUS_PENDING_USER_ACTION` result comes in for an older versionCode X after the state has already moved to a newer Y, this saves `(X, 0, refused)`. That wipes Y's attempt count, and the next run sees Y as fresh with 3 attempts again. The same applies to `recordAttempt`. Only write when the stored code matches, or when the incoming code is newer.",
+      "suggestion_code": "    fun markRefused(context: Context, versionCode: Long) = synchronized(this) {\n        val stored = Prefs.of(context).getLong(CODE, -1L)\n        if (stored \u003e versionCode) return@synchronized\n        save(context, versionCode, snapshot(context, versionCode).attempts, true)\n    }",
+      "existing_code": "    fun markRefused(context: Context, versionCode: Long) = synchronized(this) {\n        save(context, versionCode, snapshot(context, versionCode).attempts, true)\n    }",
+      "start_line": 33,
+      "end_line": 35,
+      "category": "bug",
+      "severity": "low"
+    }
+  ],
+  "groups": [
+    {
+      "label": "Kevbox silent update job, rules, state, and visibility",
+      "files": [
+        "app/src/main/java/cloud/samlo/couch/kevbox/update/SilentInstall.kt",
+        "app/src/main/java/cloud/samlo/couch/kevbox/update/SilentJob.kt",
+        "app/src/main/java/cloud/samlo/couch/kevbox/update/SilentRules.kt",
+        "app/src/main/java/cloud/samlo/couch/kevbox/update/SilentState.kt",
+        "app/src/main/java/cloud/samlo/couch/kevbox/update/VersionJson.kt",
+        "app/src/main/java/cloud/samlo/couch/kevbox/update/Visibility.kt"
+      ]
+    },
+    {
+      "label": "Core updater: installer, release model, update check",
+      "files": [
+        "app/src/main/java/cloud/samlo/couch/update/InstallResult.kt",
+        "app/src/main/java/cloud/samlo/couch/update/Installer.kt",
+        "app/src/main/java/cloud/samlo/couch/update/Release.kt",
+        "app/src/main/java/cloud/samlo/couch/update/UpdateCheck.kt",
+        "app/src/main/java/cloud/samlo/couch/data/Fetcher.kt"
+      ]
+    },
+    {
+      "label": "App wiring: manifest, build config, activities, and service",
+      "files": [
+        "app/build.gradle.kts",
+        "app/src/main/AndroidManifest.xml",
+        "app/src/main/java/cloud/samlo/couch/HomeAccessibilityService.kt",
+        "app/src/main/java/cloud/samlo/couch/MainActivity.kt",
+        "app/src/main/java/cloud/samlo/couch/kevbox/drawer/DrawerActivity.kt"
+      ]
+    },
+    {
+      "label": "Settings and home UI for updates",
+      "files": [
+        "app/src/main/java/cloud/samlo/couch/home/HomeScreen.kt",
+        "app/src/main/java/cloud/samlo/couch/settings/MainPage.kt",
+        "app/src/main/java/cloud/samlo/couch/settings/SettingsActivity.kt",
+        "app/src/main/res/values/strings.xml"
+      ]
+    },
+    {
+      "label": "Release tooling and provisioning scripts",
+      "files": [
+        "kevbox/provision/provision-test.sh",
+        "kevbox/provision/provision.sh",
+        "kevbox/release/.gitignore",
+        "kevbox/release/release_manifest.py",
+        "kevbox/release/updater_test_server.py",
+        "release.sh"
+      ]
+    }
+  ],
+  "session_id": "cdda532e-25df-4369-a47b-e34ed600dc92",
+  "manifest": {
+    "schema_version": "ocr.run-manifest/v1",
+    "run_id": "cdda532e-25df-4369-a47b-e34ed600dc92",
+    "operation": "review",
+    "terminal_state": "complete",
+    "repository": {
+      "identity_sha256": "0ffbddada3a18bb79301393e0fb4f5d70356a2ba979408b8ab1408c455adf725"
+    },
+    "input": {
+      "mode": "range",
+      "requested_from": "main",
+      "requested_head": "quick/silent-update",
+      "resolved_base": "216930279bf5439de06967db5309a756311e4027",
+      "resolved_head": "69faf1a18eeac0170cc491d0fdc1156429d67595",
+      "exact_range": "216930279bf5439de06967db5309a756311e4027..69faf1a18eeac0170cc491d0fdc1156429d67595",
+      "source_artifact_sha256": "8917804a92b39cfd07e11ad2b87aac331469034b13a1733e9accb6c04c03f3a3"
+    },
+    "execution": {
+      "ocr_version": "v1.13.3",
+      "provider": "anthropic",
+      "model": "claude-opus-5-5",
+      "configured_concurrency": 8,
+      "rule_config_sha256": "7bdde30da0c66ee5643876474d879e4d72b8803bf0501749f82291f5b9b2b87a",
+      "runtime_config_sha256": "93c1bae68fa824e3eb9a388b389d2b0cdbe98c00e45b7638e3c4d5afe2dbc39f"
+    },
+    "coverage": {
+      "selected": [
+        {
+          "item_id": "013519c9155e5d63ebb6eb8c3bbc0e4f2326e7af740ad9495e55ff6c59e45ce4",
+          "path": "app/src/main/java/cloud/samlo/couch/kevbox/drawer/DrawerActivity.kt",
+          "fingerprint": "584dfc4a68e68c42dec57b9b7f6f2f8b22084346735cc827a0828f6ac362c4fc"
+        },
+        {
+          "item_id": "0180725183880b7fdc918381ee961cc63eb95c71cfad60d509afd689cad7b338",
+          "path": "app/src/main/java/cloud/samlo/couch/settings/MainPage.kt",
+          "fingerprint": "e6a422cbe1739db8cc3c2852db1aa69f90df74f3f7f7e784fdc907b8e8fdadfe"
+        },
+        {
+          "item_id": "01a80919bafdd55496ebaec62a3809e752cae157f47f678f8ff33b4007a999e6",
+          "path": "app/src/main/java/cloud/samlo/couch/kevbox/update/SilentJob.kt",
+          "fingerprint": "472ff9bf13938bea9dd933d97a960d6b27f9bf7ea033c9c3066f0b59437d7ff7"
+        },
+        {
+          "item_id": "01c37f5098247329b85dec93a9268d499d9882d8f328821ce05a089fc811a5b5",
+          "path": "app/src/main/java/cloud/samlo/couch/home/HomeScreen.kt",
+          "fingerprint": "d27d4e4aa638e9ec163bcf53e2525e4efd05127de37f73bd2c45f66882db519b"
+        },
+        {
+          "item_id": "0d71a5f60e6df01351fa8918fcb1f4326b10ff7c5bf19a2175608c8f304ec03e",
+          "path": "kevbox/release/.gitignore",
+          "fingerprint": "7e9579b081e18ff8fcd9e37677284383d5572aaa92d9a982ea6f073d282922dd"
+        },
+        {
+          "item_id": "19bee805388df03a45378edeec6dd98b951dcb1187eabd181c1ba34311ee1363",
+          "path": "app/src/main/java/cloud/samlo/couch/HomeAccessibilityService.kt",
+          "fingerprint": "f8b0a047fe8613bcf60d2a2ca1baa7c989d1ce99d20eb17cae2602674afde7ea"
+        },
+        {
+          "item_id": "25834d57b9a6caffd5356dd915d0dd0edff19956a421616098b7a61bc214d750",
+          "path": "app/src/main/java/cloud/samlo/couch/kevbox/update/SilentRules.kt",
+          "fingerprint": "09de174b9d677c3dde3c20d230a2ef0d95c3c3e90c5c4d99e2a5b2e2c92d3bcb"
+        },
+        {
+          "item_id": "3f9a3b5ddbb1d763d16e39a8c22bd083a370d99a2030e605d5515147bbf657e8",
+          "path": "app/src/main/java/cloud/samlo/couch/settings/SettingsActivity.kt",
+          "fingerprint": "1ae2aa2074615d5a8ce3bc5d8c93a4e7fff8b8a6cacbf2cb049bfe7143048695"
+        },
+        {
+          "item_id": "49997d5ba3d2b8b2848fd7e418c8057156bd6f3785e469c076d34bd0e11ad0cd",
+          "path": "kevbox/release/release_manifest.py",
+          "fingerprint": "28f175a9b8c53dd14bb08ce7179b544314aa6df8ab7bea2f9cfb63c114ef3387"
+        },
+        {
+          "item_id": "4cd33ed5f8cdbcbe104fd0aef7a573c0414b3afb1dbaed208a031e92860dfdc8",
+          "path": "app/src/main/java/cloud/samlo/couch/update/UpdateCheck.kt",
+          "fingerprint": "73b40d82a8f9dbcbda8c122de95ddddc4c7651e13a928a47aa753259072091d5"
+        },
+        {
+          "item_id": "5c40568672ad575e9d4cfa679fe06da83dcababe0d5e7ce557d53ce0203ec25e",
+          "path": "app/src/main/java/cloud/samlo/couch/MainActivity.kt",
+          "fingerprint": "b7c1d896a208d4fef31a56e28875cef7726c3f5020ad64e9e92a3a7104b1a763"
+        },
+        {
+          "item_id": "63c6718371bf4cafdd892b9705c79078b666e87df6ce830e707ba8654dbccdcc",
+          "path": "app/src/main/AndroidManifest.xml",
+          "fingerprint": "449cd9f6565d6ce1628767b4e655bbcce1bc841cd3eb6867595087a72406f724"
+        },
+        {
+          "item_id": "7270f9029a5bac71e7c59408768aceaaa4326967817a4befcc3cbf0f6e09d74c",
+          "path": "kevbox/release/updater_test_server.py",
+          "fingerprint": "1a9ad4402528e1ffa3bef3ab3e6e002901ab3cc56ee6b00040c226a1bb3e6fa7"
+        },
+        {
+          "item_id": "7886d3e1e5a95107e6da7d2824620e5aad7bf8471d5f2f3a6f660528ad015788",
+          "path": "app/src/main/java/cloud/samlo/couch/data/Fetcher.kt",
+          "fingerprint": "8ba2ea9b72d13ad42fb727379f14b8621bb0d649c83a12f4203cdc5d6ec7d4e3"
+        },
+        {
+          "item_id": "8db844197e21f180cf3fd7ef577cb65788bc3a7902c27f25e8716bcdc8f43db1",
+          "path": "app/src/main/res/values/strings.xml",
+          "fingerprint": "04acde8c7dd59807295572487c64bc3d35511846ac105604c5d05feac47f97a0"
+        },
+        {
+          "item_id": "8ebb8184b41d816fc187c03279a9de16e2d893e1b03a34edc0e288bfaff1b543",
+          "path": "release.sh",
+          "fingerprint": "a7cd42f82f11b6b2fe5e8a9e18a890baf5c722d848c448ea08ea6b197d461072"
+        },
+        {
+          "item_id": "a5343afc40918ec1b8eda239bca9597eca2af7e50b5e13152e7e46bde88a9dc2",
+          "path": "app/build.gradle.kts",
+          "fingerprint": "a5fcb99e5ebb0d225d7b045868e08050cfb772d4bcd145f3f64584a613583d34"
+        },
+        {
+          "item_id": "aa52494b1384d64c278a54a101a71e9ca11d4e1198eb1e5c4f5130b674054bcc",
+          "path": "app/src/main/java/cloud/samlo/couch/kevbox/update/SilentInstall.kt",
+          "fingerprint": "b572ccd0a5c81b37e3a9b869fb51c9787ddf43bcd08946f6542348146e77e90f"
+        },
+        {
+          "item_id": "b6512d3d3751df91993c0e17b631dabf2aa4a826dc08913689bd5274c4183a83",
+          "path": "app/src/main/java/cloud/samlo/couch/update/Installer.kt",
+          "fingerprint": "032bb69e9d533442835a215dee8fb1ef9db9094c1a9ff2054c8bedb238bde491"
+        },
+        {
+          "item_id": "bedada8c486431741de9b5a0b550c73c2978e0e1256c8e6ea74716f21ace6c8d",
+          "path": "app/src/main/java/cloud/samlo/couch/kevbox/update/VersionJson.kt",
+          "fingerprint": "d08de2300296acf6b118ba3a0ad9d6c2323e36bbafd4fac70c46f5e5d2b6594f"
+        },
+        {
+          "item_id": "d1edb0fc5ef7d108ee7f2b528dee6e957348d40716f7335dbedbbbb66de58c43",
+          "path": "app/src/main/java/cloud/samlo/couch/update/Release.kt",
+          "fingerprint": "1d1f4e9dad1074562bd0aec7ba3f05821e5a3ebe4538f47dafe0ebd86194254a"
+        },
+        {
+          "item_id": "e3b6b8a36a9a027cc422d6594ed56e989ef3cb4f38804f80b743de16893b2cb0",
+          "path": "app/src/main/java/cloud/samlo/couch/kevbox/update/Visibility.kt",
+          "fingerprint": "6db98b408fea689dda455d83dec90c55823b00af0b55063e89314191c6fedfaf"
+        },
+        {
+          "item_id": "e48ab2d0a7216052b738e0cf04f27f05db27004f043f8c6ffdde8f153cc9c105",
+          "path": "app/src/main/java/cloud/samlo/couch/update/InstallResult.kt",
+          "fingerprint": "7500ae7d7cf9b69e12ac1cb9d94d961201c792ffef1edb80336ffb564df69547"
+        },
+        {
+          "item_id": "eaf826cf90d452f0676f9fc950f61d88f6813634a9b8a62f3ccae3e5491a3a4e",
+          "path": "kevbox/provision/provision.sh",
+          "fingerprint": "8adfeaeede2c79b53626046803d384041fff7a22338e2f9ca323db31a633760f"
+        },
+        {
+          "item_id": "efccbf79c12c2570cea7f08de57bc7f75625d4ef94912f2d485be200e0e3188f",
+          "path": "app/src/main/java/cloud/samlo/couch/kevbox/update/SilentState.kt",
+          "fingerprint": "7c8772aa106e610df4c0a90ae0efbd9e51c7390af0e1f6ff0c89811e34e46a7a"
+        },
+        {
+          "item_id": "f10def230a301b7abf969b8190ae97e723f4401476f774a8e768b4ba5a679896",
+          "path": "kevbox/provision/provision-test.sh",
+          "fingerprint": "aaad456ead68db374b97648a468febea60e7f644b498641282e131ef1c91fa63"
+        }
+      ],
+      "completed": [
+        {
+          "item_id": "013519c9155e5d63ebb6eb8c3bbc0e4f2326e7af740ad9495e55ff6c59e45ce4",
+          "path": "app/src/main/java/cloud/samlo/couch/kevbox/drawer/DrawerActivity.kt",
+          "fingerprint": "584dfc4a68e68c42dec57b9b7f6f2f8b22084346735cc827a0828f6ac362c4fc"
+        },
+        {
+          "item_id": "0180725183880b7fdc918381ee961cc63eb95c71cfad60d509afd689cad7b338",
+          "path": "app/src/main/java/cloud/samlo/couch/settings/MainPage.kt",
+          "fingerprint": "e6a422cbe1739db8cc3c2852db1aa69f90df74f3f7f7e784fdc907b8e8fdadfe"
+        },
+        {
+          "item_id": "01a80919bafdd55496ebaec62a3809e752cae157f47f678f8ff33b4007a999e6",
+          "path": "app/src/main/java/cloud/samlo/couch/kevbox/update/SilentJob.kt",
+          "fingerprint": "472ff9bf13938bea9dd933d97a960d6b27f9bf7ea033c9c3066f0b59437d7ff7"
+        },
+        {
+          "item_id": "01c37f5098247329b85dec93a9268d499d9882d8f328821ce05a089fc811a5b5",
+          "path": "app/src/main/java/cloud/samlo/couch/home/HomeScreen.kt",
+          "fingerprint": "d27d4e4aa638e9ec163bcf53e2525e4efd05127de37f73bd2c45f66882db519b"
+        },
+        {
+          "item_id": "0d71a5f60e6df01351fa8918fcb1f4326b10ff7c5bf19a2175608c8f304ec03e",
+          "path": "kevbox/release/.gitignore",
+          "fingerprint": "7e9579b081e18ff8fcd9e37677284383d5572aaa92d9a982ea6f073d282922dd"
+        },
+        {
+          "item_id": "19bee805388df03a45378edeec6dd98b951dcb1187eabd181c1ba34311ee1363",
+          "path": "app/src/main/java/cloud/samlo/couch/HomeAccessibilityService.kt",
+          "fingerprint": "f8b0a047fe8613bcf60d2a2ca1baa7c989d1ce99d20eb17cae2602674afde7ea"
+        },
+        {
+          "item_id": "25834d57b9a6caffd5356dd915d0dd0edff19956a421616098b7a61bc214d750",
+          "path": "app/src/main/java/cloud/samlo/couch/kevbox/update/SilentRules.kt",
+          "fingerprint": "09de174b9d677c3dde3c20d230a2ef0d95c3c3e90c5c4d99e2a5b2e2c92d3bcb"
+        },
+        {
+          "item_id": "3f9a3b5ddbb1d763d16e39a8c22bd083a370d99a2030e605d5515147bbf657e8",
+          "path": "app/src/main/java/cloud/samlo/couch/settings/SettingsActivity.kt",
+          "fingerprint": "1ae2aa2074615d5a8ce3bc5d8c93a4e7fff8b8a6cacbf2cb049bfe7143048695"
+        },
+        {
+          "item_id": "49997d5ba3d2b8b2848fd7e418c8057156bd6f3785e469c076d34bd0e11ad0cd",
+          "path": "kevbox/release/release_manifest.py",
+          "fingerprint": "28f175a9b8c53dd14bb08ce7179b544314aa6df8ab7bea2f9cfb63c114ef3387"
+        },
+        {
+          "item_id": "4cd33ed5f8cdbcbe104fd0aef7a573c0414b3afb1dbaed208a031e92860dfdc8",
+          "path": "app/src/main/java/cloud/samlo/couch/update/UpdateCheck.kt",
+          "fingerprint": "73b40d82a8f9dbcbda8c122de95ddddc4c7651e13a928a47aa753259072091d5"
+        },
+        {
+          "item_id": "5c40568672ad575e9d4cfa679fe06da83dcababe0d5e7ce557d53ce0203ec25e",
+          "path": "app/src/main/java/cloud/samlo/couch/MainActivity.kt",
+          "fingerprint": "b7c1d896a208d4fef31a56e28875cef7726c3f5020ad64e9e92a3a7104b1a763"
+        },
+        {
+          "item_id": "63c6718371bf4cafdd892b9705c79078b666e87df6ce830e707ba8654dbccdcc",
+          "path": "app/src/main/AndroidManifest.xml",
+          "fingerprint": "449cd9f6565d6ce1628767b4e655bbcce1bc841cd3eb6867595087a72406f724"
+        },
+        {
+          "item_id": "7270f9029a5bac71e7c59408768aceaaa4326967817a4befcc3cbf0f6e09d74c",
+          "path": "kevbox/release/updater_test_server.py",
+          "fingerprint": "1a9ad4402528e1ffa3bef3ab3e6e002901ab3cc56ee6b00040c226a1bb3e6fa7"
+        },
+        {
+          "item_id": "7886d3e1e5a95107e6da7d2824620e5aad7bf8471d5f2f3a6f660528ad015788",
+          "path": "app/src/main/java/cloud/samlo/couch/data/Fetcher.kt",
+          "fingerprint": "8ba2ea9b72d13ad42fb727379f14b8621bb0d649c83a12f4203cdc5d6ec7d4e3"
+        },
+        {
+          "item_id": "8db844197e21f180cf3fd7ef577cb65788bc3a7902c27f25e8716bcdc8f43db1",
+          "path": "app/src/main/res/values/strings.xml",
+          "fingerprint": "04acde8c7dd59807295572487c64bc3d35511846ac105604c5d05feac47f97a0"
+        },
+        {
+          "item_id": "8ebb8184b41d816fc187c03279a9de16e2d893e1b03a34edc0e288bfaff1b543",
+          "path": "release.sh",
+          "fingerprint": "a7cd42f82f11b6b2fe5e8a9e18a890baf5c722d848c448ea08ea6b197d461072"
+        },
+        {
+          "item_id": "a5343afc40918ec1b8eda239bca9597eca2af7e50b5e13152e7e46bde88a9dc2",
+          "path": "app/build.gradle.kts",
+          "fingerprint": "a5fcb99e5ebb0d225d7b045868e08050cfb772d4bcd145f3f64584a613583d34"
+        },
+        {
+          "item_id": "aa52494b1384d64c278a54a101a71e9ca11d4e1198eb1e5c4f5130b674054bcc",
+          "path": "app/src/main/java/cloud/samlo/couch/kevbox/update/SilentInstall.kt",
+          "fingerprint": "b572ccd0a5c81b37e3a9b869fb51c9787ddf43bcd08946f6542348146e77e90f"
+        },
+        {
+          "item_id": "b6512d3d3751df91993c0e17b631dabf2aa4a826dc08913689bd5274c4183a83",
+          "path": "app/src/main/java/cloud/samlo/couch/update/Installer.kt",
+          "fingerprint": "032bb69e9d533442835a215dee8fb1ef9db9094c1a9ff2054c8bedb238bde491"
+        },
+        {
+          "item_id": "bedada8c486431741de9b5a0b550c73c2978e0e1256c8e6ea74716f21ace6c8d",
+          "path": "app/src/main/java/cloud/samlo/couch/kevbox/update/VersionJson.kt",
+          "fingerprint": "d08de2300296acf6b118ba3a0ad9d6c2323e36bbafd4fac70c46f5e5d2b6594f"
+        },
+        {
+          "item_id": "d1edb0fc5ef7d108ee7f2b528dee6e957348d40716f7335dbedbbbb66de58c43",
+          "path": "app/src/main/java/cloud/samlo/couch/update/Release.kt",
+          "fingerprint": "1d1f4e9dad1074562bd0aec7ba3f05821e5a3ebe4538f47dafe0ebd86194254a"
+        },
+        {
+          "item_id": "e3b6b8a36a9a027cc422d6594ed56e989ef3cb4f38804f80b743de16893b2cb0",
+          "path": "app/src/main/java/cloud/samlo/couch/kevbox/update/Visibility.kt",
+          "fingerprint": "6db98b408fea689dda455d83dec90c55823b00af0b55063e89314191c6fedfaf"
+        },
+        {
+          "item_id": "e48ab2d0a7216052b738e0cf04f27f05db27004f043f8c6ffdde8f153cc9c105",
+          "path": "app/src/main/java/cloud/samlo/couch/update/InstallResult.kt",
+          "fingerprint": "7500ae7d7cf9b69e12ac1cb9d94d961201c792ffef1edb80336ffb564df69547"
+        },
+        {
+          "item_id": "eaf826cf90d452f0676f9fc950f61d88f6813634a9b8a62f3ccae3e5491a3a4e",
+          "path": "kevbox/provision/provision.sh",
+          "fingerprint": "8adfeaeede2c79b53626046803d384041fff7a22338e2f9ca323db31a633760f"
+        },
+        {
+          "item_id": "efccbf79c12c2570cea7f08de57bc7f75625d4ef94912f2d485be200e0e3188f",
+          "path": "app/src/main/java/cloud/samlo/couch/kevbox/update/SilentState.kt",
+          "fingerprint": "7c8772aa106e610df4c0a90ae0efbd9e51c7390af0e1f6ff0c89811e34e46a7a"
+        },
+        {
+          "item_id": "f10def230a301b7abf969b8190ae97e723f4401476f774a8e768b4ba5a679896",
+          "path": "kevbox/provision/provision-test.sh",
+          "fingerprint": "aaad456ead68db374b97648a468febea60e7f644b498641282e131ef1c91fa63"
+        }
+      ],
+      "reused": [],
+      "failed": [],
+      "waived": []
+    },
+    "elapsed_ms": 155129
+  }
+}

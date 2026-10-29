@@ -210,3 +210,6 @@ Task 3: started at ddca11f
 Task 3: landed (no installer-of-record step: pm set-installer throws SecurityException from adb, and AOSP 12-14 skip the screen for a self-update; VersionJson.URL is now a val with RELEASE_URL; buildConfig on, debug-only KEVBOX_UPDATE_FEED; extra SilentJob.holdsPrompt; outside Files: strings.xml (kevbox_about_checking), docs/kevbox/provisioning.md; Installer.kt comments still claim installer-of-record, fixed in Task 4)
 Task 4: started at 17c58ef
 Task 4: landed (outside Files: kevbox/release/test_updater_test_server.py, kevbox/release/.gitignore, Installer.kt comments + its sync row; NuvioTV quick/silent-match-live is merged into kevbox)
+ocr: 6 comments (0 critical/high, 2 medium, 4 low dropped)
+ocr medium release.sh:215 (latest link repointed before the host SHA-256 check): fix, move the link after the check and the version.json write.
+ocr medium data/Fetcher.kt:33 (a cached response's Date is old): fix, send Cache-Control: no-cache on the version.json request (as KevBox TV does).
