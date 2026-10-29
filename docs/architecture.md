@@ -151,7 +151,8 @@ Holding OK on the Settings button opens it; a plain OK opens Android's settings.
 - It filters key events. `kevbox/keys/KeyFilter` matches each key against the `keys` map
   (`KeyMap.DEFAULT` until a provision file sets one), consumes a matched key's down, repeats and
   up, and acts once on the up: open a package, show Home, or open the drawer. A key with no match
-  passes through untouched, so holding volume still ramps. Home goes through the HOME intent
+  passes through untouched. Volume keys never reach the filter on a TV, and holding one moves
+  the volume a single step while the filter is on (see [decisions](decisions.md)). Home goes through the HOME intent
   (`KevBox.goHome`), never an explicit start. The stock-launcher catch below and `provision.sh`
   start it the same way, so none of KevBox's own starts builds a second Home.
 - It receives window-state events from the stock launchers' packages and opens KevBox Home when one

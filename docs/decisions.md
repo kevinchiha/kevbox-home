@@ -34,6 +34,19 @@ stock launcher flashing and the few-second delay Android imposes on activity sta
 HOME press. It was rejected: filtering keys routes every remote press through the app, and on the
 tested TV it stopped held keys from repeating, so holding volume no longer ramped.
 
+## KevBox: remote buttons over a held-volume ramp
+
+KevBox Home does filter keys, because the remote's app buttons must open KevBox's apps. On a TV
+that costs the held-volume ramp, and no app can win it back. Android 14's `KeyboardInterceptor`
+hands each volume key to `PhoneWindowManager.interceptKeyBeforeDispatching` before any service
+sees it; on a TV that call changes the volume one step and consumes the key. The key never
+reaches the service, and because it left the normal dispatch path, Android makes no repeats for
+it. Measured on the Xiaomi TV Box S (2026-10-29): the remote sends one down and one up for a
+3-second hold, the audio log shows one step from WindowManager, and nothing from KevBox Home.
+An attempt to ramp the volume from the service (`VolumeRepeat`) was removed for this reason.
+Kevin chose the buttons. tvQuickActions remaps buttons through the same kind of service, so it
+most likely had the same limit (not measured).
+
 ## Configuration in a JSON file
 
 Settings live in `config.json` in the app's external files directory rather than in private
