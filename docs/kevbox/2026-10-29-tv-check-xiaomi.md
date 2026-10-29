@@ -30,7 +30,7 @@ Note: setupwraith owns the saved Wi-Fi (cname=com.google.android.tungsten.setupw
 ## AC-12 More apps
 - PASS Down past the last app lands on More apps under a divider; OK opens the drawer.
 ## AC-14 / 18 / 20 top right
-- PASS default Wi-Fi, Bluetooth, Speed test, Settings, clock, weather (Beirut 25°). `["bluetooth","wifi"]` -> Bluetooth, Wi-Fi, Settings (added). Speed test hidden when speedtestApp is missing, back when restored.
+- PASS default Wi-Fi, Bluetooth, Speed test, Settings, clock, weather (<city> 25°). `["bluetooth","wifi"]` -> Bluetooth, Wi-Fi, Settings (added). Speed test hidden when speedtestApp is missing, back when restored.
 - PASS focused text "Wi-Fi · strong", "Bluetooth · 1 connected". Up from the first app lands on the first button.
 ## AC-19 Settings button
 - PASS cog + "Settings" always shown; hold OK opens Customize.

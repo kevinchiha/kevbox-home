@@ -49,7 +49,9 @@ max_bytes=1048576
 built_dir="app/build/outputs/apk/release"
 built_apk="$built_dir/app-release.apk"
 ssh_alias="${KEVBOX_SSH_ALIAS:-persovps}"
-ssh_port="${KEVBOX_SSH_PORT:-1788}"
+# The port comes from ~/.ssh/config for the alias; KEVBOX_SSH_PORT overrides it.
+ssh_port_args=(); scp_port_args=()
+if [[ -n "${KEVBOX_SSH_PORT:-}" ]]; then ssh_port_args=(-p "$KEVBOX_SSH_PORT"); scp_port_args=(-P "$KEVBOX_SSH_PORT"); fi
 web_root="${KEVBOX_HOME_WEB_ROOT:-/var/www/kevbox-tv/home}"
 usage="usage: ./release.sh [--no-silent] <A.B.C.K> [release notes...]"
 
@@ -217,12 +219,12 @@ local_sha="$(sha256sum "$built_apk" | cut -d' ' -f1)"
 remote_apk="kevbox-home-$version.apk"
 remote_root="$(printf '%q' "$web_root")"
 note "uploading $remote_apk to $ssh_alias:$web_root"
-scp -P "$ssh_port" "$built_apk" "$ssh_alias:/tmp/$remote_apk" || die "scp failed; version.json was not written"
+scp "${scp_port_args[@]}" "$built_apk" "$ssh_alias:/tmp/$remote_apk" || die "scp failed; version.json was not written"
 # From here the APK can be in the web root, so the EXIT trap keeps the tag.
 uploaded=1
 # Install it and print its SHA-256 computed ON THE HOST. kevbox-home-latest.apk moves only after
 # version.json is written.
-host_sha="$(ssh -p "$ssh_port" "$ssh_alias" "set -e; sudo install -D -m 644 /tmp/$remote_apk $remote_root/$remote_apk; rm -f /tmp/$remote_apk; cd $remote_root && sha256sum $remote_apk" \
+host_sha="$(ssh "${ssh_port_args[@]}" "$ssh_alias" "set -e; sudo install -D -m 644 /tmp/$remote_apk $remote_root/$remote_apk; rm -f /tmp/$remote_apk; cd $remote_root && sha256sum $remote_apk" \
   | awk -v f="$remote_apk" '$2 == f { print $1 }')" || die "installing $remote_apk on $ssh_alias failed; version.json was not written"
 [[ -n "$host_sha" ]] || die "no SHA-256 for $remote_apk from $ssh_alias; version.json was not written"
 [[ "$host_sha" == "$local_sha" ]] \
@@ -238,7 +240,7 @@ if (( no_silent == 1 )); then
 fi
 manifest="$(python3 "$manifest_py" render "${render_args[@]}")" || die "could not render version.json"
 # Written beside it, then moved, so a box never reads half a file. `$(...)` dropped the final newline.
-printf '%s\n' "$manifest" | ssh -p "$ssh_port" "$ssh_alias" \
+printf '%s\n' "$manifest" | ssh "${ssh_port_args[@]}" "$ssh_alias" \
   "sudo tee $remote_root/version.json.new >/dev/null && sudo chmod 644 $remote_root/version.json.new && sudo mv -f $remote_root/version.json.new $remote_root/version.json" \
   || die "writing version.json on $ssh_alias failed"
 published=1
@@ -246,7 +248,7 @@ published=1
 # --- The stable link, last: it names a release only once version.json does. ---
 
 link_cmd="sudo ln -sfn $remote_apk $remote_root/kevbox-home-latest.apk"
-ssh -p "$ssh_port" "$ssh_alias" "$link_cmd" \
+ssh "${ssh_port_args[@]}" "$ssh_alias" "$link_cmd" \
   || die "version.json is written, so the release is out, but kevbox-home-latest.apk was not repointed; run on $ssh_alias: $link_cmd"
 
 if (( no_silent == 1 )); then

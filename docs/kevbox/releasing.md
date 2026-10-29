@@ -81,7 +81,7 @@ Where it uploads, overridable through the environment:
 | Variable | Default |
 |---|---|
 | `KEVBOX_SSH_ALIAS` | `persovps` |
-| `KEVBOX_SSH_PORT` | `1788` |
+| `KEVBOX_SSH_PORT` | none: the port comes from `~/.ssh/config` for the alias |
 | `KEVBOX_HOME_WEB_ROOT` | `/var/www/kevbox-tv/home` (served as `https://tv.kevbox.dev/home/`) |
 
 The base URL is fixed at `https://tv.kevbox.dev/home`: boxes only trust APKs from
