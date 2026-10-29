@@ -29,6 +29,14 @@ internal fun pickSettingsRoot(windows: List<WindowRoot>, active: WindowRoot?, se
         ?: active?.takeIf { it.pkg in settings })?.root
 
 /**
+ * What a timeout line says the last poll saw: [picked], the package of the settings root it used,
+ * when there was one; else the packages of every window root and of [active], comma-joined, with
+ * `?` for a root that has no package; `none` only when it saw no window at all.
+ */
+internal fun seenText(picked: String?, windows: List<WindowRoot>, active: WindowRoot?): String =
+    picked ?: (windows + listOfNotNull(active)).map { it.pkg ?: "?" }.distinct().joinToString(",").ifEmpty { "none" }
+
+/**
  * One Restart app run, inside the accessibility service: on the details page AppRestart opened,
  * press the settings app's own Force stop and its OK, then relaunch [pkg].
  *
@@ -46,8 +54,8 @@ class ForceStop(private val service: AccessibilityService, private val pkg: Stri
     private var deadline = 0L
     private var strings: Strings? = null
     private var cancelled = false
-    /** The package of the root the last poll used, or null: a timeout names it. */
-    private var seen: String? = null
+    /** What the last poll saw ([seenText]): a timeout names it. */
+    private var seen = "none"
     private val tick = Runnable { poll() }
 
     /** The settings app's own Force stop and OK texts; null where its resource name did not resolve. */
@@ -117,7 +125,7 @@ class ForceStop(private val service: AccessibilityService, private val pkg: Stri
 
     /**
      * The settings app's root node, read from every window on screen ([pickSettingsRoot]); null
-     * while no settings window is there. Records its package for the timeout line.
+     * while no settings window is there. Records what it saw for the timeout line.
      */
     private fun root(): AccessibilityNodeInfo? {
         val windows = service.windows.mapNotNull { window ->
@@ -125,7 +133,7 @@ class ForceStop(private val service: AccessibilityService, private val pkg: Stri
         }
         val active = service.rootInActiveWindow?.let { WindowRoot(it.packageName?.toString(), true, it) }
         val root = pickSettingsRoot(windows, active, SETTINGS) as AccessibilityNodeInfo?
-        seen = root?.packageName?.toString()
+        seen = seenText(root?.packageName?.toString(), windows, active)
         return root
     }
 
@@ -142,7 +150,7 @@ class ForceStop(private val service: AccessibilityService, private val pkg: Stri
     }
 
     private fun fail() {
-        Log.w(KevBox.TAG, "restart $pkg: step $step timed out, saw ${seen ?: "none"}")
+        Log.w(KevBox.TAG, "restart $pkg: step $step timed out, saw $seen")
         Toast.makeText(service, R.string.kevbox_restart_by_hand, Toast.LENGTH_LONG).show()
     }
 

@@ -2,6 +2,7 @@ package cloud.samlo.couch.kevbox
 
 import cloud.samlo.couch.kevbox.restart.WindowRoot
 import cloud.samlo.couch.kevbox.restart.pickSettingsRoot
+import cloud.samlo.couch.kevbox.restart.seenText
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Test
@@ -52,5 +53,28 @@ class SettingsWindowTest {
         assertNull(pickSettingsRoot(windows, active, settings))
         assertNull(pickSettingsRoot(emptyList(), null, settings))
         assertNull(pickSettingsRoot(emptyList(), WindowRoot(null, true, "no package"), settings))
+    }
+
+    @Test
+    fun timeoutNamesThePickedSettingsPackage() {
+        val windows = listOf(WindowRoot("com.google.android.apps.tv.launcherx", true, "launcher"))
+        assertEquals("com.android.tv.settings", seenText("com.android.tv.settings", windows, null))
+    }
+
+    @Test
+    fun timeoutWithoutSettingsNamesEveryWindowSeen() {
+        val windows = listOf(
+            WindowRoot("com.google.android.apps.tv.launcherx", true, "launcher"),
+            WindowRoot("com.android.systemui", false, "bar"),
+            WindowRoot(null, false, "no package"),
+        )
+        val active = WindowRoot("com.google.android.apps.tv.launcherx", true, "launcher")
+        assertEquals("com.google.android.apps.tv.launcherx,com.android.systemui,?", seenText(null, windows, active))
+        assertEquals("com.netflix.ninja", seenText(null, emptyList(), WindowRoot("com.netflix.ninja", true, "active")))
+    }
+
+    @Test
+    fun timeoutSaysNoneOnlyWhenNothingWasSeen() {
+        assertEquals("none", seenText(null, emptyList(), null))
     }
 }
