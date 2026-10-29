@@ -221,3 +221,7 @@ re-review minor SilentJob.kt:86 (a leave during any run queued nothing): fixed, 
 re-review minor Fetcher.kt:43 (huge Age): fixed, capped at 86400 s.
 re-review minor releasing.md:44 and Fetched KDoc: fixed.
 final review: done
+emulator (kevbox_tv, Android 16, adb -s emulator-5554; AC-15):
+- run 1: 90000001 installed with plain adb install (installer of record null), appops granted. 12:48 periodic: IN_USE (Home on screen). Pressed HOME at 12:49 (TV Settings is a side panel and does not stop Home; leave with HOME instead). 13:05 trigger=left versionCode=90000002 outcome=COMMITTED, then trigger=result outcome=INSTALLED (status 0). versionCode=90000002, no packageinstaller activity. Passed.
+- run 2: feed with no silent block (90000003). Forced periodic run: trigger=periodic versionCode=90000003 outcome=NO_BLOCK; versionCode stays 90000002; the Update chip shows "Update test-90000003". Passed.
+- restored the normal debug build with install -r -d.
