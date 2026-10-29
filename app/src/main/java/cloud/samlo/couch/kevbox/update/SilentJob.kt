@@ -79,10 +79,11 @@ class SilentJob : JobService() {
 
         /**
          * Queues the run 15 min after Home left the screen. Same job id each time, so a newer stop
-         * replaces the pending run and the 15 minutes count from it.
+         * replaces the pending run and the 15 minutes count from it. Does nothing while a run is in
+         * progress, since scheduling the same id would stop it mid-install.
          */
         fun afterLeaving(context: Context) {
-            if (Build.VERSION.SDK_INT < SilentRules.MIN_SDK) return
+            if (!SilentRules.queuesAfterLeaving(Build.VERSION.SDK_INT, running.get())) return
             try {
                 val scheduler = context.getSystemService(JobScheduler::class.java) ?: return
                 val job = JobInfo.Builder(AFTER_LEAVING_ID, component(context))

@@ -107,6 +107,13 @@ object SilentRules {
         return boxNowMs < after || boxNowMs - after < SAFETY_NET_MS
     }
 
+    /**
+     * Whether leaving Home queues the run 15 min later. Not below Android 12, and not while a silent
+     * run is in progress: JobScheduler stops a running job when a job with its id is scheduled again,
+     * and the run in progress already reads the latest state.
+     */
+    fun queuesAfterLeaving(sdk: Int, running: Boolean): Boolean = sdk >= MIN_SDK && !running
+
     /** The block's `after` on the box clock; the block's own when the release was stored without one. */
     private fun afterBox(release: Release): Long? {
         val block = release.silent ?: return null

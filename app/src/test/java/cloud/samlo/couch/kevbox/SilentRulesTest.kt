@@ -175,6 +175,15 @@ class SilentRulesTest {
         assertFalse(holds(state = SilentState.Snapshot(3, false)))
     }
 
+    // AC-9: leaving Home never re-schedules over a run in progress
+
+    @Test
+    fun `leaving Home queues a run only on Android 12+ with no run in progress`() {
+        assertTrue(SilentRules.queuesAfterLeaving(31, running = false))
+        assertFalse(SilentRules.queuesAfterLeaving(31, running = true))
+        assertFalse(SilentRules.queuesAfterLeaving(30, running = false))
+    }
+
     // AC-3: attempts and refusals belong to one versionCode
 
     @Test
