@@ -1,1 +1,0 @@
-- fix-1: done. No Interfaces deviations. Drawer Move-ends-on-stop has no JVM test: Move state lives in DrawerGrid's views (not on this lane's file list), and GridMove/DrawerApps hold no Move state.
