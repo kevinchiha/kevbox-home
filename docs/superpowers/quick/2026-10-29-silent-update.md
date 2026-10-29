@@ -166,7 +166,7 @@ own Options rows win)
 `fun sinceKeyMs(): Long?`. The count of started activities and the key time live in memory; the
 elapsedRealtime of the last start and last stop are also kept in SharedPreferences, so a job in a
 fresh process knows Home has been hidden since the last stop (a stored time above now means a
-reboot happened and counts as hidden since boot). `SilentJob.schedule(context)` and
+reboot happened and counts as hidden since boot). `SilentRules.quiet` treats a null time as "just now", so `sinceKeyMs()` returns the time since the activity started when no key was pressed in this process, and `sinceHiddenMs(context)` returns the time since boot when no stop is stored. `SilentJob.schedule(context)` and
 `SilentJob.afterLeaving(context)`.
 **Does:**
 - Each activity reports start/stop and key-downs to `Visibility`; the accessibility service
@@ -199,3 +199,4 @@ new `docs/kevbox/releasing.md`, AGENTS.md (one line pointing at it)
 ## Build log
 baseline: gradle, size (385083 B) and provision-test green; the python step fails (kevbox/release does not exist until Task 4)
 Task 1: started at d084f1f
+Task 1: landed (extra public helpers SilentRules.afterOnBox / onBoxClock, Release.withSilentAfterBox; SilentBlock is a data class in VersionJson.kt; eligible() does not compare versionCodes, callers use UpdateCheck.pending(); Task 3 Interfaces updated for null times)
