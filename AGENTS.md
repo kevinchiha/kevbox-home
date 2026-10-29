@@ -18,9 +18,13 @@ Rows layout, HDMI inputs). Leave them as they are: editing them only adds merge 
 ## Licence first
 
 Couch has no licence yet. Kevin asked for one in samuelloranger/couch#17. Until Couch carries a
-licence, nothing from this repo is pushed, published, released or installed on a member's box.
-Kevin's own TCL test TV and his own Xiaomi box are the only devices it runs on. If the author
-refuses, the repo is deleted.
+licence:
+
+- Commits go only to `origin`, the **private** repo kevinchiha/kevbox-home (Kevin's call,
+  2026-10-29). Never make it public, never push to `upstream`, and never push a tag (see below).
+- Nothing is published, released or installed on a member's box. Kevin's own TCL test TV and his
+  own Xiaomi box are the only devices it runs on.
+- If the author refuses, the repo is deleted, the private GitHub copy included.
 
 ## How Couch updates come in
 
