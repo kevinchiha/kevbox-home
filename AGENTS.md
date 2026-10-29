@@ -57,7 +57,7 @@ highest `v*` tag reachable from HEAD, counting Couch's three-part tags as `.0`, 
 - The `versionCode` in tv.kevbox.dev's `home/version.json` must be the APK's own AC-39 code, or
   boxes never see the update as newer. KevBox Home ignores that file's `profiles`.
 - Couch's `.github/workflows/release.yml` publishes a signed GitHub release for any pushed `v*` tag,
-  and `ci.yml` still gates the APK at Couch's 614400 bytes (AC-35's limit is 1048576). Both run only
+  and `ci.yml` still gates the APK at Couch's 716800 bytes (AC-35's limit is 1048576). Both run only
   on a push, so never push a tag: release.sh keeps its tags local. Leave the workflows unedited.
 
 On 2026-10-29 upstream was merged up to `d3dd5ea` (Couch 0.9.0, "docs: license Couch under GPL v3

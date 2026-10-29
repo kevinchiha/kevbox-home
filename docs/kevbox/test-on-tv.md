@@ -49,8 +49,7 @@ Do these on both devices, in this order, before any key or Home check.
   A debug build installed beside the release one is provisioned with
   `KEVBOX_HOME_PACKAGE=tv.kevbox.home.dev` in front of that line, and its checks use
   `tv.kevbox.home.dev` in place of `tv.kevbox.home` in every path and command below.
-- [ ] The Xiaomi box is Kevin's own box, never a member's. Nothing here goes on a member's box until
-  Couch carries a licence.
+- [ ] The Xiaomi box is Kevin's own box, never a member's. Run these checks on test devices only.
 
 [Provisioning a box](provisioning.md) explains the file and every line the script can print.
 
@@ -58,11 +57,13 @@ Do these on both devices, in this order, before any key or Home check.
 
 - [ ] `adb shell pm list packages tv.kevbox.home` prints `package:tv.kevbox.home`.
 - [ ] `adb shell dumpsys package tv.kevbox.home | grep -E 'versionCode|versionName'` shows
-  `versionName=0.8.1.0` and `versionCode=80100` (until a `v0.8.1.N` tag exists).
+  `versionName=0.9.0.0` and `versionCode=90000` for an untagged build. A release build tagged
+  `v0.9.0.N` shows `0.9.0.N` and 90000 + N, so `v0.9.0.1` gives `90001`.
 - [ ] On the TV, Settings > Apps lists the app as "KevBox Home".
 - [ ] Android's accessibility settings list "KevBox Home", switched
   on by the script.
-- [ ] Nowhere in KevBox Home's own screens does the word "Couch" appear.
+- [ ] Nowhere in KevBox Home's own screens does the word "Couch" appear, except in the licence line
+  under Settings > About, which names Couch on purpose (GPL v3 asks for it).
 - [ ] Optional, with a debug build installed too: `adb shell pm list packages tv.kevbox.home`
   prints both `package:tv.kevbox.home` and `package:tv.kevbox.home.dev`.
 

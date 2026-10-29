@@ -4,6 +4,7 @@ KevBox Home is the home screen on KevBox members' Xiaomi TV Box S. It is a modif
 [Couch](https://github.com/samuelloranger/couch) by Samuel Loranger and, like Couch, is licensed
 under the GNU General Public License v3 (see [LICENSE](LICENSE)), with no warranty.
 [UPSTREAM-SYNC.md](UPSTREAM-SYNC.md) lists every Couch file this fork changed or deleted, and why.
+Modified from Couch since 2026-10-28; last merged with Couch 0.9.0 (`d3dd5ea`) on 2026-10-29.
 
 Releases come from [tv.kevbox.dev/home](https://tv.kevbox.dev/home/), and the boxes update
 themselves from there. Each release is built from a commit on this repository's `main`.
