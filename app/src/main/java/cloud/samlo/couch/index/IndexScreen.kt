@@ -17,6 +17,7 @@ import cloud.samlo.couch.kevbox.home.AppTiles
 import cloud.samlo.couch.kevbox.home.Backdrop
 import cloud.samlo.couch.kevbox.home.MoveMode
 import cloud.samlo.couch.kevbox.home.TopFocus
+import cloud.samlo.couch.kevbox.home.WatchLine
 import cloud.samlo.couch.ui.Card
 import cloud.samlo.couch.ui.FocusRow
 import cloud.samlo.couch.ui.Tokens
@@ -336,7 +337,7 @@ class IndexScreen(
     private fun showProgram(entry: IndexEntry, program: Tile?) {
         val tile = program ?: entry.programs.firstOrNull()
         if (tile != null) {
-            spotlight.showProgram(entry.app.label, tile)
+            spotlight.showProgram(entry.app.label, tile, WatchLine.of(activity, tile.watch))
         } else {
             spotlight.showApp(entry.app.label, null)
         }

@@ -15,6 +15,10 @@
     <string name="settings">Settings</string>
     <string name="now_playing_paused">Paused</string>
     <string name="channel_recommended">Recommended</string>
+    <string name="program_season_episode">S%1$s E%2$s</string>
+    <string name="program_episode">E%1$s</string>
+    <string name="program_remaining_hours">%1$d h %2$s left</string>
+    <string name="program_remaining_minutes">%1$d min left</string>
 
     <!-- Index layout -->
     <string name="index_minutes">%1$d min</string>

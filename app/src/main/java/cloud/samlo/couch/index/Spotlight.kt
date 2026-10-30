@@ -24,6 +24,8 @@ class Spotlight(context: Context) : LinearLayout(context) {
         maxLines = 1
         letterSpacing = -0.02f
     }
+    /** KevBox: season, episode and time left, under the title. */
+    private val watch = text(15f, 600, IndexTokens.description, 1.2f).apply { maxLines = 1 }
     // KevBox: the block has the screen's left side to itself, down to the tiles, so a synopsis
     // gets seven lines instead of Couch's two.
     private val description = text(15f, 400, IndexTokens.description, 1.45f).apply { maxLines = 7 }
@@ -40,17 +42,20 @@ class Spotlight(context: Context) : LinearLayout(context) {
         orientation = VERTICAL
         addView(source, source.stack(LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT)))
         addView(title, title.stack(LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT), top = context.dp(6)))
+        addView(watch, watch.stack(LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT), top = context.dp(8)))
         addView(description, description.stack(LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT), top = context.dp(10)))
         addView(progress, LayoutParams(context.dp(PROGRESS_W), context.dp(3)).apply { topMargin = context.dp(12) })
     }
 
-    /** A program from [sourceLabel]'s channel. */
-    fun showProgram(sourceLabel: String, tile: Tile) {
+    /** A program from [sourceLabel]'s channel; [watchLine] (KevBox) under its title when set. */
+    fun showProgram(sourceLabel: String, tile: Tile, watchLine: String? = null) {
         source.visibility = VISIBLE
         // The accent can change in Customize after this view was built.
         source.setTextColor(Tokens.accent)
         source.text = sourceLabel
         title.text = tile.label
+        watch.text = watchLine.orEmpty()
+        watch.visibility = if (watchLine == null) GONE else VISIBLE
         setDescription(tile.description?.takeIf { it.isNotBlank() && it != tile.label })
         if (tile.progress >= 0f) {
             progress.visibility = VISIBLE
@@ -67,6 +72,7 @@ class Spotlight(context: Context) : LinearLayout(context) {
         // Invisible, not gone, so the title stays where a program's title sits.
         source.visibility = INVISIBLE
         title.text = name
+        watch.visibility = GONE
         setDescription(note)
         progress.visibility = GONE
     }
@@ -74,7 +80,7 @@ class Spotlight(context: Context) : LinearLayout(context) {
     /** How far the shown text runs, in pixels, at most the block's width: Home starts the rows just past it. */
     fun textWidth(): Int {
         var widest = if (progress.visibility == VISIBLE) context.dp(PROGRESS_W).toFloat() else 0f
-        for (line in listOf(source, title, description)) {
+        for (line in listOf(source, title, watch, description)) {
             if (line.visibility == VISIBLE) widest = maxOf(widest, line.paint.measureText(line.text.toString()))
         }
         return minOf(widest.toInt() + 1, context.dp(IndexTokens.TEXT_W))
