@@ -19,8 +19,8 @@ import java.io.File
 
 /**
  * One app in the list: its launch [app] tile (banner rendered at card size, shown where the
- * channel would be when it has none), a small rounded [icon], the rows of cards Home shows for it
- * (`kevbox.home.HomeRows` picks them from its channels), and its last week of use.
+ * channel would be when it has none), a rounded [icon] at tile size, the rows of cards Home shows
+ * for it (`kevbox.home.HomeRows` picks them from its channels), and its last week of use.
  */
 class IndexEntry(
     val app: Tile,
@@ -71,7 +71,7 @@ object IndexBuilder {
         return IndexData(entries, usage != null)
     }
 
-    /** The app's launcher icon as a small rounded square, rendered once per app version. */
+    /** The app's launcher icon as a rounded square at the tile's icon size, rendered once per app version. */
     private fun icon(context: Context, pkg: String): Bitmap? {
         val pm = context.packageManager
         val updated = try {
@@ -79,10 +79,10 @@ object IndexBuilder {
         } catch (e: PackageManager.NameNotFoundException) {
             return null
         }
-        val size = context.dp(IndexTokens.ICON)
+        val size = context.dp(IndexTokens.TILE_ICON)
         return Banners.memoized("icon|$pkg|$size|$updated") {
             try {
-                Banners.render(pm.getApplicationIcon(pkg), size, size, context.dpf(AppRow.ICON_RADIUS))
+                Banners.render(pm.getApplicationIcon(pkg), size, size, context.dpf(IndexTokens.TILE_ICON_RADIUS))
             } catch (e: PackageManager.NameNotFoundException) {
                 null
             }

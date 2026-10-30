@@ -31,6 +31,17 @@ object IndexTokens {
     const val ROWS_SHOWN = 7
     const val ICON = 29
 
+    // KevBox's app tiles along the bottom: the launcher icon on a rounded plate. The band runs from
+    // TILES_Y to TILES_Y + TILE_H; TILE_GAP is the visible space between two plates.
+    const val TILES_Y = 380
+    const val TILE_W = 120
+    const val TILE_H = 80
+    const val TILE_GAP = 16
+    const val TILE_RADIUS = 12f
+    const val TILE_ICON = 56
+    /** The icon's own corners; [IndexData]'s icon is rendered at [TILE_ICON] with these. */
+    const val TILE_ICON_RADIUS = 12f
+
     // The right column: the program's text, its channel's cards, then the week.
     const val COLUMN_X = 380
     const val COLUMN_W = 556
