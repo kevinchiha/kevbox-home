@@ -52,7 +52,7 @@ class Config {
     var drawer: List<String> = emptyList()
     /** Never in the column or the drawer. */
     var hidden: Set<String> = emptySet()
-    /** Empty means KevBoxConfig.BUTTONS. */
+    /** Empty means KevBoxConfig.DEFAULT_BUTTONS. */
     var buttons: List<String> = emptyList()
     var speedtestApp: String = KevBoxConfig.DEFAULT_SPEEDTEST
     var keys: List<KeyEntry> = KeyMap.DEFAULT

@@ -66,7 +66,7 @@ class KevBoxConfigTest {
 
     @Test
     fun buttonsFallBackToTheDefaultAndKeepSettings() {
-        assertEquals(KevBoxConfig.BUTTONS, KevBoxConfig.buttonsOf(Config()))
+        assertEquals(listOf("wifi", "vpn", "speedtest", "settings"), KevBoxConfig.buttonsOf(Config()))
         assertEquals(listOf("vpn", "wifi", "settings"), KevBoxConfig.buttonsOf(Config().apply { buttons = listOf("vpn", "wifi") }))
         assertEquals(listOf("settings", "vpn"), KevBoxConfig.buttonsOf(Config().apply { buttons = listOf("settings", "vpn") }))
     }

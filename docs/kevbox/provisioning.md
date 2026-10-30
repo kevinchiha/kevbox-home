@@ -54,7 +54,7 @@ Home ignores unknown keys.
 | `apps` | array of strings | Package names for the left column, in order. Blanks and repeats are dropped. | Not an array, or any element not a string: keeps the saved column. |
 | `drawer` | array of strings | Package names shown first in the drawer, in order. Blanks and repeats are dropped. | Same as `apps`. |
 | `hidden` | array of strings | Package names never shown in the left column or the drawer, even when `apps` lists them. | Same as `apps`. |
-| `buttons` | array of strings | Top-right buttons in order, from `wifi`, `vpn`, `bluetooth`, `speedtest`, `settings`. Other values and repeats are dropped. An empty array means all five in that order. A list without `settings` gets it at the end, so Customize stays reachable. | Not an array, or any element not a string: keeps the saved buttons. |
+| `buttons` | array of strings | Top-right buttons in order, from `wifi`, `vpn`, `bluetooth`, `speedtest`, `settings`. Other values and repeats are dropped. An empty array means the default: `wifi`, `vpn`, `speedtest`, `settings` (no Bluetooth since 0.9.0.3; name `bluetooth` to show it). A list without `settings` gets it at the end, so Customize stays reachable. | Not an array, or any element not a string: keeps the saved buttons. |
 | `speedtestApp` | string | The package the Speed test button opens. Default `com.rma.netpulsetv`. | Not a string, or blank: keeps the saved app. |
 | `keys` | array of objects | The remote map, described below. An empty array turns every mapping off. | Not an array: keeps the saved map. |
 | `wallpaper` | string | `daily` (Bing photo of the day), `reddit`, `gradient` or `custom`. | Any other value or type: keeps the saved wallpaper. |

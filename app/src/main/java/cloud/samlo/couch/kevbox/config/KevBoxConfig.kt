@@ -12,8 +12,10 @@ import org.json.JSONObject
  * treats a broken Couch value; it never throws the whole file away.
  */
 object KevBoxConfig {
-    /** Every top-right button, in the default order. */
+    /** Every top-right button a setup file may name. */
     val BUTTONS: List<String> = listOf("wifi", "vpn", "bluetooth", "speedtest", "settings")
+    /** The buttons when none are saved: all but Bluetooth, which Kevin dropped on 2026-10-30. */
+    val DEFAULT_BUTTONS: List<String> = BUTTONS - "bluetooth"
     const val DEFAULT_SPEEDTEST = "com.rma.netpulsetv"
     val WALLPAPERS: Set<String> = setOf("daily", "reddit", "gradient", "custom")
 
@@ -47,11 +49,11 @@ object KevBoxConfig {
         .put("keys", KeyMap.toJson(c.keys))
 
     /**
-     * The buttons to show: [Config.buttons], or [BUTTONS] when it is empty. A list without
+     * The buttons to show: [Config.buttons], or [DEFAULT_BUTTONS] when it is empty. A list without
      * Settings gets it at the end, so Customize stays reachable from the remote.
      */
     fun buttonsOf(c: Config): List<String> = when {
-        c.buttons.isEmpty() -> BUTTONS
+        c.buttons.isEmpty() -> DEFAULT_BUTTONS
         SETTINGS in c.buttons -> c.buttons
         else -> c.buttons + SETTINGS
     }

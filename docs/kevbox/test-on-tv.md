@@ -206,8 +206,8 @@ the text `not json`.
 
 ## AC-14: the top right
 
-- [ ] Top right shows, in order: Wi-Fi, VPN (only while a VPN is on), Bluetooth, Speed test,
-  Settings, then the clock and the weather.
+- [ ] Top right shows, in order: Wi-Fi, VPN (only while a VPN is on), Speed test, Settings, then
+  the clock and the weather. No Bluetooth button by default.
 - [ ] Push `{"buttons": ["bluetooth", "wifi"]}` and press Home: the row is Bluetooth, Wi-Fi, then
   Settings (always added). Push `{"buttons": []}`: the default order is back.
 - [ ] While an update waits (a newer `version.json` on tv.kevbox.dev), `Update <versionName>` shows
@@ -224,11 +224,14 @@ the text `not json`.
 
 - [ ] With no VPN, no VPN item shows.
 - [ ] Connect Surfshark (from the drawer): within 2 s a shield and "VPN" appear between Wi-Fi and
-  Bluetooth.
+  Speed test.
 - [ ] Left and Right along the buttons skip it; it never takes focus.
 - [ ] Disconnect Surfshark: the indicator is gone within 2 s.
 
 ## AC-17: the Bluetooth button
+
+Off by default. Push `{"buttons": ["wifi", "bluetooth", "speedtest"]}` first, and
+`{"buttons": []}` after.
 
 - [ ] With Bluetooth off: the off icon. On with nothing connected: the on icon. With devices
   connected (the Xiaomi box's own remote counts): the icon with their number.
@@ -237,7 +240,7 @@ the text `not json`.
 
 ## AC-18: the Speed test button
 
-- [ ] Focus More apps, press Up, then Right twice: focus is on Speed test. OK opens Speedtest
+- [ ] Focus More apps, press Up, then Right once: focus is on Speed test. OK opens Speedtest
   (`com.rma.netpulsetv`).
 - [ ] Push `{"speedtestApp": "com.example.missing"}` and press Home: the Speed test button is gone.
   Push `{"speedtestApp": "com.rma.netpulsetv"}` to bring it back.
@@ -253,8 +256,8 @@ the text `not json`.
 - [ ] Focus More apps and press Up: focus lands on the first button (Wi-Fi). Focused, it widens
   to its text: "Wi-Fi · strong" (level 3 or 4), "Wi-Fi · fair" (2), "Wi-Fi · weak" (0 or 1),
   "Ethernet" or "No network".
-- [ ] Right to Bluetooth: "Bluetooth · off", "Bluetooth · on" or "Bluetooth · 2 connected" (with the
-  real count). Right to Speed test: "Speed test". Unfocused, each goes back to its icon.
+- [ ] Right to Speed test: "Speed test". With Bluetooth pushed (AC-17): "Bluetooth · off",
+  "Bluetooth · on" or "Bluetooth · 2 connected" (with the real count). Unfocused, each goes back to its icon.
 - [ ] Press Down from the buttons: focus returns to More apps, the tile it left.
 - [ ] Focus the KevBox Live tile and press Up twice, into its upper row. Press Right, then Up:
   focus lands on the first button. Down returns to that same card.
