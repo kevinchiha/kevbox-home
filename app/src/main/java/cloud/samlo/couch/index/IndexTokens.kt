@@ -1,6 +1,7 @@
 package cloud.samlo.couch.index
 
 import android.graphics.Color
+import cloud.samlo.couch.ui.Tokens
 
 /**
  * The Index layout's measurements, in dp on Couch's 960x540dp canvas, and the few colours it
@@ -20,13 +21,15 @@ object IndexTokens {
     const val TEXT_Y = 104
     const val TEXT_W = 330
 
-    // KevBox's app tiles along the bottom: the launcher icon on a rounded plate. The band runs from
-    // TILES_Y to TILES_Y + TILE_H; TILE_GAP is the visible space between two plates.
+    // KevBox's app tiles along the bottom: the app's TV banner at the drawer's card size, its
+    // corners rounded like the drawer's. The band runs from TILES_Y to TILES_Y + TILE_H; TILE_GAP
+    // is the visible space between two plates.
     const val TILES_Y = 380
-    const val TILE_W = 120
-    const val TILE_H = 80
+    const val TILE_W = Tokens.APP_W
+    const val TILE_H = Tokens.APP_H
     const val TILE_GAP = 16
-    const val TILE_RADIUS = 12f
+    const val TILE_RADIUS = Tokens.CARD_RADIUS
+    /** An app with no banner shows its launcher icon this size on the plate instead. */
     const val TILE_ICON = 56
     /** The icon's own corners; [IndexData]'s icon is rendered at [TILE_ICON] with these. */
     const val TILE_ICON_RADIUS = 12f

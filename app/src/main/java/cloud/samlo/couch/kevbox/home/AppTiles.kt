@@ -100,16 +100,21 @@ class AppTiles(context: Context, private val makeTile: (IndexEntry) -> AppTile) 
     }
 }
 
-/** One app: its launcher icon alone, with the app's name as the content description. */
+/**
+ * One app: its TV banner filling the plate, as in the drawer, with the app's name as the content
+ * description. An app with no banner shows its launcher icon in the middle of the plate instead.
+ */
 @SuppressLint("ViewConstructor")
 class AppTile(context: Context, entry: IndexEntry) : TileFrame(context) {
     var entry: IndexEntry = entry
         private set
 
+    private val banner = ImageView(context).apply { scaleType = ImageView.ScaleType.FIT_XY }
     private val icon = ImageView(context)
 
     init {
         isLongClickable = true
+        body.addView(banner, fill())
         body.addView(icon, LayoutParams(context.dp(IndexTokens.TILE_ICON), context.dp(IndexTokens.TILE_ICON), Gravity.CENTER))
         bind(entry)
     }
@@ -117,7 +122,11 @@ class AppTile(context: Context, entry: IndexEntry) : TileFrame(context) {
     fun bind(entry: IndexEntry) {
         this.entry = entry
         contentDescription = entry.app.label
-        icon.setImageBitmap(entry.icon)
+        val wide = entry.app.banner
+        banner.setImageBitmap(wide)
+        banner.visibility = if (wide != null) VISIBLE else GONE
+        icon.setImageBitmap(if (wide == null) entry.icon else null)
+        icon.visibility = if (wide == null) VISIBLE else GONE
     }
 }
 

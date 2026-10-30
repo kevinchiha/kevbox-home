@@ -16,8 +16,9 @@ import cloud.samlo.couch.ui.dpf
 import java.io.File
 
 /**
- * One app along the bottom: its launch [app] tile, a rounded [icon] at tile size, and the rows of
- * cards Home shows for it (`kevbox.home.HomeRows` picks them from its channels).
+ * One app along the bottom: its launch [app] tile (its banner, rendered at tile size), a rounded
+ * [icon] for an app with no banner, and the rows of cards Home shows for it
+ * (`kevbox.home.HomeRows` picks them from its channels).
  */
 class IndexEntry(
     val app: Tile,
@@ -38,7 +39,7 @@ object IndexBuilder {
     fun build(context: Context, config: Config, iconsDir: File?): IndexData {
         val apps = AppSource.tiles(
             context, config, iconsDir,
-            context.dp(IndexTokens.cardWidth(-1)), context.dp(IndexTokens.CARD_H), context.dpf(IndexTokens.CARD_RADIUS),
+            context.dp(IndexTokens.TILE_W), context.dp(IndexTokens.TILE_H), context.dpf(IndexTokens.TILE_RADIUS),
         )
         val channels = Programs.channels(context, config).groupBy { it.packageName }
         // The tiles are config.apps in its saved order.
@@ -48,7 +49,8 @@ object IndexBuilder {
             val picked = HomeRows.pick(tile.key, channels[tile.key].orEmpty())
             IndexEntry(
                 app = tile,
-                icon = icon(context, tile.key),
+                // The banner is the tile; the icon only stands in for an app without one.
+                icon = if (tile.banner == null) icon(context, tile.key) else null,
                 shelves = picked.map { Shelf(it.name, it.tiles) },
             )
         }
