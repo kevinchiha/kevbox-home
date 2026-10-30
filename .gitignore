@@ -17,3 +17,6 @@ local.properties
 node_modules/
 docs/.vitepress/dist/
 docs/.vitepress/cache/
+
+# Brainstorming mockups (superpowers visual companion)
+.superpowers/
