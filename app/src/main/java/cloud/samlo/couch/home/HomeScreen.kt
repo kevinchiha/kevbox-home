@@ -36,7 +36,7 @@ class HomeScreen(private val activity: Activity) {
     private val images = Images(activity, fetcher)
     private val views: HomeViews = HomeViews(
         activity, images, { openSettings() }, { installUpdate() },
-        // A left-column app gets KevBox's menu; program cards keep Couch's.
+        // An app tile gets KevBox's menu; program cards keep Couch's.
         onAppMenu = { tile ->
             AppMenu.show(activity, tile.key, AppMenu.Place.COLUMN, config.apps) { views.index.startMove(tile.key) }
         },

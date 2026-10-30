@@ -13,9 +13,9 @@ import cloud.samlo.couch.ui.dp
 import cloud.samlo.couch.ui.dpf
 
 /**
- * The head of the right column, in text only: the focused program's source, title, synopsis and
- * progress, or the app's name and why it has nothing to show. The pictures are the channel's
- * cards under it, so moving along them decodes no larger copy of their art.
+ * The text block on the left of Home, in text only: the focused program's source, title, synopsis
+ * and progress, or a name alone (an app with no rows, More apps) with an optional note under it.
+ * The pictures are the cards on the right, so moving along them decodes no larger copy of their art.
  */
 @SuppressLint("ViewConstructor")
 class Spotlight(context: Context) : LinearLayout(context) {
@@ -60,11 +60,11 @@ class Spotlight(context: Context) : LinearLayout(context) {
         }
     }
 
-    /** An app without a channel: its name, and [note] on what OK does. */
-    fun showApp(tile: Tile, note: String) {
+    /** [name] as the title with no program: an app without rows, or More apps; [note] under it when set. */
+    fun showApp(name: String, note: String?) {
         // Invisible, not gone, so the title stays where a program's title sits.
         source.visibility = INVISIBLE
-        title.text = tile.label
+        title.text = name
         setDescription(note)
         progress.visibility = GONE
     }

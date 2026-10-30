@@ -4,20 +4,19 @@ import android.app.Activity
 import android.view.KeyEvent
 import cloud.samlo.couch.data.Config
 import cloud.samlo.couch.data.UserFiles
-import cloud.samlo.couch.index.AppList
-import cloud.samlo.couch.index.AppRow
 import cloud.samlo.couch.index.IndexData
 
 /**
- * The view side of Move in the left column: Up and Down carry the app through the list, OK or
- * Back places it and saves the new order to `config.json`. The order itself is [ColumnMove].
+ * The view side of Move along Home's app tiles: Left and Right carry the tile along the line, Up
+ * and Down do nothing, OK or Back places it and saves the new order to `config.json`. The order
+ * itself is [ColumnMove].
  *
  * A reload that arrives mid-move is held, not shown: binding the loader's order would snap the
- * row back. [onPlaced] gets it afterwards, its entries put in the placed order.
+ * tile back. [onPlaced] gets it afterwards, its entries put in the placed order.
  */
 class MoveMode(
     private val activity: Activity,
-    private val list: AppList,
+    private val tiles: AppTiles,
     /** The Config instance Home passed in; the one to change and save. */
     private val config: () -> Config,
     /** Move ended: [held] is the reload that waited (null when none), [config] the one saved into. */
@@ -27,17 +26,17 @@ class MoveMode(
     private var start: List<String> = emptyList()
     private var heldData: IndexData? = null
     private var heldConfig: Config? = null
-    /** Keys whose key-down Move took, so their key-up never reaches the row (OK's would launch it). */
+    /** Keys whose key-down Move took, so their key-up never reaches the tile (OK's would launch it). */
     private val downs = HashSet<Int>()
 
     val active: Boolean get() = move != null
 
-    /** Starts moving [row]'s app; false when Move is already on or the app is not in the column. */
-    fun start(row: AppRow): Boolean {
+    /** Starts moving [tile]'s app; false when Move is already on or the app has no tile. */
+    fun start(tile: AppTile): Boolean {
         if (active) return false
-        val order = list.rows().map { it.entry.key }
-        if (row.entry.key !in order) return false
-        move = ColumnMove(order, row.entry.key)
+        val order = tiles.tiles().map { it.entry.key }
+        if (tile.entry.key !in order) return false
+        move = ColumnMove(order, tile.entry.key)
         start = order
         return true
     }
@@ -49,9 +48,9 @@ class MoveMode(
         if (event.action != KeyEvent.ACTION_DOWN || !active || code !in KEYS) return false
         downs.add(code)
         when (code) {
-            KeyEvent.KEYCODE_DPAD_UP -> shift(-1)
-            KeyEvent.KEYCODE_DPAD_DOWN -> shift(1)
-            KeyEvent.KEYCODE_DPAD_LEFT, KeyEvent.KEYCODE_DPAD_RIGHT -> Unit
+            KeyEvent.KEYCODE_DPAD_LEFT -> shift(-1)
+            KeyEvent.KEYCODE_DPAD_RIGHT -> shift(1)
+            KeyEvent.KEYCODE_DPAD_UP, KeyEvent.KEYCODE_DPAD_DOWN -> Unit
             else -> place()
         }
         return true
@@ -74,7 +73,7 @@ class MoveMode(
         }
         val held = heldData?.let { data ->
             val byKey = data.entries.associateBy { it.key }
-            IndexData(move.saved(data.entries.map { it.key }).mapNotNull { byKey[it] }, data.usageKnown)
+            IndexData(move.saved(data.entries.map { it.key }).mapNotNull { byKey[it] })
         }
         heldData = null
         heldConfig = null
@@ -87,12 +86,10 @@ class MoveMode(
     private fun shift(by: Int) {
         val move = move ?: return
         if (!move.shift(by)) return
-        // The same entries in the new order: rows are reused, so the moving one keeps focus.
-        val byKey = list.rows().associate { it.entry.key to it.entry }
-        list.bind(move.order.mapNotNull { byKey[it] }, rebuildAll = false) { }
-        val row = list.rows().getOrNull(move.index) ?: return
-        list.select(row, inRow = false)
-        list.reveal(move.index)
+        // The same entries in the new order: tiles are reused, so the moving one keeps focus.
+        val byKey = tiles.tiles().associate { it.entry.key to it.entry }
+        tiles.bind(move.order.mapNotNull { byKey[it] }, rebuildAll = false) { }
+        tiles.select(tiles.tiles().getOrNull(move.index) ?: return)
     }
 
     private companion object {

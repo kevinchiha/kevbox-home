@@ -8,28 +8,17 @@ import android.graphics.Color
  * never trigger a layout pass.
  */
 object IndexTokens {
-    /** The canvas height: a column that fits sits centred on it. */
-    const val SCREEN_H = 540
-
     /** The widest the top bar's weather place text gets, so a long place name never crowds the buttons. */
     const val PLACE_MAX_W = 120
 
-    // The app list, left, level with the right column's header. The top bar above it starts at
-    // IndexScreen.TOP_BAR_Y (23dp) and is 52dp tall while now playing shows (40dp art plus 6dp
-    // padding above and below), so its bottom then sits at 75dp, 11dp below the list frame's top.
-    // A short centred column starts lower than that; a full or gliding one starts at the top.
-    const val LIST_X = 24
-    const val LIST_Y = 64
-    const val LIST_W = 330
-    const val LIST_H = 423
-    /** Where the list starts fading out, from its top. */
-    const val LIST_FADE_Y = 340
-    const val ROW_H = 46
-    const val ROW_PITCH = 49
-    /** Rows kept above the selected one before the list glides; the last rows never pass the fade. */
-    const val ROWS_ABOVE = 3
-    const val ROWS_SHOWN = 7
-    const val ICON = 29
+    /** The left edge of the clock, the text block and the system line; the top bar ends as far from the right. */
+    const val EDGE_X = 24
+
+    // The text block, left: the focused program's text, or the chosen app's name. The top bar
+    // above it starts at IndexScreen.TOP_BAR_Y (23dp) and is 52dp tall while now playing shows,
+    // so its bottom then sits at 75dp. The block starts level with the upper row's cards.
+    const val TEXT_Y = 104
+    const val TEXT_W = 330
 
     // KevBox's app tiles along the bottom: the launcher icon on a rounded plate. The band runs from
     // TILES_Y to TILES_Y + TILE_H; TILE_GAP is the visible space between two plates.
@@ -42,20 +31,18 @@ object IndexTokens {
     /** The icon's own corners; [IndexData]'s icon is rendered at [TILE_ICON] with these. */
     const val TILE_ICON_RADIUS = 12f
 
-    // The right column: the program's text, its channel's cards, then the week.
-    const val COLUMN_X = 380
-    const val COLUMN_W = 556
-    const val HEADER_Y = 64
-    const val STRIP_Y = 204
+    // The two rows of cards, right. Each row's label sits at its LABEL_Y, below the top bar's
+    // bottom (75dp) and now playing's pill, and its cards' plates start ROW_CARDS_DY under it.
+    const val ROWS_X = 380
+    const val ROW_1_LABEL_Y = 84
+    const val ROW_2_LABEL_Y = 216
+    const val ROW_CARDS_DY = 20
     const val CARD_H = 99
     const val CARD_GAP = 12
     const val CARD_RADIUS = 8f
-    const val STATS_Y = 378
     const val FOOTER_BOTTOM = 17
 
     val hours = Color.parseColor("#5E6865")
-    val barOff = Color.parseColor("#2C3532")
-    val markerIdle = Color.parseColor("#3D4A45")
     val description = Color.parseColor("#B9C2BF")
     val footerValue = Color.parseColor("#BFC7C4")
     val pillText = Color.parseColor("#C4CCC9")

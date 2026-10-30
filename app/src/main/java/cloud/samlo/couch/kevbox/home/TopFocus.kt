@@ -3,9 +3,9 @@ package cloud.samlo.couch.kevbox.home
 import android.view.View
 
 /**
- * Up into the top buttons and Down back out. Remembers the view Up left from (an app row, a
- * channel card, More apps) so Down returns there rather than to wherever Android's geometry
- * search would land.
+ * Up into the top buttons and Down back out. Remembers the view Up left from (a card of the upper
+ * row, an app tile with no rows, More apps) so Down returns there rather than to wherever
+ * Android's geometry search would land.
  */
 class TopFocus {
     private var origin: View? = null
@@ -19,7 +19,7 @@ class TopFocus {
 
     /**
      * Down from a top button: the view Up left from while it is still attached and focusable,
-     * else the first of [fallbacks] there is (the selected app row, then More apps).
+     * else the first of [fallbacks] there is (the selected app tile, then More apps).
      */
     fun down(vararg fallbacks: View?): View? {
         val back = origin?.takeIf { it.isAttachedToWindow && it.isFocusable && it.isShown }

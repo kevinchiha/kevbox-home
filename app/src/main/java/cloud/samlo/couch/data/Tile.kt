@@ -8,7 +8,6 @@ import android.graphics.Bitmap
 import android.graphics.drawable.Drawable
 import android.widget.Toast
 import cloud.samlo.couch.R
-import cloud.samlo.couch.kevbox.home.Watch
 
 /** One card's data. Bitmaps are rendered at the card's exact pixel size before they reach the UI. */
 class Tile(
@@ -35,14 +34,11 @@ class Tile(
     val iconWide: Boolean = false,
     /** Launches instead of [intent] when set (Fire TV recommendations); [intent] stays the fallback. */
     private val pendingIntent: PendingIntent? = null,
-    /** A program's raw playback state, for KevBox's status line. */
-    val watch: Watch? = null,
 ) {
     enum class Kind { APP, INPUT, PROGRAM }
 
     /** Changes when the card would look different, so unchanged rows are not rebuilt. */
-    val signature: String get() = "$key|$label|$subtitle|$imageUrl|$dimmed|$iconRes|$cardColor|${(progress * 100).toInt()}|${banner?.generationId}" +
-        watch?.let { "|${it.season}|${it.episode}|${it.positionMs}|${it.durationMs}" }.orEmpty()
+    val signature: String get() = "$key|$label|$subtitle|$imageUrl|$dimmed|$iconRes|$cardColor|${(progress * 100).toInt()}|${banner?.generationId}"
 
     fun launch(context: Context) {
         if (pendingIntent != null) {

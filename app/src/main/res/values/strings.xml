@@ -15,10 +15,6 @@
     <string name="settings">Settings</string>
     <string name="now_playing_paused">Paused</string>
     <string name="channel_recommended">Recommended</string>
-    <string name="program_season_episode">S%1$s E%2$s</string>
-    <string name="program_episode">E%1$s</string>
-    <string name="program_remaining_hours">%1$d h %2$s left</string>
-    <string name="program_remaining_minutes">%1$d min left</string>
 
     <!-- Index layout -->
     <string name="index_minutes">%1$d min</string>
@@ -27,14 +23,9 @@
     <string name="index_days_hours">%1$dd %2$dh</string>
     <string name="index_under_minute">&lt; 1 min</string>
     <string name="index_none">—</string>
-    <string name="index_week_line">%1$s · last opened %2$s</string>
-    <string name="index_week">Last 7 days</string>
     <string name="index_today">today</string>
     <string name="index_yesterday">yesterday</string>
     <string name="index_day_at">%1$s at %2$s</string>
-    <string name="index_not_opened">Not opened this week</string>
-    <string name="index_no_channel">%1$s has no channel on this TV. Press OK to open it.</string>
-    <string name="index_no_usage">Screen time shows here once KevBox Home has usage access. The setup guide shows how to turn it on.</string>
     <string name="index_place_range">%1$s\n%2$d° / %3$d°</string>
     <string name="index_ethernet">Ethernet</string>
     <string name="index_wifi">Wi-Fi</string>
@@ -177,7 +168,6 @@
     <string name="update_corrupt">The download didn’t match its checksum, so it wasn’t installed.</string>
     <string name="update_signature">This version is signed with a different key. Uninstall KevBox Home, then install it.</string>
     <!-- KevBox Home -->
-    <string name="kevbox_opened">Opened %1$s</string>
     <string name="kevbox_more_apps">More apps</string>
     <string name="kevbox_wifi_strong">Wi-Fi · strong</string>
     <string name="kevbox_wifi_fair">Wi-Fi · fair</string>
@@ -195,6 +185,7 @@
     <string name="kevbox_menu_restart">Restart app</string>
     <string name="kevbox_menu_uninstall">Uninstall</string>
     <string name="kevbox_move_hint">Use the arrows to move it, then press OK</string>
+    <string name="kevbox_move_hint_tiles">Use Left and Right to move it, then press OK</string>
     <string name="kevbox_restart_by_hand">Press Force stop, then reopen the app</string>
     <string name="kevbox_about_checking">Checking tv.kevbox.dev for a new version…</string>
     <string name="kevbox_licence">KevBox Home is a modified version of Couch by Samuel Loranger, licensed under the GNU GPL v3, with no warranty. Source: https://github.com/kevinchiha/kevbox-home</string>
