@@ -217,7 +217,14 @@ abstract class TileFrame(context: Context) : FrameLayout(context) {
         restyle()
     }
 
-    private fun restyle() {
+    /** A long press opens the app menu, which takes OK's key-up: back from it, drop the press scale. */
+    override fun onWindowFocusChanged(hasWindowFocus: Boolean) {
+        super.onWindowFocusChanged(hasWindowFocus)
+        if (hasWindowFocus) restyle()
+    }
+
+    /** Back to the lit or resting size, out of any press scale; Move calls it on the tile it carries. */
+    fun restyle() {
         val focused = isFocused
         val lit = focused || chosen
         if (painted != lit) {

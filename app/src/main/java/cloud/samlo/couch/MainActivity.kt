@@ -55,18 +55,18 @@ class MainActivity : Activity() {
 
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
-        home.onHomePressed()
-        openDrawerIfAsked(intent)
+        // The drawer key opens the drawer over Home instead: Back from it lands on More apps.
+        if (!openDrawerIfAsked(intent)) home.onHomePressed()
     }
 
     /**
      * Home starts the drawer itself, while in front, so the drawer's task sits straight above
-     * Home's and Back lands here. See [KevBox.goHome].
+     * Home's and Back lands here. See [KevBox.goHome]. True when it opened the drawer.
      */
-    private fun openDrawerIfAsked(intent: Intent?) {
-        if (intent?.getBooleanExtra(KevBox.EXTRA_OPEN_DRAWER, false) == true) {
-            startActivity(DrawerActivity.intent(this))
-        }
+    private fun openDrawerIfAsked(intent: Intent?): Boolean {
+        if (intent?.getBooleanExtra(KevBox.EXTRA_OPEN_DRAWER, false) != true) return false
+        startActivity(DrawerActivity.intent(this))
+        return true
     }
 
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {

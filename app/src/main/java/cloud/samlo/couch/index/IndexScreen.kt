@@ -180,6 +180,8 @@ class IndexScreen(
         val tile = tiles.tiles().firstOrNull { it.entry.key == pkg } ?: return
         if (!move.start(tile)) return
         tile.requestFocus()
+        // The long press that opened the menu left the tile at press scale.
+        tile.restyle()
         select(tile, refresh = false)
         spotlight.showApp(tile.entry.app.label, activity.getString(R.string.kevbox_move_hint_tiles))
     }
@@ -271,13 +273,23 @@ class IndexScreen(
 
     private fun fill(entry: IndexEntry) {
         removeCallbacks(fillRows)
-        if (rowsKey != entry.key) {
+        val reload = rowsKey == entry.key
+        if (!reload) {
             rowsKey = entry.key
             lanes.forEach { it.row.forget() }
         }
         removeCallbacks(buildMore)
-        built.fill(0)
+        // A reload of the same app starts from the cards already shown, not from a couple: a row
+        // cut short under its focused card would send focus back to the first one.
+        lanes.forEachIndexed { i, lane -> built[i] = if (reload) kept(lane, entry.shelves.getOrNull(i)?.tiles.orEmpty()) else 0 }
         buildStep(entry, first = true)
+    }
+
+    /** How many of [programs] a reload builds at once in [lane]: the cards it shows, and through its focused card's new place. */
+    private fun kept(lane: Lane, programs: List<Tile>): Int {
+        val focusedKey = focusedCard()?.takeIf { lane.row.isAncestorOf(it) }?.tile?.key
+        val at = programs.indexOfFirst { it.key == focusedKey }
+        return maxOf(lane.row.cards().size, at + 1)
     }
 
     /** Adds the next cards to each row; the [first] step also clears rows the app has no shelf for. */
