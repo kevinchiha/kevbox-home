@@ -11,30 +11,33 @@ import cloud.samlo.couch.data.Programs
 import cloud.samlo.couch.data.Tile
 import cloud.samlo.couch.data.Usage
 import cloud.samlo.couch.kevbox.home.AppLists
+import cloud.samlo.couch.kevbox.home.HomeRows
+import cloud.samlo.couch.kevbox.home.Shelf
 import cloud.samlo.couch.ui.dp
 import cloud.samlo.couch.ui.dpf
 import java.io.File
 
 /**
  * One app in the list: its launch [app] tile (banner rendered at card size, shown where the
- * channel would be when it has none), a small rounded [icon], the first channel it publishes,
- * and its last week of use.
+ * channel would be when it has none), a small rounded [icon], the rows of cards Home shows for it
+ * (`kevbox.home.HomeRows` picks them from its channels), and its last week of use.
  */
 class IndexEntry(
     val app: Tile,
     val icon: Bitmap?,
-    /** "Netflix", or "Jellyfin, Recently added" when the channel name doesn't say the app. */
-    val channelTitle: String?,
-    val programs: List<Tile>,
+    val shelves: List<Shelf>,
     val usage: AppUsage?,
     /** Customize's 24-hour setting, carried here because the row's "Opened at" line needs it. */
     val clock24h: Boolean,
 ) {
     val key: String get() = app.key
+    /** The first row's cards, or none. */
+    val programs: List<Tile> get() = shelves.firstOrNull()?.tiles.orEmpty()
     // The build hour turns "today" into "yesterday" by the first reload in a new hour.
-    val signature: String = "${app.signature}|${icon?.generationId}|$channelTitle|" +
+    val signature: String = "${app.signature}|${icon?.generationId}|" +
         "${usage?.perDayMs?.joinToString(",")}|${usage?.opens}|${usage?.lastUsed}|$clock24h|" +
-        "${System.currentTimeMillis() / 3_600_000}|" + programs.joinToString(";") { it.signature }
+        "${System.currentTimeMillis() / 3_600_000}|" +
+        shelves.joinToString("||") { shelf -> shelf.title + "|" + shelf.tiles.joinToString(";") { it.signature } }
 }
 
 class IndexData(
@@ -56,12 +59,11 @@ object IndexBuilder {
         val byPackage = apps.associateBy { it.key }
         val ordered = AppLists.column(config.apps, config.hidden, byPackage.keys).map { byPackage.getValue(it) }
         val entries = ordered.map { tile ->
-            val channel = channels[tile.key]?.firstOrNull()
+            val picked = HomeRows.pick(tile.key, channels[tile.key].orEmpty())
             IndexEntry(
                 app = tile,
                 icon = icon(context, tile.key),
-                channelTitle = channel?.let { Programs.title(context, it.packageName, it.name, ", ") },
-                programs = channel?.tiles.orEmpty(),
+                shelves = picked.map { Shelf(it.name, it.tiles) },
                 usage = usage?.get(tile.key),
                 clock24h = config.clock24h,
             )

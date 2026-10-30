@@ -306,7 +306,7 @@ class IndexScreen(
     private fun showProgram(entry: IndexEntry, program: Tile?) {
         val tile = program ?: entry.programs.firstOrNull()
         if (tile != null) {
-            spotlight.showProgram(entry.channelTitle.orEmpty(), tile)
+            spotlight.showProgram(entry.app.label, tile)
         } else {
             spotlight.showApp(entry.app, activity.getString(R.string.index_no_channel, entry.app.label))
         }
