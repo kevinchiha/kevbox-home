@@ -8,6 +8,7 @@ import android.content.ComponentName
 import android.content.Context
 import android.media.AudioManager
 import android.os.Build
+import android.os.PowerManager
 import android.os.PersistableBundle
 import android.util.Log
 import cloud.samlo.couch.data.Config
@@ -18,9 +19,10 @@ import cloud.samlo.couch.update.UpdateCheck
 import java.util.concurrent.atomic.AtomicBoolean
 
 /**
- * Runs the silent update (AC-9): every 6 h with a network, and once 15 min after the last Home
- * activity stops. Each run refreshes the stored release (the 6-hourly one asks tv.kevbox.dev at
- * once, the other keeps the once-a-day limit) and then tries [SilentInstall.run], off the main
+ * Runs the silent update (AC-9): every 6 h with a network, at most every 6 h while Android counts
+ * the box as unused (screen off for a while), and once 15 min after the last Home activity stops.
+ * Each run refreshes the stored release (the two 6-hourly ones ask tv.kevbox.dev at once, the
+ * after-leaving one keeps the once-a-day limit) and then tries [SilentInstall.run], off the main
  * thread. Only one run at a time; [SilentInstall] logs each outcome under [SilentInstall.TAG].
  * Nothing is scheduled below Android 12, where an update always needs the confirm screen.
  */
@@ -53,32 +55,45 @@ class SilentJob : JobService() {
     companion object {
         private const val PERIODIC_ID = 0x4b48_0601
         private const val AFTER_LEAVING_ID = 0x4b48_0602
+        private const val IDLE_ID = 0x4b48_0603
         private const val PERIOD_MS = 6 * 60 * 60_000L
         private const val EXTRA_TRIGGER = "trigger"
         private const val TRIGGER_PERIODIC = "periodic"
         private const val TRIGGER_LEFT = "left"
+        private const val TRIGGER_IDLE = "idle"
 
         private val running = AtomicBoolean(false)
 
         /** Home left the screen while a run was in progress; the run queues the 15-minute one when it ends. */
         private val leftDuringRun = AtomicBoolean(false)
 
-        /** Schedules the 6-hourly run, unless it is already scheduled. Call on every app start. */
+        /**
+         * Schedules the 6-hourly run and the 6-hourly unused-box run, each unless it is already
+         * scheduled. Call on every app start.
+         */
         fun schedule(context: Context) {
             if (Build.VERSION.SDK_INT < SilentRules.MIN_SDK) return
+            schedulePeriodic(context, PERIODIC_ID, TRIGGER_PERIODIC, idle = false)
+            // Android's "idle": screen off (or docked) for a while. Catches the box asleep with Home
+            // on top, which the 6-hourly run only reaches when it happens to fall in that time.
+            schedulePeriodic(context, IDLE_ID, TRIGGER_IDLE, idle = true)
+        }
+
+        private fun schedulePeriodic(context: Context, id: Int, trigger: String, idle: Boolean) {
             try {
                 val scheduler = context.getSystemService(JobScheduler::class.java) ?: return
-                val pending = scheduler.getPendingJob(PERIODIC_ID)
+                val pending = scheduler.getPendingJob(id)
                 if (pending != null && pending.intervalMillis == PERIOD_MS && pending.isPersisted) return
-                val job = JobInfo.Builder(PERIODIC_ID, component(context))
+                val job = JobInfo.Builder(id, component(context))
                     .setPeriodic(PERIOD_MS)
                     .setRequiredNetworkType(JobInfo.NETWORK_TYPE_ANY)
+                    .setRequiresDeviceIdle(idle)
                     .setPersisted(true)
-                    .setExtras(extras(TRIGGER_PERIODIC))
+                    .setExtras(extras(trigger))
                     .build()
                 scheduler.schedule(job)
             } catch (e: Exception) {
-                Log.w(SilentInstall.TAG, "6-hourly job not scheduled: ${e.javaClass.simpleName}")
+                Log.w(SilentInstall.TAG, "$trigger job not scheduled: ${e.javaClass.simpleName}")
             }
         }
 
@@ -125,17 +140,24 @@ class SilentJob : JobService() {
         /** One run. Blocking. */
         private fun runOnce(app: Context, trigger: String): SilentReason {
             try {
-                UpdateCheck(app, Fetcher(app)).refresh(Config.load(UserFiles(app).dir), force = trigger == TRIGGER_PERIODIC)
+                UpdateCheck(app, Fetcher(app)).refresh(Config.load(UserFiles(app).dir), force = trigger != TRIGGER_LEFT)
             } catch (e: Exception) {
                 // The stored release still counts.
             }
             return SilentInstall.run(app, trigger, { quiet(app) }, { Visibility.onScreen(app) == true })
         }
 
-        /** AC-4, read now: nothing playing, and Home out of sight for 15 min or idle on screen for 3 h. */
+        /** AC-4, read now: nothing playing, and the screen off, Home out of sight for 15 min or idle on screen for 3 h. */
         private fun quiet(app: Context): SilentReason = SilentRules.quiet(
-            playing(app), Visibility.onScreen(app), Visibility.sinceHiddenMs(app), Visibility.sinceKeyMs(),
+            playing(app), Visibility.onScreen(app), Visibility.sinceHiddenMs(app), Visibility.sinceKeyMs(), screenOff(app),
         )
+
+        /** True when the screen is off. A screensaver counts as on; an error counts as on. */
+        private fun screenOff(app: Context): Boolean = try {
+            app.getSystemService(PowerManager::class.java)?.isInteractive == false
+        } catch (e: Exception) {
+            false
+        }
 
         /** Any app playing sound. An error counts as playing. */
         private fun playing(app: Context): Boolean = try {

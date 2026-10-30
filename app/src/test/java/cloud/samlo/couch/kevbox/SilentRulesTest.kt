@@ -148,6 +148,21 @@ class SilentRulesTest {
         assertEquals(SilentReason.PLAYING, SilentRules.quiet(true, null, null, null))
     }
 
+    @Test
+    fun `screen off with nothing playing is quiet, even with Home on top`() {
+        // The box went to sleep with Home showing: Android never stopped Home, so it still counts as on screen.
+        assertEquals(SilentReason.QUIET, SilentRules.quiet(false, true, 0, min, screenOff = true))
+        assertEquals(SilentReason.QUIET, SilentRules.quiet(false, null, null, null, screenOff = true))
+        assertEquals(SilentReason.QUIET, SilentRules.quiet(false, false, 0, null, screenOff = true))
+        assertEquals(SilentReason.IN_USE, SilentRules.quiet(false, true, 0, min, screenOff = false))
+    }
+
+    @Test
+    fun `screen off still waits for nothing playing`() {
+        assertEquals(SilentReason.PLAYING, SilentRules.quiet(true, true, 0, 5 * hour, screenOff = true))
+        assertEquals(SilentReason.PLAYING, SilentRules.quiet(true, false, 5 * hour, null, screenOff = true))
+    }
+
     // AC-10
 
     @Test

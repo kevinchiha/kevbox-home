@@ -185,6 +185,28 @@ adb -s $E shell am start -n tv.kevbox.home.dev/cloud.samlo.couch.MainActivity
 
 Stop the server with Ctrl-C.
 
+### Run 3: the box goes to sleep with Home on screen
+
+90000002 is still installed after run 2. When a box goes to sleep with Home on top, Android never
+stops Home, so Home still counts as on screen; the screen being off is what lets this run install.
+
+```sh
+python3 kevbox/release/updater_test_server.py --apk /tmp/kevbox-home-90000003.apk \
+  --version-code 90000003 --after-hours -1 --port $PORT
+adb -s $E logcat -c
+adb -s $E shell am start -n tv.kevbox.home.dev/cloud.samlo.couch.MainActivity
+```
+
+1. Leave Home on screen and turn the screen off: `adb -s $E shell input keyevent KEYCODE_SLEEP`.
+2. Push the 6-hourly run, which asks the feed itself:
+   `adb -s $E shell cmd jobscheduler run -f tv.kevbox.home.dev 1263011329`. The run that waits for
+   Android to count the box as unused is `1263011331`; it does the same once it runs on its own.
+3. Check: `versionCode=90000003`, and the log shows
+   `trigger=periodic versionCode=90000003 outcome=COMMITTED`. Before this rule the same run logged
+   `outcome=IN_USE`.
+
+Stop the server with Ctrl-C.
+
 ### Back to the normal debug build
 
 Debug builds are debuggable, so `-d` installs the lower versionCode over the test build and keeps

@@ -78,13 +78,21 @@ object SilentRules {
     }
 
     /**
-     * [SilentReason.QUIET] when nobody is watching: nothing [playing], and either every Home activity
-     * has been out of sight for [OUT_OF_SIGHT_MS] or one is on screen with no key for
-     * [IDLE_ON_SCREEN_MS]. [onScreen] null (unknown) counts as on screen. A null time is unknown and
-     * counts as just now, so it never makes the box look idle.
+     * [SilentReason.QUIET] when nobody is watching: nothing [playing], and either the screen is off,
+     * every Home activity has been out of sight for [OUT_OF_SIGHT_MS], or one is on screen with no
+     * key for [IDLE_ON_SCREEN_MS]. [screenOff] covers a box that went to sleep with Home on top:
+     * Android never stops Home then, so [onScreen] stays true. [onScreen] null (unknown) counts as on
+     * screen. A null time is unknown and counts as just now, so it never makes the box look idle.
      */
-    fun quiet(playing: Boolean, onScreen: Boolean?, sinceHiddenMs: Long?, sinceKeyMs: Long?): SilentReason {
+    fun quiet(
+        playing: Boolean,
+        onScreen: Boolean?,
+        sinceHiddenMs: Long?,
+        sinceKeyMs: Long?,
+        screenOff: Boolean = false,
+    ): SilentReason {
         if (playing) return SilentReason.PLAYING
+        if (screenOff) return SilentReason.QUIET
         val idle = if (onScreen == false) {
             sinceHiddenMs != null && sinceHiddenMs >= OUT_OF_SIGHT_MS
         } else {
