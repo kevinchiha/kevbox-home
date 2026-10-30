@@ -35,9 +35,12 @@ object HomeRows {
         val keywords = slots[packageName] ?: return channels.take(MAX)
         val used = HashSet<Long>()
         return keywords.mapNotNull { words ->
-            channels.firstOrNull { c ->
+            // Two channels can answer one slot: an app that lost track of its row makes a new one and
+            // leaves the old one behind, frozen. The provider numbers channels upward, so the
+            // newest, the highest id, is the one the app still fills.
+            channels.filter { c ->
                 c.id !in used && words.any { c.name.contains(it, ignoreCase = true) }
-            }?.also { used.add(it.id) }
+            }.maxByOrNull { it.id }?.also { used.add(it.id) }
         }
     }
 }

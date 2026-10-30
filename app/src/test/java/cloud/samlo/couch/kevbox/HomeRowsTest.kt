@@ -45,6 +45,13 @@ class HomeRowsTest {
     }
 
     @Test
+    fun theNewestOfTwoCopiesOfARowIsShown() {
+        val (old, new) = channels("tv.kevbox", "Continue Watching", "Continue Watching")
+        assertEquals(listOf(new.id), HomeRows.pick("tv.kevbox", listOf(old, new)).map { it.id })
+        assertEquals(listOf(new.id), HomeRows.pick("tv.kevbox", listOf(new, old)).map { it.id })
+    }
+
+    @Test
     fun aSecondCopyOfARowNeverFillsAnEmptySlot() {
         // KevBox TV before its Library row, with a stale second Continue Watching channel.
         assertEquals(listOf("Continue Watching"), picked("tv.kevbox", "Continue Watching", "Continue Watching"))
