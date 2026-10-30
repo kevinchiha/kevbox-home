@@ -1,0 +1,313 @@
+{
+  "status": "complete",
+  "llm": {
+    "provider": "anthropic",
+    "model": "claude-opus-5-5"
+  },
+  "message": "Review complete: 6 finding(s) across 15 selected item(s).",
+  "summary": {
+    "files_reviewed": 15,
+    "comments": 6,
+    "total_tokens": 2106749,
+    "input_tokens": 2068364,
+    "output_tokens": 38385,
+    "cache_read_tokens": 1761872,
+    "cache_write_tokens": 306346,
+    "elapsed": "5m11s"
+  },
+  "tool_calls": {
+    "total": 68,
+    "by_tool": {
+      "code_comment": 5,
+      "code_search": 40,
+      "file_find": 2,
+      "file_read": 16,
+      "file_read_diff": 5
+    },
+    "failure": 0,
+    "failure_by_tool": {},
+    "failure_details": []
+  },
+  "comments": [
+    {
+      "path": "app/src/main/res/values/strings.xml",
+      "content": "`index_week_line`, `index_week`, `index_not_opened`, `index_no_channel` and `index_no_usage` were removed from the default `values/strings.xml`, but `values-fr/strings.xml` (lines 27–34) still defines them. Android Lint's `ExtraTranslation` check is Fatal by default, and no lint config in the repo turns it down, so `lintRelease` (and so the gate) will fail. Remove the same five keys from `values-fr/strings.xml`.",
+      "existing_code": "    \u003cstring name=\"index_today\"\u003etoday\u003c/string\u003e",
+      "start_line": 26,
+      "end_line": 26,
+      "category": "bug",
+      "severity": "high"
+    },
+    {
+      "path": "app/src/main/res/values/strings.xml",
+      "content": "The cleanup stops halfway. With `StatsBar`, `AppRow`/`AppList` and `StatusLine` deleted, nothing calls `index/Formats.kt` any more: `short`, `long`, `lastOpened` and `dayLetters` have no callers in `app/src`, tests included. So `index_today`, `index_yesterday`, `index_day_at`, `index_under_minute`, `index_none`, `index_hours_minutes` (and probably `index_minutes`/`index_hours`) are now used only by dead code. Lint's `UnusedResources` won't catch them because `Formats` still references them. Since the plan says strings left with no user are removed, delete `Formats.kt` along with these strings and their `values-fr` copies, or say why they stay.",
+      "existing_code": "    \u003cstring name=\"index_day_at\"\u003e%1$s at %2$s\u003c/string\u003e",
+      "start_line": 28,
+      "end_line": 28,
+      "category": "maintainability",
+      "severity": "low"
+    },
+    {
+      "path": "app/src/main/java/cloud/samlo/couch/kevbox/home/AppTiles.kt",
+      "content": "Long-pressing OK on an AppTile leaves it shrunk. onKeyDown scales the tile down to PRESS_SCALE (1.02). The long press then opens AppMenu, which is a dialog, so the confirm key-up goes to the dialog's window and this onKeyUp never runs. When the dialog closes, the tile still has view focus, so onFocusChanged doesn't fire either. If the user picks Move, `startMove` calls `tile.requestFocus()` (it is already focused) and `select(...)` (`chosen` doesn't change), so `restyle()` never runs. The moving tile then stays at 1.02 instead of FOCUS_SCALE for the whole Move, and keeps that size until focus leaves it. Fix: restore the scale when the window gets focus back, e.g. override `onWindowFocusChanged` and re-apply the lit scale there.",
+      "suggestion_code": "    override fun onKeyUp(keyCode: Int, event: KeyEvent): Boolean {\n        if (isConfirmKey(keyCode) \u0026\u0026 hasFocus()) scaleTo(Tokens.FOCUS_SCALE, Tokens.FOCUS_IN_MS)\n        return super.onKeyUp(keyCode, event)\n    }\n\n    /** A long press's key-up goes to the menu dialog: undo the press scale once the window is back. */\n    override fun onWindowFocusChanged(hasWindowFocus: Boolean) {\n        super.onWindowFocusChanged(hasWindowFocus)\n        if (hasWindowFocus) scaleTo(if (isFocused || chosen) Tokens.FOCUS_SCALE else 1f, Tokens.FOCUS_IN_MS)\n    }",
+      "existing_code": "    override fun onKeyUp(keyCode: Int, event: KeyEvent): Boolean {\n        if (isConfirmKey(keyCode) \u0026\u0026 hasFocus()) scaleTo(Tokens.FOCUS_SCALE, Tokens.FOCUS_IN_MS)\n        return super.onKeyUp(keyCode, event)\n    }",
+      "start_line": 250,
+      "end_line": 253,
+      "category": "bug",
+      "severity": "medium"
+    },
+    {
+      "path": "app/src/main/java/cloud/samlo/couch/index/IndexData.kt",
+      "content": "Home doesn't show `IndexEntry.app.banner` anymore. The banner `ImageView` is gone, and `AppTile` draws only `entry.icon`. Even so, `AppSource.tiles(...)` above still decodes and renders a card-size banner for every app on each load. They're memoized, so the cost is mostly memory, but on a weak TV that means one card-size bitmap per app held for nothing. You could pass a small size, or add a variant of `AppSource.tiles` that skips banners. Also, since this change removed the only caller of `Usage.lastWeek`, the Setup item still asks for usage access even though nothing uses it now. Consider dropping that item, or noting it for a follow-up.",
+      "existing_code": "                shelves = picked.map { Shelf(it.name, it.tiles) },",
+      "start_line": 52,
+      "end_line": 52,
+      "category": "performance",
+      "severity": "low"
+    },
+    {
+      "path": "app/src/main/java/cloud/samlo/couch/index/IndexScreen.kt",
+      "content": "The tile bar can't scroll and has no cap on how many tiles it shows. Each tile takes about 136dp (TILE_W 120 + RING_INSET×2 + margins), and `AppTiles` pads 6dp on each side. On the 960dp canvas that leaves room for about 6 app tiles plus More apps. `AppLists.column` doesn't limit `config.apps`, so a setup file with 7 or more apps pushes the line past the screen. The centred `WRAP_CONTENT` line then gets clipped, and the last apps and More apps end up off-screen. They can still take focus, but you can't see them. The old list glided (ROWS_SHOWN) to handle this. Either cap the number of tiles and send the rest to the drawer, or make the bar glide or scroll to keep the focused tile on screen.",
+      "existing_code": "        addView(tiles, LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT).apply {\n            topMargin = activity.dp(IndexTokens.TILES_Y - Tokens.RING_INSET) - tiles.paddingTop\n        })",
+      "start_line": 109,
+      "end_line": 111,
+      "category": "bug",
+      "severity": "medium"
+    },
+    {
+      "path": "app/src/main/java/cloud/samlo/couch/index/IndexScreen.kt",
+      "content": "Up from a tile always goes to `cards().first()`, even when the same app's row still remembers a card further along (for example, after going Down from card 5 back to the tile). The strip then glides back to the start, which doesn't match how moving between rows works through `entryCard()`. If you use `entryCard()` here too, Up returns to the last card focused in that row, or to the first card after `fill()`/`forget()` resets it.",
+      "suggestion_code": "                        lanes.lastOrNull { it.row.cards().isNotEmpty() }?.row?.entryCard()\n                            ?: topFocus.up(focused, topBar.firstButton()) ?: focused",
+      "existing_code": "                        lanes.lastOrNull { it.row.cards().isNotEmpty() }?.row?.cards()?.first()\n                            ?: topFocus.up(focused, topBar.firstButton()) ?: focused",
+      "start_line": 372,
+      "end_line": 373,
+      "category": "bug",
+      "severity": "low"
+    }
+  ],
+  "groups": [
+    {
+      "label": "Index screen redesign: data, tokens, spotlight, and screen layout",
+      "files": [
+        "app/src/main/java/cloud/samlo/couch/index/IndexData.kt",
+        "app/src/main/java/cloud/samlo/couch/index/IndexScreen.kt",
+        "app/src/main/java/cloud/samlo/couch/index/IndexTokens.kt",
+        "app/src/main/java/cloud/samlo/couch/index/Spotlight.kt",
+        "app/src/main/java/cloud/samlo/couch/home/HomeScreen.kt"
+      ]
+    },
+    {
+      "label": "Kevbox home: new app tiles and row composables with move/focus updates",
+      "files": [
+        "app/src/main/java/cloud/samlo/couch/kevbox/home/AppTiles.kt",
+        "app/src/main/java/cloud/samlo/couch/kevbox/home/ColumnMove.kt",
+        "app/src/main/java/cloud/samlo/couch/kevbox/home/HomeRows.kt",
+        "app/src/main/java/cloud/samlo/couch/kevbox/home/MoveMode.kt",
+        "app/src/main/java/cloud/samlo/couch/kevbox/home/TopFocus.kt"
+      ]
+    },
+    {
+      "label": "Tile data model cleanup",
+      "files": [
+        "app/src/main/java/cloud/samlo/couch/data/ProgramTile.kt",
+        "app/src/main/java/cloud/samlo/couch/data/Tile.kt"
+      ]
+    },
+    {
+      "label": "App menu and uninstall adjustments with string resource cleanup",
+      "files": [
+        "app/src/main/java/cloud/samlo/couch/kevbox/menu/AppMenu.kt",
+        "app/src/main/java/cloud/samlo/couch/kevbox/menu/Uninstall.kt",
+        "app/src/main/res/values/strings.xml"
+      ]
+    }
+  ],
+  "session_id": "8cd9eb32-7040-44db-ab32-df20f3cedce1",
+  "manifest": {
+    "schema_version": "ocr.run-manifest/v1",
+    "run_id": "8cd9eb32-7040-44db-ab32-df20f3cedce1",
+    "operation": "review",
+    "terminal_state": "complete",
+    "repository": {
+      "identity_sha256": "0ffbddada3a18bb79301393e0fb4f5d70356a2ba979408b8ab1408c455adf725"
+    },
+    "input": {
+      "mode": "range",
+      "requested_from": "main",
+      "requested_head": "quick/tile-home",
+      "resolved_base": "ebf5c10cb02e0e052f3f91f86cd868ca59b30b70",
+      "resolved_head": "af4d8327a785c4575b98909cceab471f08f34343",
+      "exact_range": "ebf5c10cb02e0e052f3f91f86cd868ca59b30b70..af4d8327a785c4575b98909cceab471f08f34343",
+      "source_artifact_sha256": "64d8643f4d5ddd53d91e600d9d6d6ea28e638800bb94d61ce93ea71058cbed4a"
+    },
+    "execution": {
+      "ocr_version": "v1.13.3",
+      "provider": "anthropic",
+      "model": "claude-opus-5-5",
+      "configured_concurrency": 8,
+      "rule_config_sha256": "7bdde30da0c66ee5643876474d879e4d72b8803bf0501749f82291f5b9b2b87a",
+      "runtime_config_sha256": "93c1bae68fa824e3eb9a388b389d2b0cdbe98c00e45b7638e3c4d5afe2dbc39f"
+    },
+    "coverage": {
+      "selected": [
+        {
+          "item_id": "01c37f5098247329b85dec93a9268d499d9882d8f328821ce05a089fc811a5b5",
+          "path": "app/src/main/java/cloud/samlo/couch/home/HomeScreen.kt",
+          "fingerprint": "fce572301d6e38b15fd8d223bc044475e3ee61ee206332807fc6b77b94a73997"
+        },
+        {
+          "item_id": "148f3903e671518013eee5c3ebd1f37e934a54fb4160c65f83d8bb71bf3c82f7",
+          "path": "app/src/main/java/cloud/samlo/couch/index/IndexData.kt",
+          "fingerprint": "781c4a9cc457f7f4c6b99c0c4c5c0392745c9d547b188189a0b7572e838495d2"
+        },
+        {
+          "item_id": "1d7a065496022d5d2bd07c62f5a2f8e5fba9416057c26f40c7544d57ed35c838",
+          "path": "app/src/main/java/cloud/samlo/couch/index/Spotlight.kt",
+          "fingerprint": "a5942975081700dd3f52c2deeb1762d03cc62cdfba37e865d16e14b4365e6369"
+        },
+        {
+          "item_id": "242e6574531b2b278b1eaccd12c5071a3737fd79789c6ed43c7743dadcb5f125",
+          "path": "app/src/main/java/cloud/samlo/couch/kevbox/home/ColumnMove.kt",
+          "fingerprint": "824f06030e4206e500026fd00339c17d3169c16ef1fa33c6e025e654a04e21e0"
+        },
+        {
+          "item_id": "2a6c205d6c6e38f0255527eeef0311aaec41d2cd952c87e4e2880f158406a4b0",
+          "path": "app/src/main/java/cloud/samlo/couch/kevbox/home/MoveMode.kt",
+          "fingerprint": "8e8610dd050a633262462179295875ecf7387a6f0ca2068b18722526d35cab9a"
+        },
+        {
+          "item_id": "8c8636466859d3ca5126079953b1491dd58f1c636160b3b34042489846f9f650",
+          "path": "app/src/main/java/cloud/samlo/couch/kevbox/menu/AppMenu.kt",
+          "fingerprint": "a585f3d09a3363b4135f6e88436fcec7a4b2d067b8de3d3bb5dbc7f03ea44644"
+        },
+        {
+          "item_id": "8db844197e21f180cf3fd7ef577cb65788bc3a7902c27f25e8716bcdc8f43db1",
+          "path": "app/src/main/res/values/strings.xml",
+          "fingerprint": "e7073366dac1a75472e391c6d2e6c01fe6926855cc00ee931c39eaec04b23240"
+        },
+        {
+          "item_id": "95be94cd553b402ec8c174dbabe40d21af73879c1ad0e88dd8b9ec1d00174edd",
+          "path": "app/src/main/java/cloud/samlo/couch/index/IndexTokens.kt",
+          "fingerprint": "6441f6b73602cb3e1139511f0d8fa035abcc3493eb7b3b0613cdab9e402397dc"
+        },
+        {
+          "item_id": "9f548c530bc2003ce39a4a3d98c06dfc3415f043969df9d6a11a025c5ecc8cba",
+          "path": "app/src/main/java/cloud/samlo/couch/kevbox/home/TopFocus.kt",
+          "fingerprint": "96468d4559b118043b61a9fb3e4d09c3f827133663478b7aee7ee719f2d020ae"
+        },
+        {
+          "item_id": "a2a6cf1c8075757a72e9767953b4241397919843842c9a77a9bd6e449d2dfd64",
+          "path": "app/src/main/java/cloud/samlo/couch/data/Tile.kt",
+          "fingerprint": "e7c92864c147da1299c61c8a71f83f8c7b17e3f38285a036dd8a8982c2d621cc"
+        },
+        {
+          "item_id": "a8470b4b36657f8f20d7e95b597933d409bf70ba36cea3e9321fc065cb4d7afc",
+          "path": "app/src/main/java/cloud/samlo/couch/data/ProgramTile.kt",
+          "fingerprint": "66326779f204d473d960fa6f0e6a677d0d57a80f114e1c235240c8b185b8f6d5"
+        },
+        {
+          "item_id": "c266190f33bb4abcf8bf9e86b29a62d2e20b529dc275ef5389fdd7aae8f02c7e",
+          "path": "app/src/main/java/cloud/samlo/couch/index/IndexScreen.kt",
+          "fingerprint": "c88deca0244622c76b7ab06d32dbfe5eca82d2370083551e37a75e92645ae7f9"
+        },
+        {
+          "item_id": "c95c075d33f60efcc7df928f94fdb65a2ab18441bd8c80e968bc5a81974bd6b2",
+          "path": "app/src/main/java/cloud/samlo/couch/kevbox/home/AppTiles.kt",
+          "fingerprint": "0c3a005335b7467e560dfcf6def0705733c81ca5b83cdb72141391b3a6a78289"
+        },
+        {
+          "item_id": "fd59b5522e48d13054c747b6b446ea71f296beb107ef718ee3ff0c95a64eef9a",
+          "path": "app/src/main/java/cloud/samlo/couch/kevbox/menu/Uninstall.kt",
+          "fingerprint": "5f23c8475e6b320b2388161e00f8ac2da39b15f12eba36eec1e5267c0bd519e3"
+        },
+        {
+          "item_id": "ff1bbf0cda5d03b7ff2518c8ae029e79d51614dbdfa6d5ba266da0aac44332d7",
+          "path": "app/src/main/java/cloud/samlo/couch/kevbox/home/HomeRows.kt",
+          "fingerprint": "caf2db77d3e66724501ea91fa6f72759f635c8ca84b6641d1c395898cd454db7"
+        }
+      ],
+      "completed": [
+        {
+          "item_id": "01c37f5098247329b85dec93a9268d499d9882d8f328821ce05a089fc811a5b5",
+          "path": "app/src/main/java/cloud/samlo/couch/home/HomeScreen.kt",
+          "fingerprint": "fce572301d6e38b15fd8d223bc044475e3ee61ee206332807fc6b77b94a73997"
+        },
+        {
+          "item_id": "148f3903e671518013eee5c3ebd1f37e934a54fb4160c65f83d8bb71bf3c82f7",
+          "path": "app/src/main/java/cloud/samlo/couch/index/IndexData.kt",
+          "fingerprint": "781c4a9cc457f7f4c6b99c0c4c5c0392745c9d547b188189a0b7572e838495d2"
+        },
+        {
+          "item_id": "1d7a065496022d5d2bd07c62f5a2f8e5fba9416057c26f40c7544d57ed35c838",
+          "path": "app/src/main/java/cloud/samlo/couch/index/Spotlight.kt",
+          "fingerprint": "a5942975081700dd3f52c2deeb1762d03cc62cdfba37e865d16e14b4365e6369"
+        },
+        {
+          "item_id": "242e6574531b2b278b1eaccd12c5071a3737fd79789c6ed43c7743dadcb5f125",
+          "path": "app/src/main/java/cloud/samlo/couch/kevbox/home/ColumnMove.kt",
+          "fingerprint": "824f06030e4206e500026fd00339c17d3169c16ef1fa33c6e025e654a04e21e0"
+        },
+        {
+          "item_id": "2a6c205d6c6e38f0255527eeef0311aaec41d2cd952c87e4e2880f158406a4b0",
+          "path": "app/src/main/java/cloud/samlo/couch/kevbox/home/MoveMode.kt",
+          "fingerprint": "8e8610dd050a633262462179295875ecf7387a6f0ca2068b18722526d35cab9a"
+        },
+        {
+          "item_id": "8c8636466859d3ca5126079953b1491dd58f1c636160b3b34042489846f9f650",
+          "path": "app/src/main/java/cloud/samlo/couch/kevbox/menu/AppMenu.kt",
+          "fingerprint": "a585f3d09a3363b4135f6e88436fcec7a4b2d067b8de3d3bb5dbc7f03ea44644"
+        },
+        {
+          "item_id": "8db844197e21f180cf3fd7ef577cb65788bc3a7902c27f25e8716bcdc8f43db1",
+          "path": "app/src/main/res/values/strings.xml",
+          "fingerprint": "e7073366dac1a75472e391c6d2e6c01fe6926855cc00ee931c39eaec04b23240"
+        },
+        {
+          "item_id": "95be94cd553b402ec8c174dbabe40d21af73879c1ad0e88dd8b9ec1d00174edd",
+          "path": "app/src/main/java/cloud/samlo/couch/index/IndexTokens.kt",
+          "fingerprint": "6441f6b73602cb3e1139511f0d8fa035abcc3493eb7b3b0613cdab9e402397dc"
+        },
+        {
+          "item_id": "9f548c530bc2003ce39a4a3d98c06dfc3415f043969df9d6a11a025c5ecc8cba",
+          "path": "app/src/main/java/cloud/samlo/couch/kevbox/home/TopFocus.kt",
+          "fingerprint": "96468d4559b118043b61a9fb3e4d09c3f827133663478b7aee7ee719f2d020ae"
+        },
+        {
+          "item_id": "a2a6cf1c8075757a72e9767953b4241397919843842c9a77a9bd6e449d2dfd64",
+          "path": "app/src/main/java/cloud/samlo/couch/data/Tile.kt",
+          "fingerprint": "e7c92864c147da1299c61c8a71f83f8c7b17e3f38285a036dd8a8982c2d621cc"
+        },
+        {
+          "item_id": "a8470b4b36657f8f20d7e95b597933d409bf70ba36cea3e9321fc065cb4d7afc",
+          "path": "app/src/main/java/cloud/samlo/couch/data/ProgramTile.kt",
+          "fingerprint": "66326779f204d473d960fa6f0e6a677d0d57a80f114e1c235240c8b185b8f6d5"
+        },
+        {
+          "item_id": "c266190f33bb4abcf8bf9e86b29a62d2e20b529dc275ef5389fdd7aae8f02c7e",
+          "path": "app/src/main/java/cloud/samlo/couch/index/IndexScreen.kt",
+          "fingerprint": "c88deca0244622c76b7ab06d32dbfe5eca82d2370083551e37a75e92645ae7f9"
+        },
+        {
+          "item_id": "c95c075d33f60efcc7df928f94fdb65a2ab18441bd8c80e968bc5a81974bd6b2",
+          "path": "app/src/main/java/cloud/samlo/couch/kevbox/home/AppTiles.kt",
+          "fingerprint": "0c3a005335b7467e560dfcf6def0705733c81ca5b83cdb72141391b3a6a78289"
+        },
+        {
+          "item_id": "fd59b5522e48d13054c747b6b446ea71f296beb107ef718ee3ff0c95a64eef9a",
+          "path": "app/src/main/java/cloud/samlo/couch/kevbox/menu/Uninstall.kt",
+          "fingerprint": "5f23c8475e6b320b2388161e00f8ac2da39b15f12eba36eec1e5267c0bd519e3"
+        },
+        {
+          "item_id": "ff1bbf0cda5d03b7ff2518c8ae029e79d51614dbdfa6d5ba266da0aac44332d7",
+          "path": "app/src/main/java/cloud/samlo/couch/kevbox/home/HomeRows.kt",
+          "fingerprint": "caf2db77d3e66724501ea91fa6f72759f635c8ca84b6641d1c395898cd454db7"
+        }
+      ],
+      "reused": [],
+      "failed": [],
+      "waived": []
+    },
+    "elapsed_ms": 310514
+  }
+}
