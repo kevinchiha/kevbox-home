@@ -81,6 +81,7 @@ class IndexScreen(
         }
         val row = FocusRow(activity).apply {
             gapDp = IndexTokens.CARD_GAP
+            hidesPassed = true
             setStartPadding(activity.dp(STRIP_START) - activity.dp(Tokens.RING_INSET))
         }
         val cardsY = labelY + IndexTokens.ROW_CARDS_DY
