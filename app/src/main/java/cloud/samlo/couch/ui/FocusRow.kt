@@ -28,6 +28,12 @@ class FocusRow(context: Context) : HorizontalScrollView(context) {
     /** Left from the first card may leave the row (to whatever the parent finds), as in the Index layout. */
     var leavesAtStart = false
 
+    /**
+     * KevBox: cards the glide has carried past the row's start fade out, so no sliver of one shows
+     * in the room left for a focused card's ring.
+     */
+    var hidesPassed = false
+
     val strip: LinearLayout = object : LinearLayout(context) {
         init {
             isChildrenDrawingOrderEnabled = true
@@ -111,6 +117,7 @@ class FocusRow(context: Context) : HorizontalScrollView(context) {
         lastIndex = 0
         strip.animate().cancel()
         strip.translationX = 0f
+        if (hidesPassed) for (card in cards()) card.alpha = 1f
     }
 
     /** The card focused last time, or the one now at its position if it's gone. */
@@ -123,8 +130,17 @@ class FocusRow(context: Context) : HorizontalScrollView(context) {
     fun reveal(card: View) {
         val maxShift = (strip.width - width).coerceAtLeast(0)
         val target = -(card.left - strip.paddingStart).coerceIn(0, maxShift).toFloat()
+        if (hidesPassed) fadePassed(target)
         if (strip.translationX == target) return
         strip.animate().translationX(target).setDuration(Tokens.GLIDE_MS).setInterpolator(Tokens.ease).start()
+    }
+
+    /** Fades out every card that starts left of the row's start once the strip sits at [target]. */
+    private fun fadePassed(target: Float) {
+        for (card in cards()) {
+            val alpha = if (card.left + target < strip.paddingStart) 0f else 1f
+            if (card.alpha != alpha) card.animate().alpha(alpha).setDuration(Tokens.GLIDE_MS).setInterpolator(Tokens.ease).start()
+        }
     }
 
     /** Left/right never leave the row (unless [leavesAtStart]): at either end, focus stays put. */

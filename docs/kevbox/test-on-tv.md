@@ -5,9 +5,17 @@ acceptance criterion of the 0.1-kevbox-home spec. Tick each line on both devices
 one. Run the commands from the repo root on a computer with `adb` connected to the device; with
 both devices connected, prefix each command with `ANDROID_SERIAL=<tv ip>:5555`.
 
+AC-10 to AC-13 check the tile home from the tile-home plan
+(`docs/superpowers/quick/2026-10-30-tile-home.md`), which replaced the spec's left column of apps.
+
 Presses are the remote's buttons: OK, hold OK (keep it down for about a second), Back, Home, Up,
 Down, Left, Right, Netflix, Prime Video, YouTube, All apps. Text in quotes is exactly what the
 screen should show.
+
+Home's layout, as the checks below name it: the app tiles run along the bottom (icons only, More
+apps last), two rows of cards sit above them on the right, each under a small label, and the text
+block on the left describes the app or card in focus. Up from More apps goes straight to the top
+buttons; Up from an app tile goes through that app's rows first.
 
 ## Before you start
 
@@ -119,47 +127,82 @@ the text `not json`.
   `com.esaba.downloader` (Downloader) and `org.videolan.vlc` (VLC). Note any the device lacks.
 - [ ] Its `keys` are the AC-28 map: the remote checks below pass with it applied.
 
-## AC-10: the left column
+## AC-10: the app tiles
 
-- [ ] From Home, the column shows KevBox Live, KevBox TV and SmartTube, in that order, then
-  "More apps". No other app is in it.
+- [ ] Home has no list of app names on the left. Along the bottom sit the tiles of KevBox Live,
+  KevBox TV and SmartTube, in that order, then More apps (a mark of four small squares). Each app
+  tile shows the app's icon alone, with no name on or under it. No other app has a tile.
+- [ ] Focus is on the KevBox Live tile when Home first opens: it is a little larger than the others
+  and ringed.
+- [ ] Press Right twice, then press Home: focus is back on the KevBox Live tile.
+- [ ] Left on the KevBox Live tile does nothing. Right from the SmartTube tile lands on More apps;
+  Right on More apps does nothing. Down on any tile does nothing.
+- [ ] OK on the KevBox TV tile opens KevBox TV. Return with Home.
 - [ ] Open SmartTube for a while, return with Home: the order has not changed.
-- [ ] Push `{"hidden": ["org.smarttube.stable"]}` as in AC-6 and press Home: SmartTube is gone from
-  the column, and from the drawer (All apps). Push `{"hidden": []}` to bring it back.
-- [ ] Push `{"apps": []}` and press Home: the column holds only "More apps". Run
+- [ ] Push `{"hidden": ["org.smarttube.stable"]}` as in AC-6 and press Home: SmartTube's tile is
+  gone, and SmartTube is not in the drawer (All apps) either. Push `{"hidden": []}` to bring it
+  back.
+- [ ] Push `{"apps": []}` and press Home: More apps is the only tile and has focus. Run
   `provision.sh` with the example file again to restore it.
 
-## AC-11: status lines
+## AC-11: two rows per app
 
-- [ ] In KevBox TV, play an episode part way and stop with time left. Back on Home, KevBox TV's
-  row reads `<title> · S<season> E<episode> · <time left>`, for example
-  "Severance · S2 E4 · 31 min left", or "1 h 05 left" from an hour up. An episode without a
-  season shows "E4" alone.
-- [ ] SmartTube's row reads `Opened today at <time>` (its channel has no watch position). After a
-  day it reads `Opened yesterday at <time>`, then the weekday ("Opened Wednesday at 22:37").
-- [ ] From Home, press Up to the buttons, Right to Settings, and hold OK: Customize opens. Press
-  Down to "24-hour clock" and press OK to switch it off, then Back: the time in the line switches
-  to the 12-hour clock.
-- [ ] KevBox Live's row reads "Opened …" too (the Recent channels row is the next phase).
-- [ ] An app in the column not opened in the last seven days has its name alone, centred, with no
-  status line. A long line ends in "…" on one line. No row shows a screen-time figure.
+- [ ] Focus the KevBox Live tile: above the tiles, on the right, two rows of cards show. The upper
+  row's label is KevBox Live's recent channels row as it names it (its name holds "récent" or
+  "recent", for example "Chaînes récentes"), the lower row's its favourites ("Favoris" or
+  similar). Each label is small grey text above its row.
+- [ ] Right to KevBox TV: one row, labelled "Continue Watching", and nothing in the lower place.
+  Once KevBox TV publishes its Library row, a second row labelled "Library" (or "Bibliothèque")
+  shows under it.
+- [ ] Right to SmartTube: the upper row's label holds "Recommended", the lower row's "History".
+- [ ] Cards show their art only, with no title under them.
+- [ ] Hold Right from KevBox Live to More apps and back with Left: each tile swaps the text block,
+  both labels and both rows to its own app. No card of one app ever shows under another app's
+  name. While you keep moving the rows stay empty; they fill a moment after you stop.
+- [ ] Focus the KevBox Live tile, press Up: focus is on the first card of the lower row. Up again:
+  the first card of the upper row. Up again: Wi-Fi.
+- [ ] Down from Wi-Fi: back on that same upper card. Down: the lower row. Down: the KevBox Live
+  tile.
+- [ ] In the lower row press Right twice, then Up and Down: focus is back on the third card.
+- [ ] Focus the KevBox TV tile (one row), press Up: its first card. Up again: Wi-Fi. Down twice:
+  the card, then the KevBox TV tile.
+- [ ] Focus the KevBox Live tile, then press Right and Up straight after, without waiting for the
+  rows to fill: focus is on the first card of KevBox TV's row, which fills at once.
+- [ ] From a card in either row, press Back: focus is on the tile of the app the rows belong to.
+  Go up to Wi-Fi and press Back: the same.
+- [ ] OK on a card of KevBox TV's Continue Watching row opens that program in KevBox TV. Return
+  with Home.
+- [ ] Focus More apps, press Up, Right to Settings, and hold OK. Open "App channels" and switch
+  off SmartTube's History channel. Back on Home, SmartTube shows its Recommended row alone, no
+  other channel in History's place. Switch History back on.
+- [ ] In "App channels", switch off every SmartTube channel. Back on Home, focus the SmartTube
+  tile: the text block shows "SmartTube" alone, with no rows and no labels. Up goes to Wi-Fi, and
+  Down from Wi-Fi returns to the SmartTube tile. Switch the channels back on.
 
 ## AC-12: More apps
 
-- [ ] From the first app, press Down until the last app, then Down once more: focus lands on
-  "More apps", under a thin divider.
-- [ ] OK on "More apps" opens the drawer.
+- [ ] Focus More apps: the text block reads "More apps", no rows and no labels show, and the
+  wallpaper is behind the screen.
+- [ ] OK on More apps opens the drawer. Back closes it, and focus is on More apps.
+- [ ] Hold OK on More apps: no menu opens.
+- [ ] From More apps, press Up: focus is on Wi-Fi. Down: back on More apps. Up again, then Back:
+  focus is on More apps.
 
-## AC-13: the right side and the backdrop
+## AC-13: the text block and the backdrop
 
-- [ ] With an app focused in the column, the right side shows its spotlight text, its channel row
-  and the week's screen-time chart, as in Couch.
-- [ ] The whole screen behind shows the first card's art. Press Right into the channel row and move
-  along it: the art follows the focused card.
-- [ ] Focus "More apps": the backdrop shows the wallpaper.
-- [ ] From Home, press Up to the buttons, Right to Settings, and hold OK. Press Down to "Dim", OK,
-  and pick Light, then Back to Home. Repeat with Medium, then Strong: the backdrop gets darker each
-  step.
+- [ ] Focus the KevBox TV tile with an episode part watched. The text block on the left shows,
+  top to bottom: "KevBox TV" alone on a small line in the accent colour (nothing after it, no
+  ", Continue Watching"), then the first card's title, its description and a progress bar.
+- [ ] Press Up into the row and move along it: the title, description and progress follow the
+  focused card, and the small line still reads "KevBox TV".
+- [ ] With a tile focused, the whole screen behind shows the art of its upper row's first card.
+  Move along a row: the art follows the focused card.
+- [ ] Focus More apps, or an app with no rows: the backdrop shows the wallpaper.
+- [ ] Home shows no week's screen-time chart and no status line under or beside any app ("Opened
+  …", time left and the like). The line of TV readings stays along the very bottom.
+- [ ] Focus More apps, press Up to the buttons, Right to Settings, and hold OK. Press Down to
+  "Dim", OK, and pick Light, then Back to Home. Repeat with Medium, then Strong: the backdrop gets
+  darker each step.
 
 ## AC-14: the top right
 
@@ -175,8 +218,7 @@ the text `not json`.
 - [ ] On Wi-Fi: the icon shows the signal level, with a green dot while the internet works.
 - [ ] On Ethernet (the TCL TV when plugged in): the icon is the Ethernet one, with the dot.
 - [ ] Unplug the network, or switch Wi-Fi off in Android's settings: the no-network icon, no dot.
-- [ ] From the first app in the column, press Up: focus is on Wi-Fi. OK opens Android's network
-  settings.
+- [ ] Focus More apps and press Up: focus is on Wi-Fi. OK opens Android's network settings.
 
 ## AC-16: the VPN indicator
 
@@ -190,13 +232,13 @@ the text `not json`.
 
 - [ ] With Bluetooth off: the off icon. On with nothing connected: the on icon. With devices
   connected (the Xiaomi box's own remote counts): the icon with their number.
-- [ ] From the first app in the column, press Up, then Right once: focus is on Bluetooth (the VPN
-  indicator never takes focus). OK opens Android's Bluetooth settings.
+- [ ] Focus More apps, press Up, then Right once: focus is on Bluetooth (the VPN indicator never
+  takes focus). OK opens Android's Bluetooth settings.
 
 ## AC-18: the Speed test button
 
-- [ ] From the first app in the column, press Up, then Right twice: focus is on Speed test. OK
-  opens Speedtest (`com.rma.netpulsetv`).
+- [ ] Focus More apps, press Up, then Right twice: focus is on Speed test. OK opens Speedtest
+  (`com.rma.netpulsetv`).
 - [ ] Push `{"speedtestApp": "com.example.missing"}` and press Home: the Speed test button is gone.
   Push `{"speedtestApp": "com.rma.netpulsetv"}` to bring it back.
 
@@ -208,14 +250,14 @@ the text `not json`.
 
 ## AC-20: button text and focus
 
-- [ ] From the first app in the column, press Up: focus lands on the first button (Wi-Fi). Focused,
-  it widens to its text: "Wi-Fi · strong" (level 3 or 4), "Wi-Fi · fair" (2), "Wi-Fi · weak"
-  (0 or 1), "Ethernet" or "No network".
+- [ ] Focus More apps and press Up: focus lands on the first button (Wi-Fi). Focused, it widens
+  to its text: "Wi-Fi · strong" (level 3 or 4), "Wi-Fi · fair" (2), "Wi-Fi · weak" (0 or 1),
+  "Ethernet" or "No network".
 - [ ] Right to Bluetooth: "Bluetooth · off", "Bluetooth · on" or "Bluetooth · 2 connected" (with the
   real count). Right to Speed test: "Speed test". Unfocused, each goes back to its icon.
-- [ ] Press Down from the buttons: focus returns to the app row it left.
-- [ ] Press Right into the channel row, then Up from any card: focus lands on the first button.
-  Down returns to that same card.
+- [ ] Press Down from the buttons: focus returns to More apps, the tile it left.
+- [ ] Focus the KevBox Live tile and press Up twice, into its upper row. Press Right, then Up:
+  focus lands on the first button. Down returns to that same card.
 
 ## AC-21: the drawer
 
@@ -238,8 +280,8 @@ before any app sees it.
 
 ## AC-23: the hold-OK menu
 
-- [ ] Hold OK on an app in the column: the menu is "App info", "Move", "Restart app", in that
-  order, and nothing else. No "Uninstall".
+- [ ] Hold OK on an app tile: the menu is "App info", "Move", "Restart app", in that order, and
+  nothing else. No "Uninstall".
 - [ ] Hold OK on VLC in the drawer: "App info", "Move", "Restart app", "Uninstall".
 - [ ] Hold OK on a system app in the drawer that was never updated: no "Uninstall". Find one with
   `adb shell dumpsys package <package> | grep pkgFlags`: it shows `SYSTEM` and no
@@ -248,17 +290,22 @@ before any app sees it.
 ## AC-24: App info
 
 - [ ] In the drawer, hold OK on VLC. "App info" is the menu's first item and has focus; press OK:
-  Android's app details page for VLC opens. Back, then do the same on KevBox TV in the column.
+  Android's app details page for VLC opens. Back, then do the same on KevBox TV's tile.
 
 ## AC-25: Move
 
-- [ ] Hold OK on KevBox TV in the column, pick "Move": the spotlight says "Use the arrows to move
-  it, then press OK". Up and Down carry it through the column. OK places it.
-- [ ] Repeat, and place it with Back instead.
+- [ ] Hold OK on KevBox TV's tile, pick "Move": the KevBox TV tile keeps focus, and the text block
+  shows "KevBox TV" with "Use Left and Right to move it, then press OK" under it.
+- [ ] Press Right: the tile swaps places with SmartTube. Right again does nothing; the tile never
+  passes More apps. Up and Down do nothing either. Press Left twice: KevBox TV is first. OK places
+  it, and the text block shows KevBox TV's first card again.
+- [ ] `adb shell cat /sdcard/Android/data/tv.kevbox.home/files/config.json`: its `apps` list starts
+  with `tv.kevbox`, then `tv.kevbox.live`.
+- [ ] Repeat, move it one place, and place it with Back instead: the new order stays.
 - [ ] In the drawer, hold OK on VLC, pick "Move": the heading says "Use the arrows to move it, then
   press OK". Left and Right move it by one place, Up and Down by one row. OK places it.
 - [ ] Reboot the device (`adb reboot`). Both new orders are still there.
-- [ ] Run `provision.sh` with the example file: the column and the drawer's first apps are back in
+- [ ] Run `provision.sh` with the example file: the tiles and the drawer's first apps are back in
   the file's order.
 
 ## AC-26: Restart app
@@ -267,9 +314,9 @@ Run this section twice: with the TV's language set to English, then to French. O
 language is in Settings > System > Language > Français; on older Android TV it is in Settings >
 Device Preferences > Language > Français.
 
-- [ ] Open KevBox TV, return with Home, hold OK on KevBox TV, pick "Restart app". The app details
-  page shows for about a second, Force stop and its confirmation are pressed for you, then KevBox
-  TV opens again from its start.
+- [ ] Open KevBox TV, return with Home, hold OK on KevBox TV's tile, pick "Restart app". The app
+  details page shows for about a second, Force stop and its confirmation are pressed for you, then
+  KevBox TV opens again from its start.
 - [ ] Force-stop SmartTube first (`adb shell am force-stop org.smarttube.stable`), then "Restart
   app" on it: Force stop is greyed out, so it goes straight to opening SmartTube.
 - [ ] Service off. KevBox Home turns its own accessibility service back on every time Home opens,
@@ -280,8 +327,8 @@ Device Preferences > Language > Français.
   ```
 
   Then switch KevBox Home's accessibility service off in Android's accessibility settings, press
-  Home, hold OK on KevBox TV and pick "Restart app": the details page stays open and the toast
-  reads "Press Force stop, then reopen the app".
+  Home, hold OK on KevBox TV's tile and pick "Restart app": the details page stays open and the
+  toast reads "Press Force stop, then reopen the app".
 - [ ] Switch the service back on in Android's accessibility settings, then give the grant back
   before the AC-27 to AC-30 checks:
 
@@ -332,16 +379,18 @@ Device Preferences > Language > Français.
 
 ## AC-33: kept features and Customize
 
-- [ ] Weather shows top right (temperature and sky), and the wallpaper and the screen-time chart
-  work as in Couch.
-- [ ] Hold OK on Settings. "Customize" lists exactly: under "Permissions", "HOME button",
-  "Notification access", "Usage access" and "TV listings"; under "Appearance", "Accent colour";
-  under "Wallpaper", "Source", "Subreddit", "Change image" and "Dim"; under "Home", "App
-  channels"; under "Clock and weather", "24-hour clock", "Weather" and "Units"; under "System",
-  "Check for updates" and "About".
+- [ ] Weather shows top right (temperature and sky), and the wallpaper works as in Couch. The
+  screen-time chart is gone on purpose (AC-13).
+- [ ] Focus More apps, press Up, Right to Settings, and hold OK. "Customize" lists exactly: under
+  "Permissions", "HOME button", "Notification access", "Usage access" and "TV listings"; under
+  "Appearance", "Accent colour"; under "Wallpaper", "Source", "Subreddit", "Change image" and
+  "Dim"; under "Home", "App channels"; under "Clock and weather", "24-hour clock", "Weather" and
+  "Units"; under "System", "Check for updates" and "About".
 - [ ] It has no Layout, Card size, Names under cards, Descriptions, Date, Rows, Inputs, Show or hide
   apps, Rearrange apps, City, Ambient mode, Other TVs, Android settings, Godmode or pre-release row.
 - [ ] Change Accent colour, Source and Units, return with Back: Home shows each change.
+- [ ] Switch "24-hour clock" off, return with Back: the clock top left shows the 12-hour time.
+  Switch it back on.
 - [ ] Press OK seven times on About: nothing opens.
 
 ## AC-37: Uninstall
@@ -350,16 +399,18 @@ Device Preferences > Language > Français.
   Pick Cancel: VLC is still installed.
 - [ ] Again, and confirm: within 2 s VLC leaves the drawer, the drawer stays open, and Home needs no
   restart. Reinstall VLC from Play Store afterwards.
-- [ ] Hold OK on a column app: no "Uninstall" (AC-23).
+- [ ] Hold OK on an app tile: no "Uninstall" (AC-23).
 
 ## AC-38: English whatever the language
 
 Set the TV's language to French (Google TV: Settings > System > Language > Français; older
 Android TV: Settings > Device Preferences > Language > Français), then:
 
-- [ ] Home reads "More apps", the buttons "Wi-Fi · strong" (or their state) and "Settings", the
-  status lines "Opened …" with English weekdays ("Opened Wednesday at 22:37", never "mercredi").
-- [ ] The screen-time chart's day letters are English, in lower case (m, t, w and so on), and the
-  bottom line's numbers use a decimal point with English units ("storage, 12 GB free", never "Go").
+- [ ] With More apps focused, the text block reads "More apps". The buttons read "Wi-Fi · strong"
+  (or their state) and "Settings".
+- [ ] Row labels show each channel's name as its app publishes it, so KevBox Live's may stay in
+  French; that is the app's text, not KevBox Home's.
+- [ ] The bottom line's numbers use a decimal point with English units ("storage, 12 GB free",
+  never "Go").
 - [ ] Customize, the hold-OK menu and the drawer are all in English.
 - [ ] Set the language back to English when done.

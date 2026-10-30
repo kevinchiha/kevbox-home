@@ -36,7 +36,7 @@ class HomeScreen(private val activity: Activity) {
     private val images = Images(activity, fetcher)
     private val views: HomeViews = HomeViews(
         activity, images, { openSettings() }, { installUpdate() },
-        // A left-column app gets KevBox's menu; program cards keep Couch's.
+        // An app tile gets KevBox's menu; program cards keep Couch's.
         onAppMenu = { tile ->
             AppMenu.show(activity, tile.key, AppMenu.Place.COLUMN, config.apps) { views.index.startMove(tile.key) }
         },
@@ -48,6 +48,8 @@ class HomeScreen(private val activity: Activity) {
 
     private var config = Config.load(null)
     private var resumed = false
+    /** HOME arrived while Home was not in front (pressed in another app): reset once it resumes. */
+    private var homePending = false
 
     private val menus: CardMenus = CardMenus(activity, { config }, files) { load() }
     private val loader = HomeLoader(
@@ -70,6 +72,10 @@ class HomeScreen(private val activity: Activity) {
             main.postDelayed(reloadForRecommendations, RECOMMENDATIONS_SETTLE_MS)
         }
         HomeAccessibilityService.restore(activity)
+        if (homePending) {
+            homePending = false
+            views.index.reset()
+        }
         // Watch progress moves while you're in an app; unchanged rows are not rebuilt.
         load()
         startLive()
@@ -87,9 +93,13 @@ class HomeScreen(private val activity: Activity) {
         loader.shutdown()
     }
 
-    /** HOME while already home goes back to the start, like the stock launcher. */
+    /**
+     * Every HOME press goes back to the start, also one pressed in another app: its intent comes
+     * before onResume, so the reset waits for it. Back from an app or a recents switch sends no
+     * intent, so focus stays where it was.
+     */
     fun onHomePressed() {
-        if (resumed) views.index.reset()
+        if (resumed) views.index.reset() else homePending = true
     }
 
     fun load() = loader.load()

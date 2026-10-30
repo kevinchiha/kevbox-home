@@ -13,7 +13,7 @@ object Uninstall {
     /**
      * True only in the drawer, for a package outside [apps], when FLAG_SYSTEM is unset or
      * FLAG_UPDATED_SYSTEM_APP is set in [flags]. A system app with no updates cannot be removed,
-     * and the left column holds the household's chosen apps, so neither ever offers it.
+     * and Home's tiles hold the household's chosen apps, so neither ever offers it.
      */
     fun allowed(flags: Int, pkg: String, place: AppMenu.Place, apps: List<String>): Boolean {
         if (place != AppMenu.Place.DRAWER || pkg in apps) return false

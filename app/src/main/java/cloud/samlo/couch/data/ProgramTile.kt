@@ -34,9 +34,9 @@ internal object ProgramTile {
             progress = if (started) (position.toFloat() / duration).coerceIn(0f, 1f) else -1f,
             intent = intent,
             watch = Watch(
-                title,
-                c.string("season_display_number")?.takeIf { it.isNotBlank() },
-                c.string("episode_display_number")?.takeIf { it.isNotBlank() },
+                c.string("season_display_number"),
+                c.string("episode_display_number"),
+                c.string("episode_title"),
                 position,
                 duration,
             ),

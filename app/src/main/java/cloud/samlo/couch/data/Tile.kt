@@ -35,14 +35,14 @@ class Tile(
     val iconWide: Boolean = false,
     /** Launches instead of [intent] when set (Fire TV recommendations); [intent] stays the fallback. */
     private val pendingIntent: PendingIntent? = null,
-    /** A program's raw playback state, for KevBox's status line. */
+    /** KevBox: a program's season, episode and playback state, for the line under Home's title. */
     val watch: Watch? = null,
 ) {
     enum class Kind { APP, INPUT, PROGRAM }
 
     /** Changes when the card would look different, so unchanged rows are not rebuilt. */
     val signature: String get() = "$key|$label|$subtitle|$imageUrl|$dimmed|$iconRes|$cardColor|${(progress * 100).toInt()}|${banner?.generationId}" +
-        watch?.let { "|${it.season}|${it.episode}|${it.positionMs}|${it.durationMs}" }.orEmpty()
+        watch?.let { "|${it.season}|${it.episode}|${it.episodeTitle}|${it.positionMs}|${it.durationMs}" }.orEmpty()
 
     fun launch(context: Context) {
         if (pendingIntent != null) {
