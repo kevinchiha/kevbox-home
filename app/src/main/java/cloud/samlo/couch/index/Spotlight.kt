@@ -25,8 +25,8 @@ class Spotlight(context: Context) : LinearLayout(context) {
         letterSpacing = -0.02f
     }
     // KevBox: the block has the screen's left side to itself, down to the tiles, so a synopsis
-    // gets six lines instead of Couch's two.
-    private val description = text(15f, 400, IndexTokens.description, 1.45f).apply { maxLines = 6 }
+    // gets seven lines instead of Couch's two.
+    private val description = text(15f, 400, IndexTokens.description, 1.45f).apply { maxLines = 7 }
     private val progressFill = GradientDrawable().apply { cornerRadius = context.dpf(1.5f) }
     private val progress = FrameLayout(context).apply {
         background = GradientDrawable().apply {
