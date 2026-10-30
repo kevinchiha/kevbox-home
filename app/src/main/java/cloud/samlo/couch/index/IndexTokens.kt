@@ -18,7 +18,7 @@ object IndexTokens {
     // The text block, left: the focused program's text, or the chosen app's name. The top bar
     // above it starts at IndexScreen.TOP_BAR_Y (23dp) and is 52dp tall while now playing shows,
     // so its bottom then sits at 75dp. The block starts level with the upper row's cards.
-    const val TEXT_Y = 114
+    const val TEXT_Y = 92
     const val TEXT_W = 330
 
     // KevBox's app tiles along the bottom: the app's TV banner at the drawer's card size, its
@@ -34,11 +34,15 @@ object IndexTokens {
     /** The icon's own corners; [IndexData]'s icon is rendered at [TILE_ICON] with these. */
     const val TILE_ICON_RADIUS = 12f
 
-    // The two rows of cards, right. Each row's label sits at its LABEL_Y, below the top bar's
-    // bottom (75dp) and now playing's pill, and its cards' plates start ROW_CARDS_DY under it.
+    // The two rows of cards, right. Each row's label sits at its LABEL_Y and its cards' plates
+    // start ROW_CARDS_DY under it. The space between the rows' cards (236 - 191) equals the space
+    // from the lower row's cards to the tiles (380 - 335): Kevin's 2026-10-30 ask. The rows start
+    // TEXT_GAP past the text block's text, never left of ROWS_MIN_X nor right of ROWS_X.
     const val ROWS_X = 380
-    const val ROW_1_LABEL_Y = 84
-    const val ROW_2_LABEL_Y = 228
+    const val TEXT_GAP = ROWS_X - EDGE_X - TEXT_W
+    const val ROWS_MIN_X = EDGE_X + TEXT_GAP
+    const val ROW_1_LABEL_Y = 62
+    const val ROW_2_LABEL_Y = 206
     const val ROW_CARDS_DY = 30
     const val CARD_H = 99
     const val CARD_GAP = 12

@@ -69,6 +69,15 @@ class Spotlight(context: Context) : LinearLayout(context) {
         progress.visibility = GONE
     }
 
+    /** How far the shown text runs, in pixels, at most the block's width: Home starts the rows just past it. */
+    fun textWidth(): Int {
+        var widest = if (progress.visibility == VISIBLE) context.dp(PROGRESS_W).toFloat() else 0f
+        for (line in listOf(source, title, description)) {
+            if (line.visibility == VISIBLE) widest = maxOf(widest, line.paint.measureText(line.text.toString()))
+        }
+        return minOf(widest.toInt() + 1, context.dp(IndexTokens.TEXT_W))
+    }
+
     private fun setDescription(text: String?) {
         description.text = text.orEmpty()
         description.visibility = if (text == null) GONE else VISIBLE

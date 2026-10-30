@@ -84,8 +84,8 @@ class IndexScreen(
             setStartPadding(activity.dp(STRIP_START) - activity.dp(Tokens.RING_INSET))
         }
         val cardsY = labelY + IndexTokens.ROW_CARDS_DY
-        val labelParams = LayoutParams(activity.dp(SCREEN_W - IndexTokens.ROWS_X - IndexTokens.EDGE_X), LayoutParams.WRAP_CONTENT).apply {
-            leftMargin = activity.dp(IndexTokens.ROWS_X)
+        val labelParams = LayoutParams(activity.dp(SCREEN_W - IndexTokens.ROWS_MIN_X - IndexTokens.EDGE_X), LayoutParams.WRAP_CONTENT).apply {
+            leftMargin = activity.dp(IndexTokens.ROWS_MIN_X)
             topMargin = activity.dp(labelY) - label.inset
         }
     }
@@ -96,11 +96,12 @@ class IndexScreen(
         addView(backdrop, fill())
         place(spotlight, IndexTokens.EDGE_X, IndexTokens.TEXT_Y, IndexTokens.TEXT_W, LayoutParams.WRAP_CONTENT)
         lanes.forEach { addView(it.label, it.labelParams) }
-        // Each row starts a little left of ROWS_X so a scaled card's ring isn't clipped.
+        // Labels and rows sit at ROWS_MIN_X and slide right past the text block's text ([followText]).
+        // Each row starts a little left of its label so a scaled card's ring isn't clipped.
         val cardTop = 10 + Tokens.RING_INSET
         lanes.forEach { lane ->
             addView(lane.row, LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT).apply {
-                leftMargin = activity.dp(IndexTokens.ROWS_X - STRIP_START)
+                leftMargin = activity.dp(IndexTokens.ROWS_MIN_X - STRIP_START)
                 topMargin = activity.dp(lane.cardsY - cardTop)
             })
         }
@@ -184,6 +185,7 @@ class IndexScreen(
         tile.restyle()
         select(tile, refresh = false)
         spotlight.showApp(tile.entry.app.label, activity.getString(R.string.kevbox_move_hint_tiles))
+        followText()
     }
 
     /** Draws [wallpaper] behind the screen, dimmed by [dim]. Called on every load. */
@@ -216,6 +218,7 @@ class IndexScreen(
         tiles.select(null)
         clearRows()
         spotlight.showApp(activity.getString(R.string.kevbox_more_apps), null)
+        followText()
         backdrop.show(null)
     }
 
@@ -323,7 +326,7 @@ class IndexScreen(
         var x = 0
         programs.forEachIndexed { i, tile ->
             x += IndexTokens.cardWidth(tile.imageRatio) + IndexTokens.CARD_GAP
-            if (x > SCREEN_W - IndexTokens.ROWS_X) return i + 2
+            if (x > SCREEN_W - IndexTokens.ROWS_MIN_X) return i + 2
         }
         return programs.size
     }
@@ -335,6 +338,25 @@ class IndexScreen(
             spotlight.showProgram(entry.app.label, tile)
         } else {
             spotlight.showApp(entry.app.label, null)
+        }
+        followText()
+    }
+
+    /**
+     * Slides the labels and rows to start [IndexTokens.TEXT_GAP] past the text block's text, so a
+     * short title leaves no empty band; a long one keeps them at [IndexTokens.ROWS_X]. Kevin's
+     * 2026-10-30 ask, on every card move. Translation only, so no layout pass.
+     */
+    private fun followText() {
+        val min = activity.dp(IndexTokens.ROWS_MIN_X)
+        val x = (activity.dp(IndexTokens.EDGE_X) + spotlight.textWidth() + activity.dp(IndexTokens.TEXT_GAP))
+            .coerceIn(min, activity.dp(IndexTokens.ROWS_X))
+        val shift = (x - min).toFloat()
+        lanes.forEach { lane ->
+            for (view in listOf(lane.label, lane.row)) {
+                if (view.translationX == shift) continue
+                view.animate().translationX(shift).setDuration(Tokens.GLIDE_MS).setInterpolator(Tokens.ease).start()
+            }
         }
     }
 
