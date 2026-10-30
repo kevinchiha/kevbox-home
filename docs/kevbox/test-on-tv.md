@@ -173,8 +173,8 @@ the text `not json`.
 - [ ] OK on a card of KevBox TV's Continue Watching row opens that program in KevBox TV. Return
   with Home.
 - [ ] Focus More apps, press Up, Right to Settings, and hold OK. Open "App channels" and switch
-  off SmartTube's History channel. Back on Home, SmartTube's lower row is now another of its
-  channels (Subscriptions, say). Switch History back on.
+  off SmartTube's History channel. Back on Home, SmartTube shows its Recommended row alone, no
+  other channel in History's place. Switch History back on.
 - [ ] In "App channels", switch off every SmartTube channel. Back on Home, focus the SmartTube
   tile: the text block shows "SmartTube" alone, with no rows and no labels. Up goes to Wi-Fi, and
   Down from Wi-Fi returns to the SmartTube tile. Switch the channels back on.

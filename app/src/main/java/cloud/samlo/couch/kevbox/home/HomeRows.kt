@@ -26,23 +26,18 @@ object HomeRows {
     )
 
     /**
-     * Up to two of [channels] (one app's, in `Programs.channels` order), in slot order. Keyword
-     * matches are placed first, so a slot left without one takes the next channel no other slot
-     * claimed instead of the one a later slot asks for by name.
+     * Up to two of [channels] (one app's, in `Programs.channels` order), in slot order. An app in
+     * [slots] shows only the rows its keywords find: a missing one leaves its slot empty rather
+     * than taking another channel, which could be a second copy of a row already shown. Any other
+     * app shows its first two channels.
      */
     fun pick(packageName: String, channels: List<Programs.Channel>): List<Programs.Channel> {
-        val keywords = slots[packageName].orEmpty()
-        val picked = arrayOfNulls<Programs.Channel>(MAX)
+        val keywords = slots[packageName] ?: return channels.take(MAX)
         val used = HashSet<Long>()
-        keywords.forEachIndexed { slot, words ->
-            picked[slot] = channels.firstOrNull { c ->
+        return keywords.mapNotNull { words ->
+            channels.firstOrNull { c ->
                 c.id !in used && words.any { c.name.contains(it, ignoreCase = true) }
             }?.also { used.add(it.id) }
         }
-        val rest = channels.filter { it.id !in used }.iterator()
-        for (slot in 0 until MAX) {
-            if (picked[slot] == null && rest.hasNext()) picked[slot] = rest.next()
-        }
-        return picked.filterNotNull()
     }
 }

@@ -39,11 +39,14 @@ class HomeRowsTest {
     }
 
     @Test
-    fun aSlotWithNoMatchLeavesTheLaterSlotItsRow() {
-        // No Recommended row: the first slot takes Subscriptions, not History, which the second asks for.
-        assertEquals(
-            listOf("Subscriptions", "History"),
-            picked("org.smarttube.stable", "History", "Subscriptions"),
-        )
+    fun aKnownAppShowsOnlyTheRowsItsKeywordsFind() {
+        // No Recommended row: History alone, not Subscriptions in Recommended's place.
+        assertEquals(listOf("History"), picked("org.smarttube.stable", "History", "Subscriptions"))
+    }
+
+    @Test
+    fun aSecondCopyOfARowNeverFillsAnEmptySlot() {
+        // KevBox TV before its Library row, with a stale second Continue Watching channel.
+        assertEquals(listOf("Continue Watching"), picked("tv.kevbox", "Continue Watching", "Continue Watching"))
     }
 }

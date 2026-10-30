@@ -18,7 +18,7 @@ object IndexTokens {
     // The text block, left: the focused program's text, or the chosen app's name. The top bar
     // above it starts at IndexScreen.TOP_BAR_Y (23dp) and is 52dp tall while now playing shows,
     // so its bottom then sits at 75dp. The block starts level with the upper row's cards.
-    const val TEXT_Y = 104
+    const val TEXT_Y = 114
     const val TEXT_W = 330
 
     // KevBox's app tiles along the bottom: the app's TV banner at the drawer's card size, its
@@ -38,8 +38,8 @@ object IndexTokens {
     // bottom (75dp) and now playing's pill, and its cards' plates start ROW_CARDS_DY under it.
     const val ROWS_X = 380
     const val ROW_1_LABEL_Y = 84
-    const val ROW_2_LABEL_Y = 216
-    const val ROW_CARDS_DY = 20
+    const val ROW_2_LABEL_Y = 228
+    const val ROW_CARDS_DY = 30
     const val CARD_H = 99
     const val CARD_GAP = 12
     const val CARD_RADIUS = 8f
