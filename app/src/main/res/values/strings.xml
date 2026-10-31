@@ -184,6 +184,8 @@
     <string name="kevbox_speedtest">Speed test</string>
     <string name="kevbox_settings">Settings</string>
     <string name="kevbox_vpn">VPN</string>
+    <string name="kevbox_menu_add_home">Add to Home</string>
+    <string name="kevbox_added_home">%1$s is on Home now</string>
     <string name="kevbox_menu_info">App info</string>
     <string name="kevbox_menu_move">Move</string>
     <string name="kevbox_menu_restart">Restart app</string>

@@ -49,5 +49,20 @@ class DrawerApps(
         config.save(files.dir)
     }
 
+    /**
+     * Puts [pkg] at the end of Home's column in a freshly read config, then reloads the grid,
+     * which drops it, since the column and the drawer never share an app. [onAdded] runs on the
+     * main thread once the save is done.
+     */
+    fun addToHome(pkg: String, onAdded: () -> Unit) {
+        executor.execute {
+            val config = Config.load(files.dir)
+            config.apps = AppLists.addToColumn(config.apps, pkg)
+            config.save(files.dir)
+            main.post { if (!activity.isDestroyed) onAdded() }
+        }
+        load()
+    }
+
     fun shutdown() = executor.shutdown()
 }

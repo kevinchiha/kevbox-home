@@ -11,6 +11,14 @@ class AppListsTest {
     }
 
     @Test
+    fun addToColumnPutsTheAppLastOnce() {
+        assertEquals(listOf("a", "b", "c"), AppLists.addToColumn(listOf("a", "b"), "c"))
+        // Already there: the column keeps its order rather than moving or doubling the app.
+        assertEquals(listOf("a", "b"), AppLists.addToColumn(listOf("a", "b"), "a"))
+        assertEquals(listOf("c"), AppLists.addToColumn(emptyList(), "c"))
+    }
+
+    @Test
     fun drawerRule() {
         val launchable = mapOf(
             "z" to "Zed", "x" to "Ex", "a" to "apple", "b" to "Banana", "c" to "cherry",

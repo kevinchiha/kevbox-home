@@ -285,14 +285,18 @@ before any app sees it.
 
 - [ ] Hold OK on an app tile: the menu is "App info", "Move", "Restart app", in that order, and
   nothing else. No "Uninstall".
-- [ ] Hold OK on VLC in the drawer: "App info", "Move", "Restart app", "Uninstall".
+- [ ] Hold OK on VLC in the drawer: "Add to Home", "App info", "Move", "Restart app",
+  "Uninstall".
+- [ ] Pick "Add to Home": "VLC is on Home now" shows, VLC leaves the drawer, and Back to Home shows
+  VLC as the last tile. Hold OK on its tile: no "Add to Home". Restart the box: VLC is still the
+  last tile.
 - [ ] Hold OK on a system app in the drawer that was never updated: no "Uninstall". Find one with
   `adb shell dumpsys package <package> | grep pkgFlags`: it shows `SYSTEM` and no
   `UPDATED_SYSTEM_APP`.
 
 ## AC-24: App info
 
-- [ ] In the drawer, hold OK on VLC. "App info" is the menu's first item and has focus; press OK:
+- [ ] In the drawer, hold OK on VLC. "App info" is the menu's second item, under "Add to Home"; pick it:
   Android's app details page for VLC opens. Back, then do the same on KevBox TV's tile.
 
 ## AC-25: Move

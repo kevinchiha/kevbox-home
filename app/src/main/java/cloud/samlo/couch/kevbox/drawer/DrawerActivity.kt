@@ -9,6 +9,9 @@ import android.content.IntentFilter
 import android.os.Build
 import android.os.Bundle
 import android.view.KeyEvent
+import android.widget.Toast
+import cloud.samlo.couch.R
+import cloud.samlo.couch.data.AppLabels
 import cloud.samlo.couch.data.Config
 import cloud.samlo.couch.data.Fetcher
 import cloud.samlo.couch.data.Images
@@ -103,7 +106,13 @@ class DrawerActivity : Activity() {
 
     private fun menu(card: Card) {
         val pkg = card.tile.key
-        AppMenu.show(this, pkg, AppMenu.Place.DRAWER, config.apps) { grid.startMove(pkg) }
+        AppMenu.show(this, pkg, AppMenu.Place.DRAWER, config.apps, onAddToHome = { addToHome(pkg) }) { grid.startMove(pkg) }
+    }
+
+    /** Add to Home: the app goes to the end of Home's column and leaves the grid; a toast says so. */
+    private fun addToHome(pkg: String) {
+        val label = AppLabels.of(this, pkg) ?: pkg
+        apps.addToHome(pkg) { Toast.makeText(this, getString(R.string.kevbox_added_home, label), Toast.LENGTH_SHORT).show() }
     }
 
     /** Keys reach Move before focus search, the way MainActivity routes them to Home. */

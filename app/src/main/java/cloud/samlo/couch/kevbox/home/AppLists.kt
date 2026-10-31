@@ -27,6 +27,9 @@ object AppLists {
         return first + rest
     }
 
+    /** The column with [pkg] added at its end, or [apps] unchanged when it is already there. */
+    fun addToColumn(apps: List<String>, pkg: String): List<String> = if (pkg in apps) apps else apps + pkg
+
     /** [list] with the item at [from] moved [by] places (negative is earlier), clamped to the ends. */
     fun move(list: List<String>, from: Int, by: Int): List<String> {
         if (from !in list.indices) return list
