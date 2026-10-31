@@ -46,10 +46,10 @@ class Config {
     var checkUpdates = true
 
     // KevBox: read and written by KevBoxConfig, the one parser shared with the provision file
-    /** The left column, in order. */
-    var apps: List<String> = emptyList()
-    /** Shown first in the drawer, in order. */
-    var drawer: List<String> = emptyList()
+    /** The left column, in order. Never empty: an empty saved list loads as the default. */
+    var apps: List<String> = KevBoxConfig.DEFAULT_APPS
+    /** Shown first in the drawer, in order. An empty saved list loads as the default. */
+    var drawer: List<String> = KevBoxConfig.DEFAULT_DRAWER
     /** Never in the column or the drawer. */
     var hidden: Set<String> = emptySet()
     /** Empty means KevBoxConfig.DEFAULT_BUTTONS. */

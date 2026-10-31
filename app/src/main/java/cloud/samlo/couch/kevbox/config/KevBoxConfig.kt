@@ -17,6 +17,19 @@ object KevBoxConfig {
     /** The buttons when none are saved: all but Bluetooth, which Kevin dropped on 2026-10-30. */
     val DEFAULT_BUTTONS: List<String> = BUTTONS - "bluetooth"
     const val DEFAULT_SPEEDTEST = "com.rma.netpulsetv"
+
+    /**
+     * The left column when none is saved, the provision example's: a box that never gets the
+     * provision file (Android 11 boxes refuse the push into Android/data) still opens on the
+     * KevBox apps. An app that isn't installed is skipped, so naming one costs nothing.
+     */
+    val DEFAULT_APPS: List<String> = listOf("tv.kevbox.live", "tv.kevbox", "org.smarttube.stable")
+
+    /** The drawer's first apps when none are saved, the provision example's. */
+    val DEFAULT_DRAWER: List<String> = listOf(
+        "com.surfshark.vpnclient.android", "com.rma.netpulsetv", "com.android.vending",
+        "nextapp.fx", "com.esaba.downloader", "org.videolan.vlc",
+    )
     val WALLPAPERS: Set<String> = setOf("daily", "reddit", "gradient", "custom")
 
     /** Copies each KevBox key in [json] whose value has the right type into [into]; returns the names applied. */
@@ -25,8 +38,10 @@ object KevBoxConfig {
         fun apply(name: String, ok: Boolean) {
             if (ok) applied += name
         }
-        apply("apps", packages(json, "apps")?.also { into.apps = it } != null)
-        apply("drawer", packages(json, "drawer")?.also { into.drawer = it } != null)
+        // An empty column or drawer order means the default, as an empty button list does: an
+        // empty column leaves a member nothing on Home and no way to add an app.
+        apply("apps", packages(json, "apps")?.also { into.apps = it.ifEmpty { DEFAULT_APPS } } != null)
+        apply("drawer", packages(json, "drawer")?.also { into.drawer = it.ifEmpty { DEFAULT_DRAWER } } != null)
         apply("hidden", packages(json, "hidden")?.also { into.hidden = it.toSet() } != null)
         apply("buttons", strings(json, "buttons")?.also { list ->
             into.buttons = list.filter { it in BUTTONS }.distinct()

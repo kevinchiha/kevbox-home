@@ -18,7 +18,7 @@ class KevBoxConfigTest {
             config,
         )
         assertEquals(listOf("tv.kevbox"), config.apps)
-        assertEquals(emptyList<String>(), config.drawer)
+        assertEquals(KevBoxConfig.DEFAULT_DRAWER, config.drawer)
         assertEquals("daily", config.wallpaper)
         assertEquals(listOf("vpn", "wifi"), config.buttons)
         assertEquals(setOf("buttons"), applied)
@@ -51,6 +51,29 @@ class KevBoxConfigTest {
         assertEquals(config.speedtestApp, copy.speedtestApp)
         assertEquals(config.keys, copy.keys)
         assertEquals(KeyMap.DEFAULT, Config.fromJson("{}").keys)
+    }
+
+    @Test
+    fun aBoxWithNoFileOpensOnTheKevBoxApps() {
+        // An Android 11 box that refused the provision push, with or without a saved config.json.
+        for (config in listOf(Config(), Config.fromJson("{}"))) {
+            assertEquals(listOf("tv.kevbox.live", "tv.kevbox", "org.smarttube.stable"), config.apps)
+            assertEquals(KevBoxConfig.DEFAULT_DRAWER, config.drawer)
+        }
+    }
+
+    @Test
+    fun anEmptyColumnOrDrawerLoadsAsTheDefault() {
+        // A config.json saved before the defaults existed holds empty lists.
+        val saved = Config.fromJson("""{"apps": [], "drawer": [" "]}""")
+        assertEquals(KevBoxConfig.DEFAULT_APPS, saved.apps)
+        assertEquals(KevBoxConfig.DEFAULT_DRAWER, saved.drawer)
+
+        // The provision file's empty arrays mean the same, and still count as applied.
+        val config = Config().apply { apps = listOf("tv.kevbox") }
+        val applied = KevBoxConfig.decode(JSONObject("""{"apps": [], "drawer": []}"""), config)
+        assertEquals(KevBoxConfig.DEFAULT_APPS, config.apps)
+        assertEquals(setOf("apps", "drawer"), applied)
     }
 
     @Test
