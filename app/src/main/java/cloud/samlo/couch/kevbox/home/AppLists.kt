@@ -30,6 +30,29 @@ object AppLists {
     /** The column with [pkg] added at its end, or [apps] unchanged when it is already there. */
     fun addToColumn(apps: List<String>, pkg: String): List<String> = if (pkg in apps) apps else apps + pkg
 
+    /**
+     * The apps that always stay on Home: KevBox Live, KevBox TV and SmartTube, under each package
+     * name SmartTube ships as. Remove from Home is never offered for them.
+     */
+    val LOCKED: Set<String> = setOf(
+        "tv.kevbox.live",
+        "tv.kevbox",
+        "org.smarttube.stable",
+        "org.smarttube.beta",
+        "com.teamsmart.videomanager.tv",
+        "com.liskovsoft.smarttubetv.beta",
+    )
+
+    /** True when Remove from Home may be offered for [pkg]. */
+    fun removable(pkg: String): Boolean = pkg !in LOCKED
+
+    /**
+     * The column without [pkg], every copy of it, so it lands back in the drawer. A locked app
+     * leaves [apps] unchanged.
+     */
+    fun removeFromColumn(apps: List<String>, pkg: String): List<String> =
+        if (removable(pkg)) apps.filter { it != pkg } else apps
+
     /** [list] with the item at [from] moved [by] places (negative is earlier), clamped to the ends. */
     fun move(list: List<String>, from: Int, by: Int): List<String> {
         if (from !in list.indices) return list

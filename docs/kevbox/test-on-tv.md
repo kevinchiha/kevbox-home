@@ -283,13 +283,16 @@ before any app sees it.
 
 ## AC-23: the hold-OK menu
 
-- [ ] Hold OK on an app tile: the menu is "App info", "Move", "Restart app", in that order, and
-  nothing else. No "Uninstall".
+- [ ] Hold OK on KevBox Live's, KevBox TV's and SmartTube's tiles: the menu is "App info",
+  "Move", "Restart app", in that order, and nothing else. No "Remove from Home", no "Uninstall".
 - [ ] Hold OK on VLC in the drawer: "Add to Home", "App info", "Move", "Restart app",
   "Uninstall".
 - [ ] Pick "Add to Home": "VLC is on Home now" shows, VLC leaves the drawer, and Back to Home shows
-  VLC as the last tile. Hold OK on its tile: no "Add to Home". Restart the box: VLC is still the
-  last tile.
+  VLC as the last tile. Hold OK on its tile: "App info", "Move", "Restart app", "Remove from
+  Home", and no "Add to Home". Restart the box: VLC is still the last tile.
+- [ ] On VLC's tile, pick "Remove from Home": "VLC is in More apps now" shows, the tile goes and
+  focus lands on a neighbouring tile. Open the drawer: VLC is back in it. Restart the box: VLC is
+  still off Home.
 - [ ] Hold OK on a system app in the drawer that was never updated: no "Uninstall". Find one with
   `adb shell dumpsys package <package> | grep pkgFlags`: it shows `SYSTEM` and no
   `UPDATED_SYSTEM_APP`.

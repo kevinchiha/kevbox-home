@@ -7,7 +7,9 @@ import android.os.Looper
 import android.view.KeyEvent
 import android.widget.Toast
 import cloud.samlo.couch.HomeAccessibilityService
+import cloud.samlo.couch.R
 import cloud.samlo.couch.MediaListener
+import cloud.samlo.couch.data.AppLabels
 import cloud.samlo.couch.data.Config
 import cloud.samlo.couch.data.Fetcher
 import cloud.samlo.couch.data.Images
@@ -17,6 +19,7 @@ import cloud.samlo.couch.data.UserFiles
 import cloud.samlo.couch.data.Wallpapers
 import cloud.samlo.couch.data.Weather
 import cloud.samlo.couch.data.WeatherNow
+import cloud.samlo.couch.kevbox.home.AppLists
 import cloud.samlo.couch.kevbox.menu.AppMenu
 import cloud.samlo.couch.kevbox.update.SilentJob
 import cloud.samlo.couch.settings.SettingsActivity
@@ -38,7 +41,10 @@ class HomeScreen(private val activity: Activity) {
         activity, images, { openSettings() }, { installUpdate() },
         // An app tile gets KevBox's menu; program cards keep Couch's.
         onAppMenu = { tile ->
-            AppMenu.show(activity, tile.key, AppMenu.Place.COLUMN, config.apps) { views.index.startMove(tile.key) }
+            AppMenu.show(
+                activity, tile.key, AppMenu.Place.COLUMN, config.apps,
+                onRemoveFromHome = { removeFromHome(tile.key) },
+            ) { views.index.startMove(tile.key) }
         },
         onProgramMenu = { menus.show(it) },
     )
@@ -147,6 +153,16 @@ class HomeScreen(private val activity: Activity) {
             if (message != null) Toast.makeText(activity, message, Toast.LENGTH_LONG).show()
             views.index.topBar.update.show(release.version)
         }
+    }
+
+    /** Remove from Home: the app leaves the tiles for the drawer, saved into a freshly read config. */
+    private fun removeFromHome(pkg: String) {
+        val saved = Config.load(files.dir)
+        saved.apps = AppLists.removeFromColumn(saved.apps, pkg)
+        saved.save(files.dir)
+        val label = AppLabels.of(activity, pkg) ?: pkg
+        Toast.makeText(activity, activity.getString(R.string.kevbox_removed_home, label), Toast.LENGTH_SHORT).show()
+        load()
     }
 
     private fun openSettings() {

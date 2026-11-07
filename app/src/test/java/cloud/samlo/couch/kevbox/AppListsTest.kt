@@ -2,6 +2,8 @@ package cloud.samlo.couch.kevbox
 
 import cloud.samlo.couch.kevbox.home.AppLists
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class AppListsTest {
@@ -16,6 +18,25 @@ class AppListsTest {
         // Already there: the column keeps its order rather than moving or doubling the app.
         assertEquals(listOf("a", "b"), AppLists.addToColumn(listOf("a", "b"), "a"))
         assertEquals(listOf("c"), AppLists.addToColumn(emptyList(), "c"))
+    }
+
+    @Test
+    fun removeFromColumnSendsTheAppBackToTheDrawer() {
+        assertEquals(listOf("tv.kevbox.live", "c"), AppLists.removeFromColumn(listOf("tv.kevbox.live", "vlc", "c", "vlc"), "vlc"))
+        assertEquals(listOf("a"), AppLists.removeFromColumn(listOf("a"), "missing"))
+        // Once off the column, the drawer lists it again.
+        val apps = AppLists.removeFromColumn(listOf("tv.kevbox", "vlc"), "vlc")
+        assertEquals(listOf("vlc"), AppLists.drawer(mapOf("tv.kevbox" to "KevBox TV", "vlc" to "VLC"), apps, emptyList(), emptySet(), "self"))
+    }
+
+    @Test
+    fun kevboxLiveTvAndSmartTubeStayOnHome() {
+        val apps = listOf("tv.kevbox.live", "tv.kevbox", "org.smarttube.stable", "com.liskovsoft.smarttubetv.beta", "vlc")
+        for (pkg in apps.dropLast(1)) {
+            assertFalse(pkg, AppLists.removable(pkg))
+            assertEquals(apps, AppLists.removeFromColumn(apps, pkg))
+        }
+        assertTrue(AppLists.removable("vlc"))
     }
 
     @Test

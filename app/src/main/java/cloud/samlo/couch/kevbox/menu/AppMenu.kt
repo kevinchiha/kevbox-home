@@ -11,12 +11,13 @@ import android.util.Log
 import cloud.samlo.couch.R
 import cloud.samlo.couch.data.AppLabels
 import cloud.samlo.couch.kevbox.KevBox
+import cloud.samlo.couch.kevbox.home.AppLists
 import cloud.samlo.couch.kevbox.restart.AppRestart
 
 /**
  * The menu a long OK press opens on an app, on Home's tiles or in the drawer: Add to Home (drawer
- * only), App info, Move, Restart app and, for removable drawer apps, Uninstall. Nothing else, by
- * design. Program cards keep Couch's own CardMenus; this copies its dialog pattern rather than
+ * only), App info, Move, Restart app, Remove from Home (tiles only, never for KevBox Live, KevBox
+ * TV or SmartTube) and, for removable drawer apps, Uninstall. Nothing else, by design. Program cards keep Couch's own CardMenus; this copies its dialog pattern rather than
  * calling into it.
  */
 object AppMenu {
@@ -28,7 +29,8 @@ object AppMenu {
      * drawer is about to drop it. The chosen action runs once the dialog has closed, so Move
      * starts with the dialog out of the way; Back closes it with no action and focus stays put.
      * [onAddToHome] is the drawer's Add to Home, offered first since it is what a member most
-     * often wants there; Home's tiles pass none.
+     * often wants there; Home's tiles pass none. [onRemoveFromHome] is the tiles' Remove from Home,
+     * offered last, and only for an app outside `AppLists.LOCKED`; the drawer passes none.
      */
     fun show(
         activity: Activity,
@@ -36,6 +38,7 @@ object AppMenu {
         place: Place,
         apps: List<String>,
         onAddToHome: (() -> Unit)? = null,
+        onRemoveFromHome: (() -> Unit)? = null,
         onMove: () -> Unit,
     ) {
         val info = try {
@@ -48,6 +51,8 @@ object AppMenu {
             activity.getString(R.string.kevbox_menu_info) to { appInfo(activity, pkg) },
             activity.getString(R.string.kevbox_menu_move) to onMove,
             activity.getString(R.string.kevbox_menu_restart) to { AppRestart.start(activity, pkg) },
+            onRemoveFromHome?.takeIf { place == Place.COLUMN && AppLists.removable(pkg) }
+                ?.let { activity.getString(R.string.kevbox_menu_remove_home) to it },
             if (Uninstall.allowed(info.flags, pkg, place, apps)) {
                 activity.getString(R.string.kevbox_menu_uninstall) to { uninstall(activity, pkg) }
             } else {
